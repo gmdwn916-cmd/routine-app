@@ -271,7 +271,9 @@
       margin-bottom: 8px;
     }
 
-    .dd-routine-list { margin-bottom: 8px; }
+    .dd-routine-list { margin-bottom: 8px; max-height: 110px; overflow-y: auto; }
+    #dd-events-list { max-height: 110px; overflow-y: auto; }
+    #dd-events-section .dd-section-label { color: #d97000; }
 
     .dd-routine-item {
       display: flex;
@@ -324,6 +326,31 @@
     }
 
     .btn-dd-del-event:active { color: #ff3b30; }
+
+    .dd-routine-hint {
+      font-size: 11px;
+      color: #8e8e93;
+      line-height: 1.5;
+      margin: 6px 0 2px;
+      padding: 5px 8px;
+      background: #f5f5f7;
+      border-radius: 7px;
+    }
+
+    .btn-dd-del-routine {
+      background: none;
+      border: none;
+      font-size: 16px;
+      color: #c7c7cc;
+      cursor: pointer;
+      padding: 0 2px;
+      line-height: 1;
+      font-family: inherit;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+
+    .btn-dd-del-routine:active { color: #ff3b30; }
 
     .dd-add-row {
       display: flex;
@@ -505,9 +532,9 @@
     .bulk-day-cell {
       background: #fff;
       border-radius: 7px;
-      padding: 5px 3px;
+      padding: 5px 4px 4px;
       cursor: pointer;
-      min-height: 72px;
+      min-height: 70px;
       display: flex;
       flex-direction: column;
       align-items: flex-start;
@@ -521,29 +548,61 @@
 
     .bulk-day-cell:active { background: #e5e5ea; }
 
+    .bulk-day-cell.today {
+      border-color: #007aff;
+      background: rgba(0,122,255,0.06);
+    }
+
     .bulk-day-cell.selected {
       background: #eff6ff;
       border-color: #007aff;
     }
 
-    .bulk-cell-num {
-      font-size: 11px;
-      font-weight: 700;
-      color: #1c1c1e;
-      line-height: 1;
-    }
-
-    .bulk-day-cell.selected .bulk-cell-num { color: #007aff; }
-
-    .bulk-cell-date {
-      font-size: 8px;
-      color: #8e8e93;
-      line-height: 1.2;
+    .bulk-cell-top-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
       width: 100%;
     }
 
+    .bulk-cell-left {
+      display: flex;
+      align-items: baseline;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .bulk-cell-date-num {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1c1c1e;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .bulk-day-cell.today .bulk-cell-date-num,
+    .bulk-day-cell.selected .bulk-cell-date-num { color: #007aff; }
+
+    .bulk-cell-dow {
+      font-size: 7px;
+      color: #8e8e93;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .bulk-cell-dnum {
+      font-size: 7px;
+      font-weight: 600;
+      color: #c7c7cc;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .bulk-day-cell.today .bulk-cell-dnum,
+    .bulk-day-cell.selected .bulk-cell-dnum { color: #007aff; }
+
     .bulk-cell-shift {
-      font-size: 8px;
+      font-size: 9px;
       color: #5e5ce6;
       font-weight: 600;
       max-width: 100%;
@@ -704,6 +763,14 @@
       height: 6px;
       border-radius: 50%;
       flex-shrink: 0;
+    }
+
+    .cell-event-bar {
+      width: 100%;
+      height: 2.5px;
+      border-radius: 1.5px;
+      background: #ff9500;
+      margin-top: 4px;
     }
 
     .grid-empty-msg {
@@ -1048,6 +1115,89 @@
     }
 
     .btn-ob-back:active { opacity: 0.75; }
+
+    /* ── 근무유형 색 설정 ── */
+    .shift-color-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 12px 0;
+      border-bottom: 1px solid #f2f2f7;
+    }
+    .shift-color-row:last-child { border-bottom: none; }
+    .shift-color-row-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .shift-color-row-bottom {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .shift-color-name {
+      flex: 1;
+      font-size: 15px;
+      font-weight: 600;
+      color: #1c1c1e;
+    }
+    .shift-color-preview {
+      min-width: 52px;
+      height: 26px;
+      border-radius: 7px;
+      border: 1.5px solid transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      flex-shrink: 0;
+      padding: 0 6px;
+    }
+    .shift-color-swatches {
+      display: flex;
+      gap: 5px;
+      flex: 1;
+      flex-wrap: wrap;
+    }
+    .shift-color-swatch {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
+      flex-shrink: 0;
+      padding: 0;
+      transition: transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .shift-color-swatch.active {
+      box-shadow: 0 0 0 2px #fff, 0 0 0 4px #1c1c1e;
+    }
+    .shift-color-swatch:active { transform: scale(0.88); }
+    .shift-color-input {
+      width: 30px;
+      height: 30px;
+      border: 1.5px solid #e5e5ea;
+      border-radius: 50%;
+      padding: 2px;
+      cursor: pointer;
+      background: #fff;
+      flex-shrink: 0;
+      -webkit-appearance: none;
+    }
+    .shift-color-empty {
+      font-size: 13px;
+      color: #8e8e93;
+      padding: 4px 0;
+    }
+    .shift-color-hint {
+      font-size: 11px;
+      color: #8e8e93;
+      margin: -4px 4px 12px;
+      line-height: 1.4;
+    }
   </style>
 </head>
 <body>
@@ -1120,6 +1270,9 @@
       <div class="onboard-warn" id="warn-settings"></div>
       <button class="btn btn-primary" id="btn-save-settings">저장</button>
     </div>
+    <p class="settings-section-title">근무유형 색 설정</p>
+    <div class="card" id="shift-color-card"></div>
+    <p class="shift-color-hint">색은 배경에 옅게(약 15%) 적용됩니다. 너무 어두운 색은 글씨와 구분이 어려울 수 있어요.</p>
   </div>
 
   <!-- ── 하단 내비게이션 ── -->
@@ -1180,9 +1333,16 @@
     <div class="dd-section">
       <div class="dd-section-label">루틴</div>
       <div id="dd-routines" class="dd-routine-list"></div>
-      <button class="btn-dd-edit" id="btn-dd-edit-routine">루틴 편집 →</button>
+      <div class="dd-add-row" style="margin-top:8px">
+        <select id="dd-routine-cat" class="cat-select"></select>
+        <input type="text" id="dd-routine-input" placeholder="루틴 추가…" maxlength="50">
+        <button class="btn-dd-add" id="btn-dd-add-routine">추가</button>
+      </div>
+      <div class="dd-routine-hint">↩ 루틴은 D번호 기준으로 반복됩니다. 추가하면 다음 주기 같은 Day에도 적용돼요.</div>
+      <div class="onboard-warn" id="dd-routine-warn"></div>
+      <button class="btn-dd-edit" id="btn-dd-edit-routine">상세 편집 →</button>
     </div>
-    <div class="dd-section">
+    <div class="dd-section" id="dd-events-section">
       <div class="dd-section-label">📅 개인 일정</div>
       <div id="dd-events-list"></div>
       <div class="dd-add-row">
@@ -1297,8 +1457,22 @@
     { name: '당직', color: '#ff9500' },
     { name: '당',   color: '#ff9500' },
   ];
+  const SHIFT_COLOR_PRESETS = [
+    '#007aff', // 파랑
+    '#5e5ce6', // 보라
+    '#32ade6', // 하늘
+    '#34c759', // 초록
+    '#ff9500', // 주황
+    '#ff3b30', // 빨강
+    '#ff2d78', // 분홍
+    '#8e8e93', // 회색
+  ];
+
   function getShiftColor(name) {
     if (!name) return null;
+    if (state && state.shiftColors && state.shiftColors[name] !== undefined) {
+      return state.shiftColors[name] || null;
+    }
     const e = SHIFT_COLORS.find(function (s) { return s.name === name; });
     return e ? e.color : null;
   }
@@ -1333,8 +1507,9 @@
 
   function applyShiftPattern(n, pattern, baseDate) {
     const cycleDays = n * 7;
-    if (!state) { state = { cycleDays: 0, baseDate: '', days: [], events: [] }; }
+    if (!state) { state = { cycleDays: 0, baseDate: '', days: [], events: [], shiftColors: {} }; }
     if (!Array.isArray(state.events)) { state.events = []; }
+    if (!state.shiftColors) { state.shiftColors = {}; }
     state.days = resizeDays(state.days, cycleDays);
     state.days.forEach(function (d, i) {
       d.shiftType.name = pattern.length > 0 ? (pattern[i % pattern.length] || '') : '';
@@ -1347,6 +1522,10 @@
   function migrateState(s) {
     if (!s || !s.days) return false;
     let changed = false;
+    if (!s.shiftColors) {
+      s.shiftColors = {};
+      changed = true;
+    }
     if (!Array.isArray(s.events)) {
       s.events = [];
       changed = true;
@@ -1568,7 +1747,7 @@
       const cellDateStr = formatDateStr(dateMid);
       const items = dayObj.items || [];
       const cellEvents = getEventsForDate(cellDateStr);
-      if (items.length > 0 || cellEvents.length > 0) {
+      if (items.length > 0) {
         const dotsRow = document.createElement('div');
         dotsRow.className = 'cell-dots-row';
         items.slice(0, 4).forEach(function (item) {
@@ -1578,13 +1757,12 @@
           dot.style.background = cat.color;
           dotsRow.appendChild(dot);
         });
-        if (cellEvents.length > 0) {
-          const evDot = document.createElement('div');
-          evDot.className = 'cell-dot';
-          evDot.style.background = '#ff9500';
-          dotsRow.appendChild(evDot);
-        }
         cell.appendChild(dotsRow);
+      }
+      if (cellEvents.length > 0) {
+        const evBar = document.createElement('div');
+        evBar.className = 'cell-event-bar';
+        cell.appendChild(evBar);
       }
 
       cell.addEventListener('click', function () { openDayDetail(dayIdx0, cellDateStr); });
@@ -1594,18 +1772,108 @@
 
   // ── 설정 탭 ──────────────────────────────────────────────
   function renderSettings() {
-    if (!state) return;
-    const cd = state.cycleDays;
-    const n = (cd && cd % 7 === 0) ? cd / 7 : '';
-    document.getElementById('input-shift-n').value = n;
-    if (n) {
-      const patternNames = state.days.slice(0, n).map(function (d) { return d.shiftType.name; }).filter(Boolean);
-      document.getElementById('input-pattern').value = patternNames.join(', ');
-    } else {
-      document.getElementById('input-pattern').value = '';
+    if (state) {
+      const cd = state.cycleDays;
+      const n = (cd && cd % 7 === 0) ? cd / 7 : '';
+      document.getElementById('input-shift-n').value = n;
+      if (n) {
+        const patternNames = state.days.slice(0, n).map(function (d) { return d.shiftType.name; }).filter(Boolean);
+        document.getElementById('input-pattern').value = patternNames.join(', ');
+      } else {
+        document.getElementById('input-pattern').value = '';
+      }
+      document.getElementById('input-base').value = state.baseDate || '';
     }
-    document.getElementById('input-base').value = state.baseDate || '';
     document.getElementById('warn-settings').textContent = '';
+    renderShiftColorSettings();
+  }
+
+  function renderShiftColorSettings() {
+    const card = document.getElementById('shift-color-card');
+    if (!state || !state.cycleDays) {
+      card.innerHTML = '<div class="shift-color-empty">주기 설정을 먼저 완료해 주세요.</div>';
+      return;
+    }
+    const shiftNames = [];
+    state.days.forEach(function (d) {
+      if (d.shiftType.name && !shiftNames.includes(d.shiftType.name)) {
+        shiftNames.push(d.shiftType.name);
+      }
+    });
+    if (shiftNames.length === 0) {
+      card.innerHTML = '<div class="shift-color-empty">등록된 근무유형이 없습니다.</div>';
+      return;
+    }
+    card.innerHTML = '';
+    shiftNames.forEach(function (name) {
+      const currentColor = getShiftColor(name) || '#8e8e93';
+
+      const row = document.createElement('div');
+      row.className = 'shift-color-row';
+
+      // 상단: 이름 + 미리보기
+      const rowTop = document.createElement('div');
+      rowTop.className = 'shift-color-row-top';
+      const nameEl = document.createElement('span');
+      nameEl.className = 'shift-color-name';
+      nameEl.textContent = name;
+      const preview = document.createElement('div');
+      preview.className = 'shift-color-preview';
+      preview.textContent = name;
+      function applyPreview(color) {
+        preview.style.background = 'rgba(' + hexToRgb(color) + ',0.15)';
+        preview.style.borderColor = color;
+        preview.style.color = color;
+      }
+      applyPreview(currentColor);
+      rowTop.appendChild(nameEl);
+      rowTop.appendChild(preview);
+      row.appendChild(rowTop);
+
+      // 하단: 스와치 8개 + 직접 선택
+      const rowBottom = document.createElement('div');
+      rowBottom.className = 'shift-color-row-bottom';
+
+      const swatchWrap = document.createElement('div');
+      swatchWrap.className = 'shift-color-swatches';
+
+      const colorInput = document.createElement('input');
+      colorInput.type = 'color';
+      colorInput.value = currentColor;
+      colorInput.className = 'shift-color-input';
+      colorInput.title = '직접 선택';
+
+      function selectColor(color) {
+        if (!state.shiftColors) { state.shiftColors = {}; }
+        state.shiftColors[name] = color;
+        applyPreview(color);
+        colorInput.value = color;
+        swatchWrap.querySelectorAll('.shift-color-swatch').forEach(function (s) {
+          s.classList.toggle('active', s.dataset.color === color);
+        });
+        saveState();
+        renderGrid();
+        renderToday();
+      }
+
+      SHIFT_COLOR_PRESETS.forEach(function (preset) {
+        const swatch = document.createElement('button');
+        swatch.className = 'shift-color-swatch' + (preset === currentColor ? ' active' : '');
+        swatch.dataset.color = preset;
+        swatch.style.background = preset;
+        swatch.title = preset;
+        swatch.addEventListener('click', function () { selectColor(preset); });
+        swatchWrap.appendChild(swatch);
+      });
+
+      colorInput.addEventListener('input', function () { applyPreview(colorInput.value); });
+      colorInput.addEventListener('change', function () { selectColor(colorInput.value); });
+
+      rowBottom.appendChild(swatchWrap);
+      rowBottom.appendChild(colorInput);
+      row.appendChild(rowBottom);
+      card.appendChild(row);
+    });
   }
 
   document.getElementById('btn-save-settings').addEventListener('click', function () {
@@ -1745,6 +2013,19 @@
 
     document.getElementById('dd-event-input').value = '';
     document.getElementById('dd-warn').textContent = '';
+
+    // 루틴 추가 행 초기화
+    const ddCatSel = document.getElementById('dd-routine-cat');
+    ddCatSel.innerHTML = '';
+    CATEGORIES.forEach(function (c) {
+      const opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = (c.icon ? c.icon + ' ' : '') + c.name;
+      ddCatSel.appendChild(opt);
+    });
+    document.getElementById('dd-routine-input').value = '';
+    document.getElementById('dd-routine-warn').textContent = '';
+
     document.getElementById('day-detail-overlay').classList.add('open');
   }
 
@@ -1759,7 +2040,7 @@
       el.appendChild(empty);
       return;
     }
-    items.forEach(function (item) {
+    items.forEach(function (item, i) {
       const cat = getCat(item.category);
       const row = document.createElement('div');
       row.className = 'dd-routine-item';
@@ -1769,8 +2050,20 @@
       const text = document.createElement('span');
       text.textContent = item.text;
       text.style.color = cat.color;
+      const del = document.createElement('button');
+      del.className = 'btn-dd-del-routine';
+      del.textContent = '×';
+      del.setAttribute('aria-label', '삭제');
+      del.addEventListener('click', function () {
+        state.days[detailDayIdx0].items.splice(i, 1);
+        saveState();
+        renderDDRoutines(state.days[detailDayIdx0]);
+        renderGrid();
+        renderToday();
+      });
       row.appendChild(icon);
       row.appendChild(text);
+      row.appendChild(del);
       el.appendChild(row);
     });
   }
@@ -1839,6 +2132,28 @@
     if (e.key === 'Enter') { document.getElementById('btn-dd-add-event').click(); }
   });
 
+  document.getElementById('btn-dd-add-routine').addEventListener('click', function () {
+    const input = document.getElementById('dd-routine-input');
+    const warn = document.getElementById('dd-routine-warn');
+    const text = input.value.trim();
+    if (!text) { warn.textContent = '루틴을 입력해 주세요.'; return; }
+    warn.textContent = '';
+    const category = document.getElementById('dd-routine-cat').value;
+    const day = state.days[detailDayIdx0];
+    if (!day.items.some(function (it) { return it.text === text; })) {
+      day.items.push({ text: text, category: category });
+    }
+    input.value = '';
+    saveState();
+    renderDDRoutines(state.days[detailDayIdx0]);
+    renderGrid();
+    renderToday();
+  });
+
+  document.getElementById('dd-routine-input').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { document.getElementById('btn-dd-add-routine').click(); }
+  });
+
   // ── 달력 월 이동 ──────────────────────────────────────────
   document.getElementById('btn-cal-prev').addEventListener('click', function () {
     calMonth--;
@@ -1887,23 +2202,38 @@
       const cell = document.createElement('div');
       cell.className = 'bulk-day-cell';
       cell.dataset.idx = i;
-      const bulkShiftColor = getShiftColor(day.shiftType.name);
-      if (bulkShiftColor) {
-        cell.style.background = 'rgba(' + hexToRgb(bulkShiftColor) + ',0.10)';
-      }
 
-      const num = document.createElement('div');
-      num.className = 'bulk-cell-num';
-      num.textContent = 'D' + day.dayIndex;
-      cell.appendChild(num);
+      const isToday = (i === dayIdx0Today);
+      if (isToday) {
+        cell.classList.add('today');
+      } else {
+        const bulkShiftColor = getShiftColor(day.shiftType.name);
+        if (bulkShiftColor) {
+          cell.style.background = 'rgba(' + hexToRgb(bulkShiftColor) + ',0.10)';
+        }
+      }
 
       const dateOfDay = new Date(
         cycleStartMid.getFullYear(), cycleStartMid.getMonth(), cycleStartMid.getDate() + i
       );
-      const dateEl = document.createElement('div');
-      dateEl.className = 'bulk-cell-date';
-      dateEl.textContent = (dateOfDay.getMonth() + 1) + '/' + dateOfDay.getDate() + ' ' + DOW[dateOfDay.getDay()];
-      cell.appendChild(dateEl);
+      const topRow = document.createElement('div');
+      topRow.className = 'bulk-cell-top-row';
+      const leftEl = document.createElement('div');
+      leftEl.className = 'bulk-cell-left';
+      const dateNumEl = document.createElement('span');
+      dateNumEl.className = 'bulk-cell-date-num';
+      dateNumEl.textContent = (dateOfDay.getMonth() + 1) + '/' + dateOfDay.getDate();
+      const dowEl = document.createElement('span');
+      dowEl.className = 'bulk-cell-dow';
+      dowEl.textContent = DOW[dateOfDay.getDay()];
+      leftEl.appendChild(dateNumEl);
+      leftEl.appendChild(dowEl);
+      const dnumEl = document.createElement('span');
+      dnumEl.className = 'bulk-cell-dnum';
+      dnumEl.textContent = 'D' + day.dayIndex;
+      topRow.appendChild(leftEl);
+      topRow.appendChild(dnumEl);
+      cell.appendChild(topRow);
 
       if (day.shiftType.name) {
         const shift = document.createElement('div');
