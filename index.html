@@ -119,12 +119,26 @@
       font-weight: 600;
     }
 
+    .today-date-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
     .today-date-header {
       font-size: 26px;
       font-weight: 800;
       color: #1c1c1e;
       line-height: 1.2;
-      margin-bottom: 8px;
+    }
+
+    .today-dnum {
+      font-size: 12px;
+      color: #8e8e93;
+      font-weight: 500;
+      padding-top: 6px;
+      flex-shrink: 0;
     }
 
     .today-shift {
@@ -134,13 +148,6 @@
     }
 
     .today-shift.empty { color: #c7c7cc; font-weight: 400; font-size: 15px; }
-
-    .today-dnum {
-      font-size: 12px;
-      color: #8e8e93;
-      font-weight: 500;
-      margin-top: 6px;
-    }
 
     .section-label {
       font-size: 11px;
@@ -1523,9 +1530,11 @@
 
     <div id="today-content" style="display:none">
       <div class="card">
-        <div class="today-date-header" id="td-date"></div>
+        <div class="today-date-row">
+          <div class="today-date-header" id="td-date"></div>
+          <div class="today-dnum" id="td-dnum"></div>
+        </div>
         <div class="today-shift" id="td-shift"></div>
-        <div class="today-dnum" id="td-dnum"></div>
       </div>
       <div class="card">
         <div class="section-label">루틴 항목</div>
@@ -1576,8 +1585,8 @@
       <div class="form-group" style="margin-bottom:0">
         <label for="input-week-start">주 시작 요일</label>
         <select id="input-week-start">
-          <option value="0">월요일 (월~일)</option>
-          <option value="1">일요일 (일~토)</option>
+          <option value="0">월요일</option>
+          <option value="1">일요일</option>
         </select>
       </div>
     </div>
