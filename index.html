@@ -1421,14 +1421,6 @@
       margin-bottom: 4px;
     }
 
-    /* ── 근무 예외 표식 ── */
-    .cell-shift-override {
-      font-size: 7px;
-      color: #ff9500;
-      font-weight: 800;
-      margin-left: 1px;
-    }
-
     .dd-shift-view {
       display: flex;
       align-items: center;
@@ -2099,7 +2091,7 @@
 
       const cell = document.createElement('div');
       cell.className = 'grid-cell' + (!inMonth ? ' other-month' : '') + (isToday ? ' today' : '');
-      const { name: shiftName, isOverride: shiftIsOverride } = getEffectiveShiftName(cellDateStr, dayIdx0);
+      const { name: shiftName } = getEffectiveShiftName(cellDateStr, dayIdx0);
       const shiftColor = getShiftColor(shiftName);
       if (shiftColor) {
         cell.style.background = 'rgba(' + hexToRgb(shiftColor) + ',0.10)';
@@ -2118,12 +2110,6 @@
         const shiftEl = document.createElement('div');
         shiftEl.className = 'cell-shift-name';
         shiftEl.textContent = shiftName;
-        if (shiftIsOverride) {
-          const mark = document.createElement('span');
-          mark.className = 'cell-shift-override';
-          mark.textContent = '✎';
-          shiftEl.appendChild(mark);
-        }
         topRow.appendChild(shiftEl);
       }
       cell.appendChild(topRow);
