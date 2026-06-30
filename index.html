@@ -1507,6 +1507,24 @@
       font-family: inherit;
       margin-top: 4px;
     }
+
+    /* ── bulk 달력 추가 스타일 ── */
+    .bulk-repeat-hint {
+      font-size: 11px;
+      color: #8e8e93;
+      margin: -2px 0 10px;
+      line-height: 1.45;
+    }
+    .bulk-sel-label {
+      font-size: 12px;
+      color: #6c6c70;
+      margin: 4px 0 4px;
+    }
+    .bulk-cal-cell.selected {
+      background: rgba(0,122,255,0.22) !important;
+      border: 1.5px solid #007aff !important;
+    }
+    .bulk-cal-cell.selected .cell-date { color: #007aff; }
   </style>
 </head>
 <body>
@@ -1612,12 +1630,12 @@
     </button>
     <button id="nav-grid" onclick="switchTab('grid')">
       <svg viewBox="0 0 24 24">
-        <rect x="3" y="3" width="7" height="7" rx="1"/>
-        <rect x="14" y="3" width="7" height="7" rx="1"/>
-        <rect x="3" y="14" width="7" height="7" rx="1"/>
-        <rect x="14" y="14" width="7" height="7" rx="1"/>
+        <rect x="3" y="4" width="18" height="17" rx="2"/>
+        <line x1="3" y1="9" x2="21" y2="9"/>
+        <line x1="8" y1="2" x2="8" y2="6"/>
+        <line x1="16" y1="2" x2="16" y2="6"/>
       </svg>
-      전체 보기
+      달력
     </button>
     <button id="nav-settings" onclick="switchTab('settings')">
       <svg viewBox="0 0 24 24">
@@ -1710,10 +1728,17 @@
         <input type="text" id="bulk-text" placeholder="예: 주짓수, 아침 루틴…">
         <select id="bulk-cat"></select>
       </div>
-      <div class="bulk-grid-label">추가할 Day 선택<span id="bulk-sel-count" class="bulk-sel-count"></span></div>
+      <p class="bulk-repeat-hint">선택한 날짜의 주기(D○)에 추가되며, 다음 주기 같은 Day에도 반복됩니다.</p>
+      <div class="cal-nav" style="padding:0 0 8px">
+        <button class="btn-cal-nav" id="btn-bulk-cal-prev">‹</button>
+        <span id="bulk-cal-title"></span>
+        <button class="btn-cal-nav" id="btn-bulk-cal-next">›</button>
+      </div>
+      <div class="grid-header" id="bulk-grid-header"></div>
+      <div class="bulk-sel-label">날짜 선택<span id="bulk-sel-count" class="bulk-sel-count"></span></div>
     </div>
     <div id="bulk-day-grid-wrap">
-      <div class="bulk-day-grid" id="bulk-day-grid"></div>
+      <div class="day-grid" id="bulk-cal-grid"></div>
     </div>
     <div id="bulk-panel-bottom">
       <div class="onboard-warn" id="bulk-warn"></div>
@@ -1852,6 +1877,9 @@
   const _now = new Date();
   let calYear = _now.getFullYear();
   let calMonth = _now.getMonth();
+  let bulkCalYear = _now.getFullYear();
+  let bulkCalMonth = _now.getMonth();
+  let bulkSelectedDates = new Set();
 
   // ── 스토리지 ──────────────────────────────────────────────
   function loadState() {
@@ -2685,10 +2713,127 @@
   })();
 
   // ── 일괄 추가 ──────────────────────────────────────────
+  function renderBulkCal() {
+    document.getElementById('bulk-cal-title').textContent = bulkCalYear + '년 ' + (bulkCalMonth + 1) + '월';
+
+    const weekStart = (state && state.weekStart === 1) ? 1 : 0;
+
+    const headerEl = document.getElementById('bulk-grid-header');
+    headerEl.innerHTML = '';
+    const HEADERS = weekStart === 1
+      ? ['일','월','화','수','목','금','토']
+      : ['월','화','수','목','금','토','일'];
+    HEADERS.forEach(function (h, i) {
+      const cell = document.createElement('div');
+      cell.className = 'grid-header-cell';
+      if (weekStart === 0 && i === 5) cell.classList.add('sat');
+      else if (weekStart === 0 && i === 6) cell.classList.add('sun');
+      else if (weekStart === 1 && i === 0) cell.classList.add('sun');
+      else if (weekStart === 1 && i === 6) cell.classList.add('sat');
+      cell.textContent = h;
+      headerEl.appendChild(cell);
+    });
+
+    const grid = document.getElementById('bulk-cal-grid');
+    grid.innerHTML = '';
+
+    const todayMid = todayMidnight();
+    const baseMid = parseLocalDate(state.baseDate);
+
+    const firstOfMonth = new Date(bulkCalYear, bulkCalMonth, 1);
+    const daysInMonth = new Date(bulkCalYear, bulkCalMonth + 1, 0).getDate();
+    const startWd = weekStart === 1
+      ? firstOfMonth.getDay()
+      : (firstOfMonth.getDay() + 6) % 7;
+
+    const cells = [];
+    for (let d = 1 - startWd; d <= 0; d++) {
+      cells.push({ date: new Date(bulkCalYear, bulkCalMonth, d), inMonth: false });
+    }
+    for (let d = 1; d <= daysInMonth; d++) {
+      cells.push({ date: new Date(bulkCalYear, bulkCalMonth, d), inMonth: true });
+    }
+    const trailing = (7 - (cells.length % 7)) % 7;
+    for (let d = 1; d <= trailing; d++) {
+      cells.push({ date: new Date(bulkCalYear, bulkCalMonth + 1, d), inMonth: false });
+    }
+
+    cells.forEach(function ({ date, inMonth }) {
+      const dateMid = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      const isToday = dateMid.getTime() === todayMid.getTime();
+      const diff = Math.round((dateMid - baseMid) / 86400000);
+      const dayIdx0 = ((diff % state.cycleDays) + state.cycleDays) % state.cycleDays;
+      const dayObj = state.days[dayIdx0];
+      const cellDateStr = formatDateStr(dateMid);
+      const isSelected = bulkSelectedDates.has(cellDateStr);
+
+      const cell = document.createElement('div');
+      cell.className = 'grid-cell bulk-cal-cell' +
+        (!inMonth ? ' other-month' : '') +
+        (isToday ? ' today' : '') +
+        (isSelected ? ' selected' : '');
+
+      const { name: shiftName } = getEffectiveShiftName(cellDateStr, dayIdx0);
+      const shiftColor = getShiftColor(shiftName);
+      if (shiftColor && !isSelected) {
+        cell.style.background = 'rgba(' + hexToRgb(shiftColor) + ',0.10)';
+      }
+
+      // 날짜 + D번호 행
+      const topRow = document.createElement('div');
+      topRow.className = 'cell-top-row';
+
+      const dateEl = document.createElement('div');
+      dateEl.className = 'cell-date';
+      dateEl.textContent = date.getDate();
+      topRow.appendChild(dateEl);
+
+      const dnumEl = document.createElement('div');
+      dnumEl.className = 'cell-shift-name';
+      dnumEl.textContent = 'D' + dayObj.dayIndex;
+      topRow.appendChild(dnumEl);
+
+      cell.appendChild(topRow);
+
+      // 루틴 dots
+      const items = dayObj.items || [];
+      if (items.length > 0) {
+        const dotsRow = document.createElement('div');
+        dotsRow.className = 'cell-dots-row';
+        items.slice(0, 4).forEach(function (item) {
+          const cat = getCat(item.category);
+          const dot = document.createElement('div');
+          dot.className = 'cell-dot';
+          dot.style.background = cat.color;
+          dotsRow.appendChild(dot);
+        });
+        cell.appendChild(dotsRow);
+      }
+
+      cell.addEventListener('click', function () {
+        if (bulkSelectedDates.has(cellDateStr)) {
+          bulkSelectedDates.delete(cellDateStr);
+          cell.classList.remove('selected');
+          if (shiftColor) {
+            cell.style.background = 'rgba(' + hexToRgb(shiftColor) + ',0.10)';
+          } else {
+            cell.style.background = '';
+          }
+        } else {
+          bulkSelectedDates.add(cellDateStr);
+          cell.classList.add('selected');
+          cell.style.background = '';
+        }
+        updateBulkCount();
+      });
+
+      grid.appendChild(cell);
+    });
+  }
+
   function openBulk() {
     if (!state || !state.cycleDays) return;
 
-    // 카테고리 select 초기화
     const catSel = document.getElementById('bulk-cat');
     catSel.innerHTML = '';
     CATEGORIES.forEach(function (c) {
@@ -2698,101 +2843,23 @@
       catSel.appendChild(opt);
     });
 
-    // 텍스트·경고 초기화
     document.getElementById('bulk-text').value = '';
     document.getElementById('bulk-warn').textContent = '';
 
-    // 이번 주기 Day 1의 실제 날짜 계산 (로컬 자정 기준)
-    const DOW = ['일','월','화','수','목','금','토'];
-    const baseMid = parseLocalDate(state.baseDate);
-    const todayMid = todayMidnight();
-    const diffToday = Math.round((todayMid - baseMid) / 86400000);
-    const dayIdx0Today = ((diffToday % state.cycleDays) + state.cycleDays) % state.cycleDays;
-    const cycleStartMid = new Date(
-      todayMid.getFullYear(), todayMid.getMonth(), todayMid.getDate() - dayIdx0Today
-    );
+    bulkSelectedDates = new Set();
+    const now = new Date();
+    bulkCalYear = now.getFullYear();
+    bulkCalMonth = now.getMonth();
 
-    // Day 선택 격자 렌더
-    const grid = document.getElementById('bulk-day-grid');
-    grid.innerHTML = '';
-    state.days.forEach(function (day, i) {
-      const cell = document.createElement('div');
-      cell.className = 'bulk-day-cell';
-      cell.dataset.idx = i;
-
-      const isToday = (i === dayIdx0Today);
-      if (isToday) {
-        cell.classList.add('today');
-      } else {
-        const bulkShiftColor = getShiftColor(day.shiftType.name);
-        if (bulkShiftColor) {
-          cell.style.background = 'rgba(' + hexToRgb(bulkShiftColor) + ',0.10)';
-        }
-      }
-
-      const dateOfDay = new Date(
-        cycleStartMid.getFullYear(), cycleStartMid.getMonth(), cycleStartMid.getDate() + i
-      );
-      const topRow = document.createElement('div');
-      topRow.className = 'bulk-cell-top-row';
-      const leftEl = document.createElement('div');
-      leftEl.className = 'bulk-cell-left';
-      const dateNumEl = document.createElement('span');
-      dateNumEl.className = 'bulk-cell-date-num';
-      dateNumEl.textContent = (dateOfDay.getMonth() + 1) + '/' + dateOfDay.getDate();
-      const dowEl = document.createElement('span');
-      dowEl.className = 'bulk-cell-dow';
-      dowEl.textContent = DOW[dateOfDay.getDay()];
-      leftEl.appendChild(dateNumEl);
-      leftEl.appendChild(dowEl);
-      const dnumEl = document.createElement('span');
-      dnumEl.className = 'bulk-cell-dnum';
-      dnumEl.textContent = 'D' + day.dayIndex;
-      topRow.appendChild(leftEl);
-      topRow.appendChild(dnumEl);
-      cell.appendChild(topRow);
-
-      if (day.shiftType.name) {
-        const shift = document.createElement('div');
-        shift.className = 'bulk-cell-shift';
-        shift.textContent = day.shiftType.name;
-        cell.appendChild(shift);
-      }
-
-      (day.items || []).slice(0, 2).forEach(function (item) {
-        const cat = getCat(item.category);
-        const chip = document.createElement('div');
-        chip.className = 'bulk-cell-chip';
-        chip.style.background = 'rgba(' + hexToRgb(cat.color) + ',0.15)';
-        chip.style.color = cat.color;
-        chip.textContent = (cat.icon ? cat.icon + ' ' : '') + item.text;
-        cell.appendChild(chip);
-      });
-
-      if ((day.items || []).length > 2) {
-        const more = document.createElement('div');
-        more.className = 'bulk-cell-chip-more';
-        more.textContent = '+' + (day.items.length - 2);
-        cell.appendChild(more);
-      }
-
-      cell.addEventListener('click', function () {
-        cell.classList.toggle('selected');
-        updateBulkCount();
-      });
-
-      grid.appendChild(cell);
-    });
-
+    renderBulkCal();
     updateBulkCount();
     document.getElementById('bulk-overlay').classList.add('open');
     document.getElementById('bulk-text').focus();
   }
 
   function updateBulkCount() {
-    const selected = document.querySelectorAll('#bulk-day-grid .bulk-day-cell.selected');
     const el = document.getElementById('bulk-sel-count');
-    el.textContent = selected.length > 0 ? selected.length + '개 선택됨' : '';
+    el.textContent = bulkSelectedDates.size > 0 ? ' ' + bulkSelectedDates.size + '개 선택됨' : '';
   }
 
   function closeBulk() {
@@ -2804,23 +2871,40 @@
     if (e.target === this) closeBulk();
   });
 
+  document.getElementById('btn-bulk-cal-prev').addEventListener('click', function () {
+    bulkCalMonth--;
+    if (bulkCalMonth < 0) { bulkCalMonth = 11; bulkCalYear--; }
+    renderBulkCal();
+  });
+
+  document.getElementById('btn-bulk-cal-next').addEventListener('click', function () {
+    bulkCalMonth++;
+    if (bulkCalMonth > 11) { bulkCalMonth = 0; bulkCalYear++; }
+    renderBulkCal();
+  });
+
   document.getElementById('btn-bulk-add').addEventListener('click', function () {
     const text = document.getElementById('bulk-text').value.trim();
     const category = document.getElementById('bulk-cat').value;
     const warn = document.getElementById('bulk-warn');
 
     if (!text) { warn.textContent = '루틴 항목을 입력해 주세요.'; return; }
-
-    const selected = document.querySelectorAll('#bulk-day-grid .bulk-day-cell.selected');
-    if (selected.length === 0) { warn.textContent = '추가할 Day를 하나 이상 선택해 주세요.'; return; }
+    if (bulkSelectedDates.size === 0) { warn.textContent = '추가할 날짜를 하나 이상 선택해 주세요.'; return; }
     warn.textContent = '';
 
-    selected.forEach(function (cell) {
-      const idx = parseInt(cell.dataset.idx, 10);
-      const day = state.days[idx];
-      const duplicate = day.items.some(function (it) { return it.text === text; });
-      if (!duplicate) {
-        day.items.push({ text: text, category: category });
+    const baseMid = parseLocalDate(state.baseDate);
+    const addedDayIndices = new Set();
+
+    bulkSelectedDates.forEach(function (dateStr) {
+      const dateMid = parseLocalDate(dateStr);
+      const diff = Math.round((dateMid - baseMid) / 86400000);
+      const dayIdx0 = ((diff % state.cycleDays) + state.cycleDays) % state.cycleDays;
+      if (!addedDayIndices.has(dayIdx0)) {
+        addedDayIndices.add(dayIdx0);
+        const day = state.days[dayIdx0];
+        if (!day.items.some(function (it) { return it.text === text; })) {
+          day.items.push({ text: text, category: category });
+        }
       }
     });
 
