@@ -1525,6 +1525,96 @@
       border: 1.5px solid #007aff !important;
     }
     .bulk-cal-cell.selected .cell-date { color: #007aff; }
+
+    /* ── 스킵 ── */
+    .skip-btn {
+      margin-left: auto;
+      flex-shrink: 0;
+      background: none;
+      border: 1.5px solid #e5e5ea;
+      border-radius: 7px;
+      font-size: 11px;
+      color: #aeaeb2;
+      padding: 3px 8px;
+      cursor: pointer;
+      font-family: inherit;
+      line-height: 1.4;
+      transition: border-color 0.12s, color 0.12s;
+    }
+    .skip-btn:active { color: #8e8e93; border-color: #c7c7cc; }
+    .today-items li.skipped .item-icon { opacity: 0.4; }
+    .today-items li.skipped .item-text { opacity: 0.4; text-decoration: line-through; }
+    .unskip-btn {
+      margin-left: auto;
+      flex-shrink: 0;
+      background: none;
+      border: none;
+      font-size: 11px;
+      color: #c7c7cc;
+      cursor: pointer;
+      font-family: inherit;
+      padding: 3px 2px;
+      line-height: 1.4;
+    }
+    .unskip-btn:active { color: #8e8e93; }
+    .today-items li.skip-move-row {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+      padding: 8px 10px;
+      background: #f5f5f7;
+      border-radius: 8px;
+      border-bottom: none;
+      margin-top: -1px;
+    }
+    .skip-move-label {
+      font-size: 12px;
+      color: #6c6c70;
+    }
+    .skip-move-controls {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      width: 100%;
+    }
+    .skip-move-date {
+      flex: 1;
+      min-width: 0;
+      padding: 6px 8px;
+      border: 1.5px solid #e5e5ea;
+      border-radius: 8px;
+      font-size: 12px;
+      font-family: inherit;
+      background: #fff;
+      color: #1c1c1e;
+      outline: none;
+      -webkit-appearance: none;
+    }
+    .skip-move-date:focus { border-color: #007aff; }
+    .btn-skip-move {
+      padding: 6px 12px;
+      background: #007aff;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .btn-skip-dismiss {
+      padding: 6px 8px;
+      background: none;
+      border: 1.5px solid #e5e5ea;
+      border-radius: 8px;
+      font-size: 12px;
+      color: #8e8e93;
+      font-family: inherit;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
   </style>
 </head>
 <body>
@@ -1559,7 +1649,7 @@
         <div id="td-items"></div>
       </div>
       <div class="card" id="td-events-card" style="display:none">
-        <div class="section-label">📅 오늘 일정</div>
+        <div class="section-label">📅 오늘 할 일</div>
         <div id="td-events"></div>
       </div>
     </div>
@@ -1939,6 +2029,10 @@
       s.weekStart = 0;
       changed = true;
     }
+    if (!Array.isArray(s.skips)) {
+      s.skips = [];
+      changed = true;
+    }
     s.days.forEach(day => {
       if (!Array.isArray(day.items)) {
         day.items = (day.routine && day.routine.trim())
@@ -2034,6 +2128,7 @@
     const day = state.days[idx];
 
     const tdMid = todayMidnight();
+    const todayDateStr = formatDateStr(tdMid);
     const DOW_KR = ['일','월','화','수','목','금','토'];
     document.getElementById('td-date').textContent =
       (tdMid.getMonth() + 1) + '월 ' + tdMid.getDate() + '일 ' + DOW_KR[tdMid.getDay()] + '요일';
@@ -2056,32 +2151,50 @@
 
     const itemsEl = document.getElementById('td-items');
     const items = day.items || [];
+    const todaySkips = new Set(
+      (state.skips || []).filter(function(s) { return s.date === todayDateStr; }).map(function(s) { return s.text; })
+    );
     if (items.length > 0) {
       const ul = document.createElement('ul');
       ul.className = 'today-items';
-      items.forEach(item => {
+      items.forEach(function(item) {
         const cat = getCat(item.category);
+        const isSkipped = todaySkips.has(item.text);
         const li = document.createElement('li');
+        if (isSkipped) li.classList.add('skipped');
         const iconEl = document.createElement('span');
         iconEl.className = 'item-icon';
         iconEl.textContent = cat.icon || '●';
         if (!cat.icon) iconEl.style.color = cat.color;
         const textEl = document.createElement('span');
+        textEl.className = 'item-text';
         textEl.textContent = item.text;
         textEl.style.color = cat.color;
         li.appendChild(iconEl);
         li.appendChild(textEl);
+        if (isSkipped) {
+          const unskipBtn = document.createElement('button');
+          unskipBtn.className = 'unskip-btn';
+          unskipBtn.textContent = '스킵 취소';
+          unskipBtn.addEventListener('click', function() { unskipItem(item.text); });
+          li.appendChild(unskipBtn);
+        } else {
+          const skipBtn = document.createElement('button');
+          skipBtn.className = 'skip-btn';
+          skipBtn.textContent = '스킵';
+          skipBtn.addEventListener('click', function() { skipItemAndPrompt(li, ul, item.text, todayDateStr); });
+          li.appendChild(skipBtn);
+        }
         ul.appendChild(li);
       });
       itemsEl.innerHTML = '';
       itemsEl.appendChild(ul);
     } else {
       itemsEl.innerHTML =
-        '<div class="today-items-empty">아직 루틴이 없어요.<br>전체 보기에서 이 날을 탭해 편집할 수 있어요.</div>';
+        '<div class="today-items-empty">아직 루틴이 없어요.<br>달력 탭에서 이 날을 탭해 편집할 수 있어요.</div>';
     }
 
-    // 오늘 일정
-    const todayDateStr = formatDateStr(todayMidnight());
+    // 오늘 할 일
     const todayEvents = getEventsForDate(todayDateStr);
     const eventsCard = document.getElementById('td-events-card');
     const eventsEl = document.getElementById('td-events');
@@ -3201,6 +3314,72 @@
   document.getElementById('btn-new-routine').addEventListener('click', function () {
     openBulk();
   });
+
+  // ── 스킵 ──────────────────────────────────────────────────
+  function skipItemAndPrompt(li, ul, text, todayDateStr) {
+    if (!Array.isArray(state.skips)) state.skips = [];
+    if (!state.skips.some(function(s) { return s.date === todayDateStr && s.text === text; })) {
+      state.skips.push({ date: todayDateStr, text: text });
+      saveState();
+    }
+    li.classList.add('skipped');
+    const skipBtn = li.querySelector('.skip-btn');
+    if (skipBtn) {
+      const unskipBtn = document.createElement('button');
+      unskipBtn.className = 'unskip-btn';
+      unskipBtn.textContent = '스킵 취소';
+      unskipBtn.addEventListener('click', function() { unskipItem(text); });
+      li.replaceChild(unskipBtn, skipBtn);
+    }
+    const existing = ul.querySelector('.skip-move-row');
+    if (existing) existing.remove();
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = formatDateStr(tomorrow);
+    const moveRow = document.createElement('li');
+    moveRow.className = 'skip-move-row';
+    const label = document.createElement('span');
+    label.className = 'skip-move-label';
+    label.textContent = '다른 날 할 일로 옮길까요?';
+    const dateInput = document.createElement('input');
+    dateInput.type = 'date';
+    dateInput.value = tomorrowStr;
+    dateInput.className = 'skip-move-date';
+    const moveBtn = document.createElement('button');
+    moveBtn.className = 'btn-skip-move';
+    moveBtn.textContent = '옮기기';
+    moveBtn.addEventListener('click', function() {
+      const targetDate = dateInput.value;
+      if (!targetDate) return;
+      if (!Array.isArray(state.events)) state.events = [];
+      state.events.push({ date: targetDate, text: text });
+      saveState();
+      moveRow.remove();
+      renderGrid();
+      renderToday();
+    });
+    const dismissBtn = document.createElement('button');
+    dismissBtn.className = 'btn-skip-dismiss';
+    dismissBtn.textContent = '그냥 스킵';
+    dismissBtn.addEventListener('click', function() { moveRow.remove(); });
+    const controls = document.createElement('div');
+    controls.className = 'skip-move-controls';
+    controls.appendChild(dateInput);
+    controls.appendChild(moveBtn);
+    controls.appendChild(dismissBtn);
+    moveRow.appendChild(label);
+    moveRow.appendChild(controls);
+    li.after(moveRow);
+  }
+
+  function unskipItem(text) {
+    const todayStr = formatDateStr(todayMidnight());
+    state.skips = (state.skips || []).filter(function(s) {
+      return !(s.date === todayStr && s.text === text);
+    });
+    saveState();
+    renderToday();
+  }
 
   // ── 초기화 ───────────────────────────────────────────────
   state = loadState();
