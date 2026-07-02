@@ -3790,15 +3790,15 @@
       return state.days[adj] ? (state.days[adj].shiftType.name || '—') : '—';
     }
 
-    // 그리드: [핸들 22px] [이름 1fr] [날짜셀 × N] [◀ 26px] [▶ 26px]
-    var colTemplate = '22px minmax(56px,1fr) repeat(' + shiftCount + ',minmax(34px,1fr)) 26px 26px';
+    // 그리드: [핸들] [이름] [날짜셀 × N] [◀] [▶] — 모두 화면 폭 안에 맞춤
+    var colTemplate = '18px minmax(40px,1fr) repeat(' + shiftCount + ',1fr) 20px 20px';
 
     var tableWrap = document.createElement('div');
-    tableWrap.style.cssText = 'overflow-x:auto;margin:0 -4px;';
+    tableWrap.style.cssText = 'overflow-x:auto;';
 
     // 헤더 행
     var hdr = document.createElement('div');
-    hdr.style.cssText = 'display:grid;grid-template-columns:' + colTemplate + ';min-width:max-content;border-bottom:1.5px solid #e5e5ea;padding-bottom:4px;margin-bottom:2px;align-items:end;';
+    hdr.style.cssText = 'display:grid;grid-template-columns:' + colTemplate + ';width:100%;border-bottom:1.5px solid #e5e5ea;padding-bottom:4px;margin-bottom:2px;align-items:end;box-sizing:border-box;';
     hdr.appendChild(document.createElement('div')); // 핸들 자리
     var hdrN = document.createElement('div');
     hdrN.style.cssText = 'padding:3px 4px;font-size:11px;color:#8e8e93;';
@@ -3806,9 +3806,9 @@
     hdr.appendChild(hdrN);
     dates.forEach(function(d) {
       var th = document.createElement('div');
-      th.style.cssText = 'padding:3px 2px;font-size:11px;text-align:center;min-width:34px;white-space:nowrap;color:' +
+      th.style.cssText = 'padding:3px 1px;font-size:11px;text-align:center;overflow:hidden;color:' +
         (d.isToday ? '#007aff' : '#8e8e93') + ';font-weight:' + (d.isToday ? '700' : '500') + ';';
-      th.textContent = d.label + (d.isToday ? '\n오늘' : '');
+      th.textContent = d.label;  // "오늘" 텍스트 제거 — 파란색으로 구분
       hdr.appendChild(th);
     });
     hdr.appendChild(document.createElement('div')); // ◀ 자리
@@ -3818,14 +3818,14 @@
     // 팀 행 생성
     function makeRow(teamName, teamIdx, offsetDays, isMyTeam) {
       var tr = document.createElement('div');
-      tr.style.cssText = 'display:grid;grid-template-columns:' + colTemplate + ';min-width:max-content;border-top:1px solid #f2f2f7;align-items:center;';
+      tr.style.cssText = 'display:grid;grid-template-columns:' + colTemplate + ';width:100%;border-top:1px solid #f2f2f7;align-items:center;box-sizing:border-box;';
       if (!isMyTeam) tr.dataset.teamIdx = teamIdx;
 
       // 핸들 셀
       var hCell = document.createElement('div');
-      hCell.style.cssText = 'display:flex;align-items:center;justify-content:center;padding:8px 0;font-size:15px;user-select:none;';
+      hCell.style.cssText = 'display:flex;align-items:center;justify-content:center;padding:6px 0;font-size:14px;user-select:none;';
       if (isMyTeam) {
-        hCell.style.opacity = '0'; hCell.textContent = '≡'; // 그리드 정렬용 invisible
+        hCell.style.opacity = '0'; hCell.textContent = '≡';
       } else {
         hCell.style.cssText += 'color:#c7c7cc;cursor:grab;touch-action:none;';
         hCell.textContent = '≡';
@@ -3835,20 +3835,20 @@
 
       // 이름 셀
       var nCell = document.createElement('div');
-      nCell.style.cssText = 'padding:6px 4px;overflow:hidden;';
+      nCell.style.cssText = 'padding:5px 3px;overflow:hidden;';
       if (isMyTeam) {
         var nSpan = document.createElement('span');
-        nSpan.style.cssText = 'font-size:13px;font-weight:600;color:#1c1c1e;';
+        nSpan.style.cssText = 'font-size:12px;font-weight:600;color:#1c1c1e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;';
         nSpan.textContent = teamName;
         var badge = document.createElement('span');
-        badge.style.cssText = 'font-size:10px;color:#007aff;background:rgba(0,122,255,0.10);border-radius:4px;padding:1px 4px;margin-left:4px;font-weight:500;white-space:nowrap;';
+        badge.style.cssText = 'font-size:9px;color:#007aff;background:rgba(0,122,255,0.10);border-radius:3px;padding:1px 3px;margin-top:1px;font-weight:500;white-space:nowrap;display:inline-block;';
         badge.textContent = '내팀';
         nCell.appendChild(nSpan);
         nCell.appendChild(badge);
       } else {
         var inp = document.createElement('input');
         inp.type = 'text'; inp.maxLength = 10; inp.value = teamName; inp.placeholder = '팀 이름';
-        inp.style.cssText = 'width:100%;padding:4px 6px;border:1.5px solid #e5e5ea;border-radius:7px;font-size:13px;font-family:inherit;background:#f5f5f7;color:#1c1c1e;outline:none;box-sizing:border-box;';
+        inp.style.cssText = 'width:100%;padding:3px 5px;border:1px solid #e5e5ea;border-radius:6px;font-size:12px;font-family:inherit;background:#f5f5f7;color:#1c1c1e;outline:none;box-sizing:border-box;';
         (function(idx, el) {
           el.addEventListener('input', function() {
             state.teams[idx].name = el.value.trim();
@@ -3863,7 +3863,7 @@
       var shiftCells = [];
       dates.forEach(function(d) {
         var sc = document.createElement('div');
-        sc.style.cssText = 'padding:8px 2px;text-align:center;font-size:12px;' +
+        sc.style.cssText = 'padding:6px 1px;text-align:center;font-size:11px;overflow:hidden;' +
           (d.isToday ? 'color:#007aff;font-weight:700;' : 'color:#1c1c1e;');
         sc.textContent = shiftAt(isMyTeam ? 0 : offsetDays, d.dateStr);
         shiftCells.push(sc);
@@ -3877,10 +3877,10 @@
       } else {
         var dec = document.createElement('button');
         dec.textContent = '◀';
-        dec.style.cssText = 'width:22px;height:22px;border-radius:50%;border:1.5px solid #d1d1d6;background:none;font-size:9px;cursor:pointer;font-family:inherit;padding:0;';
+        dec.style.cssText = 'width:20px;height:20px;border-radius:50%;border:1px solid #d1d1d6;background:none;font-size:8px;cursor:pointer;font-family:inherit;padding:0;';
         var inc = document.createElement('button');
         inc.textContent = '▶';
-        inc.style.cssText = 'width:22px;height:22px;border-radius:50%;border:1.5px solid #d1d1d6;background:none;font-size:9px;cursor:pointer;font-family:inherit;padding:0;';
+        inc.style.cssText = 'width:20px;height:20px;border-radius:50%;border:1px solid #d1d1d6;background:none;font-size:8px;cursor:pointer;font-family:inherit;padding:0;';
         (function(idx, cells) {
           var curOff = state.teams[idx].offsetDays;
           function apply() {
