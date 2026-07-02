@@ -1294,6 +1294,66 @@
       line-height: 1;
     }
 
+    .routine-period-toggle {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .btn-period {
+      padding: 5px 14px;
+      border-radius: 20px;
+      border: 1.5px solid #d1d1d6;
+      background: none;
+      font-size: 13px;
+      color: #8e8e93;
+      cursor: pointer;
+      font-family: inherit;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-period.active {
+      background: #007aff;
+      border-color: #007aff;
+      color: #fff;
+    }
+    .routine-rate {
+      font-size: 11px;
+      color: #8e8e93;
+      margin-top: 3px;
+    }
+    .routine-rate-bar {
+      height: 3px;
+      border-radius: 2px;
+      background: #e5e5ea;
+      margin-top: 4px;
+      overflow: hidden;
+    }
+    .routine-rate-fill {
+      height: 100%;
+      border-radius: 2px;
+      background: #34c759;
+    }
+    .team-chip {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: #f2f2f7;
+      font-size: 12px;
+      color: #3c3c43;
+      margin-right: 6px;
+      margin-top: 2px;
+    }
+    .btn-add-reminder {
+      margin-top: 10px;
+      padding: 8px 14px;
+      background: none;
+      border: 1.5px solid #007aff;
+      border-radius: 10px;
+      color: #007aff;
+      font-size: 13px;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
     /* ── 루틴 상세 오버레이 ── */
     #routine-detail-overlay {
       display: none;
@@ -1672,6 +1732,7 @@
           <div class="today-dnum" id="td-dnum"></div>
         </div>
         <div class="today-shift" id="td-shift"></div>
+        <div id="td-teams" style="display:none; margin-top:6px;"></div>
       </div>
       <div class="card">
         <div class="section-label">루틴 항목</div>
@@ -1680,6 +1741,10 @@
       <div class="card" id="td-events-card" style="display:none">
         <div class="section-label">📅 오늘 할 일</div>
         <div id="td-events"></div>
+      </div>
+      <div class="card" id="td-reminders-card" style="display:none">
+        <div class="section-label">🔔 리마인더</div>
+        <div id="td-reminders"></div>
       </div>
     </div>
   </div>
@@ -1726,6 +1791,25 @@
           <option value="1">일요일</option>
         </select>
       </div>
+    </div>
+    <p class="settings-section-title">리마인더</p>
+    <div class="card">
+      <div id="reminder-list"></div>
+      <button class="btn-add-reminder" id="btn-add-reminder">+ 추가</button>
+    </div>
+    <p class="settings-section-title">팀 근무</p>
+    <div class="card">
+      <div id="team-list"></div>
+      <div style="display:flex; gap:8px; margin-top:10px; align-items:center; flex-wrap:wrap;">
+        <input type="text" id="team-name-input" placeholder="팀 이름" maxlength="10" style="flex:1; min-width:80px; padding:9px 12px; border:1.5px solid #e5e5ea; border-radius:10px; font-size:14px; font-family:inherit; background:#f5f5f7; color:#1c1c1e; outline:none;">
+        <div style="display:flex; align-items:center; gap:4px;">
+          <button id="btn-team-offset-dec" style="width:28px;height:28px;border-radius:50%;border:1.5px solid #d1d1d6;background:none;font-size:14px;cursor:pointer;font-family:inherit;">◀</button>
+          <span id="team-offset-preview" style="font-size:11px;color:#8e8e93;min-width:50px;text-align:center;">오늘: —</span>
+          <button id="btn-team-offset-inc" style="width:28px;height:28px;border-radius:50%;border:1.5px solid #d1d1d6;background:none;font-size:14px;cursor:pointer;font-family:inherit;">▶</button>
+        </div>
+        <button id="btn-team-add" style="padding:9px 14px;background:#007aff;color:#fff;border:none;border-radius:10px;font-size:14px;font-family:inherit;cursor:pointer;font-weight:600;">추가</button>
+      </div>
+      <div style="color:#ff3b30;font-size:12px;min-height:18px;margin-top:4px;" id="team-warn"></div>
     </div>
   </div>
 
@@ -1811,6 +1895,10 @@
         <button class="dd-shift-cancel-btn" id="btn-dd-shift-cancel">취소</button>
       </div>
     </div>
+    <div class="dd-section" id="dd-teams-section" style="display:none">
+      <div class="dd-section-label">다른 팀 근무</div>
+      <div id="dd-teams-list"></div>
+    </div>
     <div class="dd-section">
       <div class="dd-section-label">루틴</div>
       <div id="dd-routines" class="dd-routine-list"></div>
@@ -1890,6 +1978,29 @@
         <button class="btn btn-primary" id="btn-rd-save">저장</button>
       </div>
       <button class="btn btn-secondary" id="btn-rd-close">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 리마인더 추가 오버레이 ── -->
+<div id="reminder-add-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:50; align-items:flex-end; justify-content:center;">
+  <div style="background:#f5f5f7; width:100%; max-width:480px; border-radius:20px 20px 0 0; padding:20px; padding-bottom:calc(20px + env(safe-area-inset-bottom,0));">
+    <div style="font-weight:700; font-size:16px; margin-bottom:16px;">리마인더 추가</div>
+    <input type="text" id="rem-name-input" placeholder="리마인더 이름" maxlength="30" style="width:100%; padding:10px 12px; border:1.5px solid #e5e5ea; border-radius:10px; font-size:14px; font-family:inherit; background:#fff; margin-bottom:10px; outline:none;">
+    <div style="display:flex; gap:8px; margin-bottom:10px;">
+      <button class="btn-period active" id="rem-type-interval" style="flex:1">간격형</button>
+      <button class="btn-period" id="rem-type-date" style="flex:1">날짜형</button>
+    </div>
+    <div id="rem-interval-row" style="margin-bottom:10px;">
+      <input type="number" id="rem-interval-days" placeholder="반복 주기 (일)" min="1" max="365" style="width:100%; padding:10px 12px; border:1.5px solid #e5e5ea; border-radius:10px; font-size:14px; font-family:inherit; background:#fff; outline:none;">
+    </div>
+    <div id="rem-date-row" style="margin-bottom:10px; display:none;">
+      <input type="date" id="rem-target-date" style="width:100%; padding:10px 12px; border:1.5px solid #e5e5ea; border-radius:10px; font-size:14px; font-family:inherit; background:#fff; outline:none;">
+    </div>
+    <div style="color:#ff3b30; font-size:12px; min-height:18px; margin-bottom:8px;" id="rem-warn"></div>
+    <div style="display:flex; gap:8px;">
+      <button id="btn-rem-cancel" style="flex:1; padding:12px; border:1.5px solid #d1d1d6; border-radius:12px; background:none; font-size:15px; font-family:inherit; cursor:pointer;">취소</button>
+      <button id="btn-rem-save" style="flex:1; padding:12px; background:#007aff; color:#fff; border:none; border-radius:12px; font-size:15px; font-family:inherit; cursor:pointer; font-weight:600;">저장</button>
     </div>
   </div>
 </div>
@@ -2000,6 +2111,8 @@
   let bulkCalMonth = _now.getMonth();
   let bulkSelectedDates = new Set();
   let _skipMoveRowTarget = null;
+  let routinePeriod = 'cycle';
+  let teamAddOffset = 0;
 
   // ── 스토리지 ──────────────────────────────────────────────
   function loadState() {
@@ -2065,6 +2178,14 @@
     }
     if (!Array.isArray(s.done_log)) {
       s.done_log = [];
+      changed = true;
+    }
+    if (!Array.isArray(s.reminders)) {
+      s.reminders = [];
+      changed = true;
+    }
+    if (!Array.isArray(s.teams)) {
+      s.teams = [];
       changed = true;
     }
     s.days.forEach(day => {
@@ -2178,6 +2299,12 @@
       textEl.className = 'item-text';
       textEl.textContent = item.text;
       textEl.style.color = cat.color;
+      textEl.style.cursor = 'pointer';
+      textEl.addEventListener('click', function(e) {
+        e.stopPropagation();
+        switchTab('routine');
+        openRoutineDetail(item.text);
+      });
       li.appendChild(textEl);
 
       if (!isDone) {
@@ -2281,6 +2408,22 @@
       shiftEl.textContent = '근무유형 미설정';
       shiftEl.className = 'today-shift empty';
     }
+
+    const teamsEl = document.getElementById('td-teams');
+    const teams = state.teams || [];
+    if (teams.length > 0) {
+      teamsEl.style.display = '';
+      teamsEl.innerHTML = '';
+      teams.forEach(function(team) {
+        const chip = document.createElement('span');
+        chip.className = 'team-chip';
+        chip.textContent = team.name + ': ' + (getTeamShift(team, todayDateStr) || '—');
+        teamsEl.appendChild(chip);
+      });
+    } else {
+      teamsEl.style.display = 'none';
+    }
+
     const todayCard = document.querySelector('#today-content .card');
     const todayShiftColor = getShiftColor(todayShiftName);
     todayCard.style.background = todayShiftColor
@@ -2317,6 +2460,60 @@
       });
     } else {
       eventsCard.style.display = 'none';
+    }
+
+    // 오늘 리마인더
+    const remCard = document.getElementById('td-reminders-card');
+    const remEl = document.getElementById('td-reminders');
+    const dueReminders = (state.reminders || []).filter(function(r) {
+      if (r.type === 'date') {
+        return r.targetDate && parseLocalDate(r.targetDate) <= tdMid;
+      } else {
+        if (!r.lastDoneDate) return true;
+        const last = parseLocalDate(r.lastDoneDate);
+        const next = new Date(last.getFullYear(), last.getMonth(), last.getDate() + (r.intervalDays || 0));
+        return next <= tdMid;
+      }
+    });
+    if (dueReminders.length > 0) {
+      remCard.style.display = '';
+      remEl.innerHTML = '';
+      dueReminders.forEach(function(r) {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f2f2f7;font-size:14px;';
+        const nameEl = document.createElement('span');
+        nameEl.style.flex = '1';
+        nameEl.textContent = '🔔 ' + r.name;
+        const addBtn = document.createElement('button');
+        addBtn.textContent = '할 일 추가';
+        addBtn.style.cssText = 'padding:4px 8px;border:1.5px solid #007aff;border-radius:8px;background:none;color:#007aff;font-size:12px;font-family:inherit;cursor:pointer;';
+        addBtn.addEventListener('click', function() {
+          if (!Array.isArray(state.events)) state.events = [];
+          state.events.push({ date: todayDateStr, text: r.name });
+          saveState();
+          renderToday();
+          renderGrid();
+        });
+        const doneBtn = document.createElement('button');
+        doneBtn.textContent = '완료';
+        doneBtn.style.cssText = 'padding:4px 8px;border:none;border-radius:8px;background:#34c759;color:#fff;font-size:12px;font-family:inherit;cursor:pointer;';
+        doneBtn.addEventListener('click', function() {
+          if (r.type === 'date') {
+            const d = parseLocalDate(r.targetDate);
+            r.targetDate = formatDateStr(new Date(d.getFullYear() + 1, d.getMonth(), d.getDate()));
+          } else {
+            r.lastDoneDate = todayDateStr;
+          }
+          saveState();
+          renderToday();
+        });
+        row.appendChild(nameEl);
+        row.appendChild(addBtn);
+        row.appendChild(doneBtn);
+        remEl.appendChild(row);
+      });
+    } else {
+      remCard.style.display = 'none';
     }
   }
 
@@ -2453,6 +2650,9 @@
     }
     document.getElementById('warn-settings').textContent = '';
     renderShiftColorSettings();
+    renderReminderList();
+    renderTeamList();
+    updateTeamOffsetPreview();
   }
 
   function renderShiftColorSettings() {
@@ -2681,6 +2881,7 @@
     document.getElementById('dd-day-info').textContent =
       'D' + day.dayIndex + (effShiftName ? ' · ' + effShiftName : '');
     renderDDShift(effShiftName, effIsOverride, effOverrideType);
+    renderDDTeams(dateStr);
 
     // 루틴 목록 (읽기 전용)
     renderDDRoutines(day);
@@ -3192,6 +3393,147 @@
     switchTab('today');
   });
 
+  // ── 성취율 계산 ──────────────────────────────────────────
+  function calcCompletionRate(routineName, dayIndices0, period) {
+    if (!state || !state.cycleDays || !state.baseDate) return { expected: 0, done: 0, rate: null };
+    const dayIdxSet = new Set(dayIndices0);
+    const baseMid = parseLocalDate(state.baseDate);
+    const todayMid = todayMidnight();
+    const cycleDays = state.cycleDays;
+
+    let startDate;
+    if (period === 'cycle') {
+      const todayDiff = Math.round((todayMid - baseMid) / 86400000);
+      const cycleOffset = ((todayDiff % cycleDays) + cycleDays) % cycleDays;
+      startDate = new Date(baseMid.getFullYear(), baseMid.getMonth(), baseMid.getDate() + (todayDiff - cycleOffset));
+    } else {
+      startDate = new Date(todayMid.getFullYear(), todayMid.getMonth(), 1);
+    }
+
+    const doneSet = new Set(
+      (state.done_log || []).filter(function(d) { return d.text === routineName; }).map(function(d) { return d.date; })
+    );
+
+    let expected = 0, done = 0;
+    let cur = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+    while (cur <= todayMid) {
+      const diff = Math.round((cur - baseMid) / 86400000);
+      const idx0 = ((diff % cycleDays) + cycleDays) % cycleDays;
+      if (dayIdxSet.has(idx0)) {
+        expected++;
+        if (doneSet.has(formatDateStr(cur))) done++;
+      }
+      cur = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate() + 1);
+    }
+    return { expected: expected, done: done, rate: expected === 0 ? null : Math.round(done / expected * 100) };
+  }
+
+  // ── 팀 근무 계산 ─────────────────────────────────────────
+  function getTeamShift(team, dateStr) {
+    if (!state || !state.cycleDays || !state.baseDate) return null;
+    const baseMid = parseLocalDate(state.baseDate);
+    const dateMid = parseLocalDate(dateStr);
+    const diff = Math.round((dateMid - baseMid) / 86400000);
+    const adjustedDiff = diff - team.offsetDays;
+    const idx0 = ((adjustedDiff % state.cycleDays) + state.cycleDays) % state.cycleDays;
+    return state.days[idx0] ? (state.days[idx0].shiftType.name || null) : null;
+  }
+
+  function renderDDTeams(dateStr) {
+    const section = document.getElementById('dd-teams-section');
+    const el = document.getElementById('dd-teams-list');
+    if (!el) return;
+    const teams = state.teams || [];
+    if (teams.length === 0) { section.style.display = 'none'; return; }
+    section.style.display = '';
+    el.innerHTML = '';
+    teams.forEach(function(team) {
+      const shiftName = getTeamShift(team, dateStr);
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 0;font-size:14px;color:#1c1c1e;';
+      const nameEl = document.createElement('span');
+      nameEl.style.color = '#8e8e93';
+      nameEl.textContent = team.name;
+      const shiftEl = document.createElement('span');
+      shiftEl.textContent = shiftName || '—';
+      row.appendChild(nameEl);
+      row.appendChild(shiftEl);
+      el.appendChild(row);
+    });
+  }
+
+  function renderReminderList() {
+    const el = document.getElementById('reminder-list');
+    if (!el) return;
+    el.innerHTML = '';
+    const reminders = state.reminders || [];
+    if (reminders.length === 0) {
+      el.innerHTML = '<div style="font-size:13px;color:#c7c7cc;padding:4px 0;">등록된 리마인더 없음</div>';
+      return;
+    }
+    reminders.forEach(function(r, i) {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;padding:8px 0;border-bottom:1px solid #f2f2f7;font-size:14px;gap:8px;';
+      const info = document.createElement('span');
+      info.style.flex = '1';
+      info.textContent = r.type === 'interval'
+        ? r.name + ' (' + r.intervalDays + '일마다)'
+        : r.name + ' (' + r.targetDate + ')';
+      const del = document.createElement('button');
+      del.textContent = '×';
+      del.style.cssText = 'background:none;border:none;font-size:18px;color:#c7c7cc;cursor:pointer;padding:0 4px;font-family:inherit;';
+      del.addEventListener('click', function() {
+        state.reminders.splice(i, 1);
+        saveState();
+        renderReminderList();
+        renderToday();
+      });
+      row.appendChild(info);
+      row.appendChild(del);
+      el.appendChild(row);
+    });
+  }
+
+  function renderTeamList() {
+    const el = document.getElementById('team-list');
+    if (!el) return;
+    el.innerHTML = '';
+    const teams = state.teams || [];
+    if (teams.length === 0) {
+      el.innerHTML = '<div style="font-size:13px;color:#c7c7cc;padding:4px 0;">등록된 팀 없음</div>';
+      return;
+    }
+    const todayStr = formatDateStr(todayMidnight());
+    teams.forEach(function(team, i) {
+      const todayShift = getTeamShift(team, todayStr);
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;padding:8px 0;border-bottom:1px solid #f2f2f7;font-size:14px;gap:8px;';
+      const info = document.createElement('span');
+      info.style.flex = '1';
+      info.textContent = team.name + ' — 오늘: ' + (todayShift || '—');
+      const del = document.createElement('button');
+      del.textContent = '×';
+      del.style.cssText = 'background:none;border:none;font-size:18px;color:#c7c7cc;cursor:pointer;padding:0 4px;font-family:inherit;';
+      del.addEventListener('click', function() {
+        state.teams.splice(i, 1);
+        saveState();
+        renderTeamList();
+        renderToday();
+      });
+      row.appendChild(info);
+      row.appendChild(del);
+      el.appendChild(row);
+    });
+  }
+
+  function updateTeamOffsetPreview() {
+    const el = document.getElementById('team-offset-preview');
+    if (!el || !state || !state.cycleDays) return;
+    const todayStr = formatDateStr(todayMidnight());
+    const shift = getTeamShift({ offsetDays: teamAddOffset }, todayStr);
+    el.textContent = '오늘: ' + (shift || '—');
+  }
+
   // ── 루틴 탭 ──────────────────────────────────────────────
   function renderRoutine() {
     const list = document.getElementById('routine-list');
@@ -3216,6 +3558,20 @@
       list.innerHTML = '<div class="routine-empty">등록된 루틴이 없어요.<br>새 루틴 만들기를 눌러 추가해 보세요.</div>';
       return;
     }
+
+    // 기간 토글
+    const toggleWrap = document.createElement('div');
+    toggleWrap.className = 'routine-period-toggle';
+    ['cycle', 'month'].forEach(function(p) {
+      const btn = document.createElement('button');
+      btn.className = 'btn-period' + (routinePeriod === p ? ' active' : '');
+      btn.textContent = p === 'cycle' ? '이번 주기' : '이번 달';
+      btn.addEventListener('click', function() {
+        if (routinePeriod !== p) { routinePeriod = p; renderRoutine(); }
+      });
+      toggleWrap.appendChild(btn);
+    });
+    list.appendChild(toggleWrap);
 
     routineMap.forEach(function (info, name) {
       const cat = getCat(info.category);
@@ -3245,8 +3601,26 @@
       const sortedIdx = info.dayIndices.slice().sort(function (a, b) { return a - b; });
       daysEl.textContent = sortedIdx.map(function (i) { return 'D' + state.days[i].dayIndex; }).join(' · ');
 
+      const rateResult = calcCompletionRate(name, info.dayIndices, routinePeriod);
+      const rateEl = document.createElement('div');
+      rateEl.className = 'routine-rate';
+      if (rateResult.expected === 0) {
+        rateEl.textContent = (routinePeriod === 'cycle' ? '이번 주기 ' : '이번 달 ') + '기록 없음';
+      } else {
+        rateEl.textContent = (routinePeriod === 'cycle' ? '이번 주기 ' : '이번 달 ') +
+          rateResult.done + '/' + rateResult.expected + ' (' + rateResult.rate + '%)';
+      }
+      const barEl = document.createElement('div');
+      barEl.className = 'routine-rate-bar';
+      const fillEl = document.createElement('div');
+      fillEl.className = 'routine-rate-fill';
+      fillEl.style.width = (rateResult.rate || 0) + '%';
+      barEl.appendChild(fillEl);
+
       infoEl.appendChild(nameEl);
       infoEl.appendChild(daysEl);
+      infoEl.appendChild(rateEl);
+      infoEl.appendChild(barEl);
 
       const chevron = document.createElement('span');
       chevron.className = 'routine-chevron';
@@ -3437,6 +3811,98 @@
     moveRow.appendChild(controls);
     li.after(moveRow);
   }
+
+  // ── 리마인더 이벤트 ──────────────────────────────────────
+  let remAddType = 'interval';
+
+  function openReminderAddOverlay() {
+    document.getElementById('rem-name-input').value = '';
+    document.getElementById('rem-interval-days').value = '';
+    document.getElementById('rem-target-date').value = '';
+    document.getElementById('rem-warn').textContent = '';
+    remAddType = 'interval';
+    document.getElementById('rem-type-interval').classList.add('active');
+    document.getElementById('rem-type-date').classList.remove('active');
+    document.getElementById('rem-interval-row').style.display = '';
+    document.getElementById('rem-date-row').style.display = 'none';
+    document.getElementById('reminder-add-overlay').style.display = 'flex';
+  }
+
+  document.getElementById('btn-add-reminder').addEventListener('click', openReminderAddOverlay);
+
+  document.getElementById('rem-type-interval').addEventListener('click', function() {
+    remAddType = 'interval';
+    this.classList.add('active');
+    document.getElementById('rem-type-date').classList.remove('active');
+    document.getElementById('rem-interval-row').style.display = '';
+    document.getElementById('rem-date-row').style.display = 'none';
+  });
+
+  document.getElementById('rem-type-date').addEventListener('click', function() {
+    remAddType = 'date';
+    this.classList.add('active');
+    document.getElementById('rem-type-interval').classList.remove('active');
+    document.getElementById('rem-interval-row').style.display = 'none';
+    document.getElementById('rem-date-row').style.display = '';
+  });
+
+  document.getElementById('btn-rem-cancel').addEventListener('click', function() {
+    document.getElementById('reminder-add-overlay').style.display = 'none';
+  });
+
+  document.getElementById('btn-rem-save').addEventListener('click', function() {
+    const name = document.getElementById('rem-name-input').value.trim();
+    const warn = document.getElementById('rem-warn');
+    if (!name) { warn.textContent = '이름을 입력해 주세요.'; return; }
+    let reminder;
+    if (remAddType === 'interval') {
+      const days = parseInt(document.getElementById('rem-interval-days').value, 10);
+      if (!days || days < 1) { warn.textContent = '반복 주기(일)를 입력해 주세요.'; return; }
+      reminder = { name: name, type: 'interval', intervalDays: days, lastDoneDate: null };
+    } else {
+      const tDate = document.getElementById('rem-target-date').value;
+      if (!tDate) { warn.textContent = '날짜를 선택해 주세요.'; return; }
+      reminder = { name: name, type: 'date', targetDate: tDate };
+    }
+    warn.textContent = '';
+    if (!Array.isArray(state.reminders)) state.reminders = [];
+    state.reminders.push(reminder);
+    saveState();
+    document.getElementById('reminder-add-overlay').style.display = 'none';
+    renderReminderList();
+    renderToday();
+  });
+
+  // ── 팀 이벤트 ────────────────────────────────────────────
+  document.getElementById('btn-team-offset-dec').addEventListener('click', function() {
+    if (!state || !state.cycleDays) return;
+    teamAddOffset = ((teamAddOffset - 1) % state.cycleDays + state.cycleDays) % state.cycleDays;
+    updateTeamOffsetPreview();
+  });
+
+  document.getElementById('btn-team-offset-inc').addEventListener('click', function() {
+    if (!state || !state.cycleDays) return;
+    teamAddOffset = (teamAddOffset + 1) % state.cycleDays;
+    updateTeamOffsetPreview();
+  });
+
+  document.getElementById('btn-team-add').addEventListener('click', function() {
+    const name = document.getElementById('team-name-input').value.trim();
+    const warn = document.getElementById('team-warn');
+    if (!name) { warn.textContent = '팀 이름을 입력해 주세요.'; return; }
+    if ((state.teams || []).some(function(t) { return t.name === name; })) {
+      warn.textContent = '같은 이름의 팀이 이미 있어요.'; return;
+    }
+    warn.textContent = '';
+    if (!Array.isArray(state.teams)) state.teams = [];
+    state.teams.push({ name: name, offsetDays: teamAddOffset });
+    saveState();
+    document.getElementById('team-name-input').value = '';
+    teamAddOffset = 0;
+    updateTeamOffsetPreview();
+    renderTeamList();
+    renderToday();
+  });
 
   // ── 초기화 ───────────────────────────────────────────────
   state = loadState();
