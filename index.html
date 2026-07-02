@@ -2713,12 +2713,7 @@
         var n = (state && state.reminders || []).length;
         return n ? n + '개' : '없음';
       }},
-      { key: 'teams', icon: '👥', label: '팀 근무', getValue: function() {
-        var myName = state && state.myTeamName;
-        var n = (state && state.teams || []).length;
-        if (!myName) return '미설정';
-        return myName + (n ? ' 외 ' + n + '팀' : '');
-      }},
+      { key: 'teams', icon: '👥', label: '팀 근무', getValue: function() { return ''; }},
     ];
 
     var listEl = document.getElementById('settings-list-view');
@@ -3739,7 +3734,7 @@
     }
 
     // 그리드: [핸들] [이름] [날짜셀 × N] [◀] [▶] — 모두 화면 폭 안에 맞춤
-    var colTemplate = '18px minmax(40px,1fr) repeat(' + shiftCount + ',1fr) 20px 20px';
+    var colTemplate = '18px minmax(40px,1fr) repeat(' + shiftCount + ',1fr) 20px';
 
     var tableWrap = document.createElement('div');
     tableWrap.style.cssText = 'overflow-x:auto;';
@@ -3759,7 +3754,6 @@
       th.textContent = d.label;  // "오늘" 텍스트 제거 — 파란색으로 구분
       hdr.appendChild(th);
     });
-    hdr.appendChild(document.createElement('div')); // ◀ 자리
     hdr.appendChild(document.createElement('div')); // ▶ 자리
     tableWrap.appendChild(hdr);
 
@@ -3788,11 +3782,7 @@
         var nSpan = document.createElement('span');
         nSpan.style.cssText = 'font-size:12px;font-weight:600;color:#1c1c1e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;';
         nSpan.textContent = teamName;
-        var badge = document.createElement('span');
-        badge.style.cssText = 'font-size:9px;color:#007aff;background:rgba(0,122,255,0.10);border-radius:3px;padding:1px 3px;margin-top:1px;font-weight:500;white-space:nowrap;display:inline-block;';
-        badge.textContent = '내팀';
         nCell.appendChild(nSpan);
-        nCell.appendChild(badge);
       } else {
         var inp = document.createElement('input');
         inp.type = 'text'; inp.maxLength = 10; inp.value = teamName; inp.placeholder = '팀 이름';
@@ -3821,11 +3811,7 @@
       // ◀ ▶ 버튼
       if (isMyTeam) {
         tr.appendChild(document.createElement('div'));
-        tr.appendChild(document.createElement('div'));
       } else {
-        var dec = document.createElement('button');
-        dec.textContent = '◀';
-        dec.style.cssText = 'width:20px;height:20px;border-radius:50%;border:1px solid #d1d1d6;background:none;font-size:8px;cursor:pointer;font-family:inherit;padding:0;';
         var inc = document.createElement('button');
         inc.textContent = '▶';
         inc.style.cssText = 'width:20px;height:20px;border-radius:50%;border:1px solid #d1d1d6;background:none;font-size:8px;cursor:pointer;font-family:inherit;padding:0;';
@@ -3837,14 +3823,10 @@
             cells.forEach(function(sc, ci) { sc.textContent = shiftAt(curOff, dates[ci].dateStr); });
             renderToday();
           }
-          dec.addEventListener('click', function() {
-            curOff = ((curOff - 1) % state.cycleDays + state.cycleDays) % state.cycleDays; apply();
-          });
           inc.addEventListener('click', function() {
             curOff = (curOff + 1) % state.cycleDays; apply();
           });
         }(teamIdx, shiftCells));
-        tr.appendChild(dec);
         tr.appendChild(inc);
       }
       return tr;
