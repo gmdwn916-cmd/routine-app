@@ -807,6 +807,48 @@
     }
 
     /* ── Settings Tab ── */
+    .settings-menu-item {
+      display: flex;
+      align-items: center;
+      background: #fff;
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+      -webkit-tap-highlight-color: transparent;
+      gap: 12px;
+      transition: background 0.12s;
+    }
+    .settings-menu-item:active { background: #f2f2f7; }
+    .settings-menu-icon { font-size: 20px; flex-shrink: 0; width: 28px; text-align: center; line-height: 1; }
+    .settings-menu-info { flex: 1; min-width: 0; }
+    .settings-menu-label { font-size: 15px; font-weight: 600; color: #1c1c1e; margin-bottom: 2px; }
+    .settings-menu-value { font-size: 13px; color: #8e8e93; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .settings-menu-chevron { font-size: 22px; color: #c7c7cc; flex-shrink: 0; line-height: 1; }
+    .settings-detail-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .btn-settings-back {
+      background: none;
+      border: none;
+      font-size: 17px;
+      color: #007aff;
+      cursor: pointer;
+      padding: 4px 0;
+      font-family: inherit;
+      flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .settings-detail-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #1c1c1e;
+    }
+
     .settings-section-title {
       font-size: 12px;
       font-weight: 600;
@@ -1762,54 +1804,79 @@
 
   <!-- ── 설정 탭 ── -->
   <div class="tab-content" id="tab-settings">
-    <p class="settings-section-title">주기 설정</p>
-    <div class="card">
-      <div class="form-group">
-        <label for="input-shift-n">교대 수</label>
-        <input type="number" id="input-shift-n" min="1" max="52" placeholder="예: 4" inputmode="numeric">
+    <!-- 목록 뷰 -->
+    <div id="settings-list-view"></div>
+
+    <!-- 상세 뷰 -->
+    <div id="settings-detail-view" style="display:none">
+      <div class="settings-detail-header">
+        <button id="btn-settings-back" class="btn-settings-back">‹ 뒤로</button>
+        <span id="settings-detail-title" class="settings-detail-title"></span>
       </div>
-      <div class="form-group">
-        <label for="input-pattern">근무 순서</label>
-        <input type="text" id="input-pattern" placeholder="예: 주간, 야간, 비번, 휴무">
-      </div>
-      <div class="form-group">
-        <label for="input-base">Day 1 시작 날짜</label>
-        <input type="date" id="input-base">
-      </div>
-      <div class="onboard-warn" id="warn-settings"></div>
-      <button class="btn btn-primary" id="btn-save-settings">저장</button>
-    </div>
-    <p class="settings-section-title">근무유형 색 설정</p>
-    <div class="card" id="shift-color-card"></div>
-    <p class="shift-color-hint">색은 배경에 옅게(약 15%) 적용됩니다. 너무 어두운 색은 글씨와 구분이 어려울 수 있어요.</p>
-    <p class="settings-section-title">달력 설정</p>
-    <div class="card">
-      <div class="form-group" style="margin-bottom:0">
-        <label for="input-week-start">주 시작 요일</label>
-        <select id="input-week-start">
-          <option value="0">월요일</option>
-          <option value="1">일요일</option>
-        </select>
-      </div>
-    </div>
-    <p class="settings-section-title">리마인더</p>
-    <div class="card">
-      <div id="reminder-list"></div>
-      <button class="btn-add-reminder" id="btn-add-reminder">+ 추가</button>
-    </div>
-    <p class="settings-section-title">팀 근무</p>
-    <div class="card">
-      <div id="team-list"></div>
-      <div style="display:flex; gap:8px; margin-top:10px; align-items:center; flex-wrap:wrap;">
-        <input type="text" id="team-name-input" placeholder="팀 이름" maxlength="10" style="flex:1; min-width:80px; padding:9px 12px; border:1.5px solid #e5e5ea; border-radius:10px; font-size:14px; font-family:inherit; background:#f5f5f7; color:#1c1c1e; outline:none;">
-        <div style="display:flex; align-items:center; gap:4px;">
-          <button id="btn-team-offset-dec" style="width:28px;height:28px;border-radius:50%;border:1.5px solid #d1d1d6;background:none;font-size:14px;cursor:pointer;font-family:inherit;">◀</button>
-          <span id="team-offset-preview" style="font-size:11px;color:#8e8e93;min-width:50px;text-align:center;">오늘: —</span>
-          <button id="btn-team-offset-inc" style="width:28px;height:28px;border-radius:50%;border:1.5px solid #d1d1d6;background:none;font-size:14px;cursor:pointer;font-family:inherit;">▶</button>
+
+      <!-- 교대 주기 -->
+      <div id="sd-cycle" style="display:none">
+        <div class="card">
+          <div class="form-group">
+            <label for="input-shift-n">교대 수</label>
+            <input type="number" id="input-shift-n" min="1" max="52" placeholder="예: 4" inputmode="numeric">
+          </div>
+          <div class="form-group">
+            <label for="input-pattern">근무 순서</label>
+            <input type="text" id="input-pattern" placeholder="예: 주간, 야간, 비번, 휴무">
+          </div>
+          <div class="form-group">
+            <label for="input-base">Day 1 시작 날짜</label>
+            <input type="date" id="input-base">
+          </div>
+          <div class="onboard-warn" id="warn-settings"></div>
+          <button class="btn btn-primary" id="btn-save-settings">저장</button>
         </div>
-        <button id="btn-team-add" style="padding:9px 14px;background:#007aff;color:#fff;border:none;border-radius:10px;font-size:14px;font-family:inherit;cursor:pointer;font-weight:600;">추가</button>
       </div>
-      <div style="color:#ff3b30;font-size:12px;min-height:18px;margin-top:4px;" id="team-warn"></div>
+
+      <!-- 근무유형 색 -->
+      <div id="sd-colors" style="display:none">
+        <div class="card" id="shift-color-card"></div>
+        <p class="shift-color-hint">색은 배경에 옅게(약 15%) 적용됩니다. 너무 어두운 색은 글씨와 구분이 어려울 수 있어요.</p>
+      </div>
+
+      <!-- 주 시작 요일 -->
+      <div id="sd-weekstart" style="display:none">
+        <div class="card">
+          <div class="form-group" style="margin-bottom:0">
+            <label for="input-week-start">주 시작 요일</label>
+            <select id="input-week-start">
+              <option value="0">월요일</option>
+              <option value="1">일요일</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- 리마인더 -->
+      <div id="sd-reminders" style="display:none">
+        <div class="card">
+          <div id="reminder-list"></div>
+          <button class="btn-add-reminder" id="btn-add-reminder">+ 추가</button>
+        </div>
+      </div>
+
+      <!-- 팀 근무 -->
+      <div id="sd-teams" style="display:none">
+        <div class="card">
+          <div id="team-list"></div>
+          <div style="display:flex; gap:8px; margin-top:10px; align-items:center; flex-wrap:wrap;">
+            <input type="text" id="team-name-input" placeholder="팀 이름" maxlength="10" style="flex:1; min-width:80px; padding:9px 12px; border:1.5px solid #e5e5ea; border-radius:10px; font-size:14px; font-family:inherit; background:#f5f5f7; color:#1c1c1e; outline:none;">
+            <div style="display:flex; align-items:center; gap:4px;">
+              <button id="btn-team-offset-dec" style="width:28px;height:28px;border-radius:50%;border:1.5px solid #d1d1d6;background:none;font-size:14px;cursor:pointer;font-family:inherit;">◀</button>
+              <span id="team-offset-preview" style="font-size:11px;color:#8e8e93;min-width:50px;text-align:center;">오늘: —</span>
+              <button id="btn-team-offset-inc" style="width:28px;height:28px;border-radius:50%;border:1.5px solid #d1d1d6;background:none;font-size:14px;cursor:pointer;font-family:inherit;">▶</button>
+            </div>
+            <button id="btn-team-add" style="padding:9px 14px;background:#007aff;color:#fff;border:none;border-radius:10px;font-size:14px;font-family:inherit;cursor:pointer;font-weight:600;">추가</button>
+          </div>
+          <div style="color:#ff3b30;font-size:12px;min-height:18px;margin-top:4px;" id="team-warn"></div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -2635,24 +2702,112 @@
 
   // ── 설정 탭 ──────────────────────────────────────────────
   function renderSettings() {
-    if (state) {
-      const cd = state.cycleDays;
-      const n = (cd && cd % 7 === 0) ? cd / 7 : '';
+    document.getElementById('settings-list-view').style.display = '';
+    document.getElementById('settings-detail-view').style.display = 'none';
+
+    var ITEMS = [
+      { key: 'cycle', icon: '🔄', label: '교대 주기', getValue: function() {
+        if (!state || !state.cycleDays || !state.baseDate) return '미설정';
+        var n = state.cycleDays % 7 === 0 ? state.cycleDays / 7 : state.cycleDays;
+        var suffix = state.cycleDays % 7 === 0 ? '교대' : '일 주기';
+        var d = parseLocalDate(state.baseDate);
+        return n + suffix + ' · D1: ' + (d.getMonth()+1) + '/' + d.getDate();
+      }},
+      { key: 'colors', icon: '🎨', label: '근무유형 색', getValue: function() {
+        if (!state || !state.cycleDays) return '미설정';
+        var names = [];
+        state.days.forEach(function(d) {
+          if (d.shiftType.name && !names.includes(d.shiftType.name)) names.push(d.shiftType.name);
+        });
+        return names.length ? names.join(' · ') : '근무유형 없음';
+      }},
+      { key: 'weekstart', icon: '📆', label: '주 시작 요일', getValue: function() {
+        return (!state || !state.weekStart) ? '월요일' : '일요일';
+      }},
+      { key: 'reminders', icon: '🔔', label: '리마인더', getValue: function() {
+        var n = (state && state.reminders || []).length;
+        return n ? n + '개' : '없음';
+      }},
+      { key: 'teams', icon: '👥', label: '팀 근무', getValue: function() {
+        var n = (state && state.teams || []).length;
+        return n ? n + '개 팀' : '없음';
+      }},
+    ];
+
+    var listEl = document.getElementById('settings-list-view');
+    listEl.innerHTML = '';
+    ITEMS.forEach(function(item) {
+      var row = document.createElement('div');
+      row.className = 'settings-menu-item';
+
+      var iconEl = document.createElement('span');
+      iconEl.className = 'settings-menu-icon';
+      iconEl.textContent = item.icon;
+
+      var infoEl = document.createElement('div');
+      infoEl.className = 'settings-menu-info';
+
+      var labelEl = document.createElement('div');
+      labelEl.className = 'settings-menu-label';
+      labelEl.textContent = item.label;
+
+      var valueEl = document.createElement('div');
+      valueEl.className = 'settings-menu-value';
+      valueEl.textContent = item.getValue();
+
+      var chevronEl = document.createElement('span');
+      chevronEl.className = 'settings-menu-chevron';
+      chevronEl.textContent = '›';
+
+      infoEl.appendChild(labelEl);
+      infoEl.appendChild(valueEl);
+      row.appendChild(iconEl);
+      row.appendChild(infoEl);
+      row.appendChild(chevronEl);
+
+      row.addEventListener('click', function() { openSettingsDetail(item.key); });
+      listEl.appendChild(row);
+    });
+  }
+
+  function openSettingsDetail(key) {
+    document.getElementById('settings-list-view').style.display = 'none';
+    document.getElementById('settings-detail-view').style.display = '';
+
+    var titles = { cycle: '교대 주기', colors: '근무유형 색', weekstart: '주 시작 요일', reminders: '리마인더', teams: '팀 근무' };
+    document.getElementById('settings-detail-title').textContent = titles[key] || '';
+
+    ['sd-cycle','sd-colors','sd-weekstart','sd-reminders','sd-teams'].forEach(function(id) {
+      document.getElementById(id).style.display = 'none';
+    });
+    document.getElementById('sd-' + key).style.display = '';
+
+    if (key === 'cycle') {
+      var cd = state && state.cycleDays;
+      var n = (cd && cd % 7 === 0) ? cd / 7 : '';
       document.getElementById('input-shift-n').value = n;
       if (n) {
-        const patternNames = state.days.slice(0, n).map(function (d) { return d.shiftType.name; }).filter(Boolean);
+        var patternNames = state.days.slice(0, n).map(function(d) { return d.shiftType.name; }).filter(Boolean);
         document.getElementById('input-pattern').value = patternNames.join(', ');
       } else {
         document.getElementById('input-pattern').value = '';
       }
-      document.getElementById('input-base').value = state.baseDate || '';
-      document.getElementById('input-week-start').value = state.weekStart !== undefined ? String(state.weekStart) : '0';
+      document.getElementById('input-base').value = (state && state.baseDate) || '';
+      document.getElementById('warn-settings').textContent = '';
+    } else if (key === 'colors') {
+      renderShiftColorSettings();
+    } else if (key === 'weekstart') {
+      document.getElementById('input-week-start').value = (state && state.weekStart !== undefined) ? String(state.weekStart) : '0';
+    } else if (key === 'reminders') {
+      renderReminderList();
+    } else if (key === 'teams') {
+      renderTeamList();
+      updateTeamOffsetPreview();
     }
-    document.getElementById('warn-settings').textContent = '';
-    renderShiftColorSettings();
-    renderReminderList();
-    renderTeamList();
-    updateTeamOffsetPreview();
+  }
+
+  function closeSettingsDetail() {
+    renderSettings();
   }
 
   function renderShiftColorSettings() {
@@ -2742,6 +2897,8 @@
       card.appendChild(row);
     });
   }
+
+  document.getElementById('btn-settings-back').addEventListener('click', closeSettingsDetail);
 
   document.getElementById('btn-save-settings').addEventListener('click', function () {
     const n = parseInt(document.getElementById('input-shift-n').value, 10);
