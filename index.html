@@ -254,7 +254,26 @@
       font-size: 13px;
       color: #5e5ce6;
       font-weight: 600;
+    }
+
+    .dd-day-info-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
       margin-top: 2px;
+    }
+
+    .btn-dd-change-shift-inline {
+      font-size: 11px;
+      font-weight: 600;
+      color: #007aff;
+      background: none;
+      border: 1px solid rgba(0,122,255,0.4);
+      border-radius: 10px;
+      padding: 2px 8px;
+      cursor: pointer;
+      font-family: inherit;
+      line-height: 1.4;
     }
 
     .dd-section {
@@ -2091,25 +2110,21 @@
   <div id="day-detail-panel">
     <div class="dd-header">
       <div id="dd-date-title" class="dd-date-title"></div>
-      <div id="dd-day-info" class="dd-day-info"></div>
-    </div>
-    <div class="dd-section" id="dd-shift-section">
-      <div class="dd-section-label">근무유형</div>
-      <div class="dd-shift-view" id="dd-shift-view">
-        <span class="dd-shift-name-text" id="dd-shift-name-text"></span>
+      <div class="dd-day-info-row">
+        <div id="dd-day-info" class="dd-day-info"></div>
         <span class="dd-shift-override-badge" id="dd-shift-override-badge" style="display:none">이번만</span>
-        <button class="btn-dd-edit" id="btn-dd-change-shift">변경 →</button>
+        <button class="btn-dd-change-shift-inline" id="btn-dd-change-shift">근무 변경</button>
       </div>
-      <div class="dd-shift-edit-row" id="dd-shift-edit-row" style="display:none">
-        <div class="dd-shift-edit-title">이 근무 변경, 어떻게 적용할까요?</div>
-        <input type="text" id="dd-shift-new-input" placeholder="새 근무명…" maxlength="20">
-        <div class="btn-row">
-          <button class="btn btn-secondary" id="btn-dd-shift-once">이번 날짜만</button>
-          <button class="btn btn-primary" id="btn-dd-shift-pattern">앞으로 <span id="dd-shift-dnum-label">D○</span>마다</button>
-        </div>
-        <div class="dd-shift-note">설정탭의 기본 근무 패턴은 바뀌지 않아요.</div>
-        <button class="dd-shift-cancel-btn" id="btn-dd-shift-cancel">취소</button>
+    </div>
+    <div class="dd-section dd-shift-edit-row" id="dd-shift-edit-row" style="display:none">
+      <div class="dd-shift-edit-title">이 근무 변경, 어떻게 적용할까요?</div>
+      <input type="text" id="dd-shift-new-input" placeholder="새 근무명…" maxlength="20">
+      <div class="btn-row">
+        <button class="btn btn-secondary" id="btn-dd-shift-once">이번 날짜만</button>
+        <button class="btn btn-primary" id="btn-dd-shift-pattern">앞으로 <span id="dd-shift-dnum-label">D○</span>마다</button>
       </div>
+      <div class="dd-shift-note">설정탭의 기본 근무 패턴은 바뀌지 않아요.</div>
+      <button class="dd-shift-cancel-btn" id="btn-dd-shift-cancel">취소</button>
     </div>
     <div class="dd-section">
       <div class="dd-section-label">루틴</div>
@@ -2352,7 +2367,7 @@
   let bulkCalMonth = _now.getMonth();
   let bulkSelectedDates = new Set();
   let _skipMoveRowTarget = null;
-  let routinePeriod = 'cycle';
+
   let teamCalYear = _now.getFullYear();
   let teamCalMonth = _now.getMonth();
 
@@ -3281,7 +3296,6 @@
   }
 
   function renderDDShift(shiftName, isOverride, overrideType) {
-    document.getElementById('dd-shift-name-text').textContent = shiftName || '(미설정)';
     const badge = document.getElementById('dd-shift-override-badge');
     if (isOverride) {
       badge.textContent = overrideType === 'date' ? '날짜만' : 'D마다';
@@ -3290,7 +3304,6 @@
       badge.style.display = 'none';
     }
     document.getElementById('dd-shift-edit-row').style.display = 'none';
-    document.getElementById('dd-shift-view').style.display = '';
   }
 
   function closeDayDetail() {
@@ -3309,14 +3322,12 @@
     document.getElementById('dd-shift-new-input').value = name || '';
     const day = state.days[detailDayIdx0];
     document.getElementById('dd-shift-dnum-label').textContent = 'D' + day.dayIndex;
-    document.getElementById('dd-shift-view').style.display = 'none';
     document.getElementById('dd-shift-edit-row').style.display = '';
     document.getElementById('dd-shift-new-input').focus();
   });
 
   document.getElementById('btn-dd-shift-cancel').addEventListener('click', function () {
     document.getElementById('dd-shift-edit-row').style.display = 'none';
-    document.getElementById('dd-shift-view').style.display = '';
   });
 
   document.getElementById('btn-dd-shift-once').addEventListener('click', function () {
@@ -3720,21 +3731,16 @@
   });
 
   // ── 성취율 계산 ──────────────────────────────────────────
-  function calcCompletionRate(routineName, dayIndices0, period) {
+  function calcCompletionRate(routineName, dayIndices0) {
     if (!state || !state.cycleDays || !state.baseDate) return { expected: 0, done: 0, rate: null };
     const dayIdxSet = new Set(dayIndices0);
     const baseMid = parseLocalDate(state.baseDate);
     const todayMid = todayMidnight();
     const cycleDays = state.cycleDays;
 
-    let startDate;
-    if (period === 'cycle') {
-      const todayDiff = Math.round((todayMid - baseMid) / 86400000);
-      const cycleOffset = ((todayDiff % cycleDays) + cycleDays) % cycleDays;
-      startDate = new Date(baseMid.getFullYear(), baseMid.getMonth(), baseMid.getDate() + (todayDiff - cycleOffset));
-    } else {
-      startDate = new Date(todayMid.getFullYear(), todayMid.getMonth(), 1);
-    }
+    const todayDiff = Math.round((todayMid - baseMid) / 86400000);
+    const cycleOffset = ((todayDiff % cycleDays) + cycleDays) % cycleDays;
+    const startDate = new Date(baseMid.getFullYear(), baseMid.getMonth(), baseMid.getDate() + (todayDiff - cycleOffset));
 
     const doneSet = new Set(
       (state.done_log || []).filter(function(d) { return d.text === routineName; }).map(function(d) { return d.date; })
@@ -4261,19 +4267,6 @@
       return;
     }
 
-    // 기간 토글
-    const toggleWrap = document.createElement('div');
-    toggleWrap.className = 'routine-period-toggle';
-    ['cycle', 'month'].forEach(function(p) {
-      const btn = document.createElement('button');
-      btn.className = 'btn-period' + (routinePeriod === p ? ' active' : '');
-      btn.textContent = p === 'cycle' ? '이번 주기' : '이번 달';
-      btn.addEventListener('click', function() {
-        if (routinePeriod !== p) { routinePeriod = p; renderRoutine(); }
-      });
-      toggleWrap.appendChild(btn);
-    });
-    list.appendChild(toggleWrap);
 
     routineMap.forEach(function (info, name) {
       const cat = getCat(info.category);
@@ -4303,14 +4296,13 @@
       const sortedIdx = info.dayIndices.slice().sort(function (a, b) { return a - b; });
       daysEl.textContent = sortedIdx.map(function (i) { return 'D' + state.days[i].dayIndex; }).join(' · ');
 
-      const rateResult = calcCompletionRate(name, info.dayIndices, routinePeriod);
+      const rateResult = calcCompletionRate(name, info.dayIndices);
       const rateEl = document.createElement('div');
       rateEl.className = 'routine-rate';
       if (rateResult.expected === 0) {
-        rateEl.textContent = (routinePeriod === 'cycle' ? '이번 주기 ' : '이번 달 ') + '기록 없음';
+        rateEl.textContent = '이번 주기 기록 없음';
       } else {
-        rateEl.textContent = (routinePeriod === 'cycle' ? '이번 주기 ' : '이번 달 ') +
-          rateResult.done + '/' + rateResult.expected + ' (' + rateResult.rate + '%)';
+        rateEl.textContent = '이번 주기 ' + rateResult.done + '/' + rateResult.expected + ' (' + rateResult.rate + '%)';
       }
       const barEl = document.createElement('div');
       barEl.className = 'routine-rate-bar';
