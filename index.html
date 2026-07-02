@@ -3661,12 +3661,11 @@
     });
   }
 
-  // 팀 편집 목록의 long-press 드래그 정렬
-  function setupLongPressDrag(handleEl, rowEl, containerEl) {
+  // 팀 행 long-press 드래그 정렬 (tableWrap 기준)
+  function setupLongPressDrag(handleEl, rowEl, tableWrap) {
     handleEl.addEventListener('touchstart', function(e) {
-      var startTouch = e.touches[0];
-      var startY = startTouch.clientY;
-      var startX = startTouch.clientX;
+      var startY = e.touches[0].clientY;
+      var startX = e.touches[0].clientX;
       var dragging = false;
       var clone = null;
       var cloneStartTop = 0;
@@ -3676,7 +3675,7 @@
         var rect = rowEl.getBoundingClientRect();
         cloneStartTop = rect.top;
         clone = rowEl.cloneNode(true);
-        clone.style.cssText += ';position:fixed;left:' + rect.left + 'px;top:' + rect.top + 'px;width:' + rect.width + 'px;z-index:999;box-shadow:0 6px 24px rgba(0,0,0,0.18);pointer-events:none;opacity:0.96;border-radius:10px;background:#fff;';
+        clone.style.cssText += ';position:fixed;left:' + rect.left + 'px;top:' + rect.top + 'px;width:' + rect.width + 'px;z-index:999;box-shadow:0 6px 24px rgba(0,0,0,0.18);pointer-events:none;opacity:0.95;background:#fff;';
         document.body.appendChild(clone);
         rowEl.style.opacity = '0.2';
         if (navigator.vibrate) navigator.vibrate(40);
@@ -3685,23 +3684,21 @@
       function onMove(e) {
         var touch = e.touches[0];
         if (!dragging) {
-          if (Math.abs(touch.clientY - startY) > 8 || Math.abs(touch.clientX - startX) > 8) {
-            clearTimeout(timer);
-          }
+          if (Math.abs(touch.clientY - startY) > 8 || Math.abs(touch.clientX - startX) > 8) clearTimeout(timer);
           return;
         }
         e.preventDefault();
         clone.style.top = (cloneStartTop + touch.clientY - startY) + 'px';
 
-        // 형제 요소 사이 삽입 위치 계산
-        var siblings = Array.from(containerEl.children).filter(function(c) { return c !== rowEl; });
+        // data-team-idx 있는 행만 대상으로 삽입 위치 계산
+        var siblings = Array.from(tableWrap.querySelectorAll('[data-team-idx]')).filter(function(c) { return c !== rowEl; });
         var insertBefore = null;
         for (var s = 0; s < siblings.length; s++) {
           var sr = siblings[s].getBoundingClientRect();
           if (touch.clientY < sr.top + sr.height / 2) { insertBefore = siblings[s]; break; }
         }
-        if (insertBefore) containerEl.insertBefore(rowEl, insertBefore);
-        else containerEl.appendChild(rowEl);
+        if (insertBefore) tableWrap.insertBefore(rowEl, insertBefore);
+        else tableWrap.appendChild(rowEl);
       }
 
       function onEnd() {
@@ -3714,16 +3711,13 @@
         rowEl.style.opacity = '1';
         if (clone && clone.parentNode) { document.body.removeChild(clone); clone = null; }
 
-        // DOM 순서로 state.teams 재정렬
-        var newOrder = Array.from(containerEl.children).map(function(r) {
+        // 현재 DOM 순서로 state.teams 재정렬
+        var newOrder = Array.from(tableWrap.querySelectorAll('[data-team-idx]')).map(function(r) {
           return parseInt(r.dataset.teamIdx, 10);
         });
         var oldTeams = state.teams.slice();
         var reordered = newOrder.map(function(idx) { return oldTeams[idx]; });
-        // 숨겨진 항목(내 팀 이름 중복)은 뒤에 유지
-        oldTeams.forEach(function(t) {
-          if (t.name === state.myTeamName) reordered.push(t);
-        });
+        oldTeams.forEach(function(t) { if (t.name === state.myTeamName) reordered.push(t); });
         state.teams = reordered;
         saveState();
         renderTeamSettings();
@@ -3752,24 +3746,24 @@
       label0.style.cssText = 'font-size:15px;font-weight:600;color:#1c1c1e;margin-bottom:12px;';
       label0.textContent = '내 팀 이름을 알려주세요';
       card.appendChild(label0);
-      var nameRow = document.createElement('div');
-      nameRow.style.cssText = 'display:flex;gap:8px;';
-      var nameInput = document.createElement('input');
-      nameInput.type = 'text'; nameInput.maxLength = 10; nameInput.placeholder = '예: 2팀, A조';
-      nameInput.style.cssText = 'flex:1;padding:10px 12px;border:1.5px solid #e5e5ea;border-radius:10px;font-size:14px;font-family:inherit;background:#f5f5f7;color:#1c1c1e;outline:none;';
-      var nameBtn = document.createElement('button');
-      nameBtn.textContent = '설정';
-      nameBtn.style.cssText = 'padding:10px 16px;background:#007aff;color:#fff;border:none;border-radius:10px;font-size:14px;font-family:inherit;cursor:pointer;font-weight:600;';
-      nameBtn.addEventListener('click', function() {
-        var v = nameInput.value.trim();
+      var nameRow0 = document.createElement('div');
+      nameRow0.style.cssText = 'display:flex;gap:8px;';
+      var nameInput0 = document.createElement('input');
+      nameInput0.type = 'text'; nameInput0.maxLength = 10; nameInput0.placeholder = '예: 2팀, A조';
+      nameInput0.style.cssText = 'flex:1;padding:10px 12px;border:1.5px solid #e5e5ea;border-radius:10px;font-size:14px;font-family:inherit;background:#f5f5f7;color:#1c1c1e;outline:none;';
+      var nameBtn0 = document.createElement('button');
+      nameBtn0.textContent = '설정';
+      nameBtn0.style.cssText = 'padding:10px 16px;background:#007aff;color:#fff;border:none;border-radius:10px;font-size:14px;font-family:inherit;cursor:pointer;font-weight:600;';
+      nameBtn0.addEventListener('click', function() {
+        var v = nameInput0.value.trim();
         if (!v) return;
         state.myTeamName = v;
         saveState();
         renderTeamSettings();
       });
-      nameRow.appendChild(nameInput);
-      nameRow.appendChild(nameBtn);
-      card.appendChild(nameRow);
+      nameRow0.appendChild(nameInput0);
+      nameRow0.appendChild(nameBtn0);
+      card.appendChild(nameRow0);
       return;
     }
 
@@ -3778,18 +3772,14 @@
     var needed = shiftCount - 1;
     if (!Array.isArray(state.teams)) state.teams = [];
     var autoAdded = false;
-    while (state.teams.length < needed) {
-      state.teams.push({ name: '', offsetDays: 0 });
-      autoAdded = true;
-    }
+    while (state.teams.length < needed) { state.teams.push({ name: '', offsetDays: 0 }); autoAdded = true; }
     if (autoAdded) saveState();
 
     // 날짜 배열 (오늘부터 교대 수만큼)
     var todayMid = todayMidnight();
     var baseMid = parseLocalDate(state.baseDate);
-    var displayDays = shiftCount;
     var dates = [];
-    for (var d = 0; d < displayDays; d++) {
+    for (var d = 0; d < shiftCount; d++) {
       var dm = new Date(todayMid.getFullYear(), todayMid.getMonth(), todayMid.getDate() + d);
       dates.push({ dateStr: formatDateStr(dm), label: (dm.getMonth() + 1) + '/' + dm.getDate(), isToday: d === 0 });
     }
@@ -3800,154 +3790,133 @@
       return state.days[adj] ? (state.days[adj].shiftType.name || '—') : '—';
     }
 
-    var colTemplate = 'minmax(72px,auto) repeat(' + displayDays + ',minmax(40px,1fr))';
+    // 그리드: [핸들 22px] [이름 1fr] [날짜셀 × N] [◀ 26px] [▶ 26px]
+    var colTemplate = '22px minmax(56px,1fr) repeat(' + shiftCount + ',minmax(34px,1fr)) 26px 26px';
 
-    // ── 섹션 1: 근무표 (가로 스크롤)
     var tableWrap = document.createElement('div');
     tableWrap.style.cssText = 'overflow-x:auto;margin:0 -4px;';
 
+    // 헤더 행
     var hdr = document.createElement('div');
-    hdr.style.cssText = 'display:grid;grid-template-columns:' + colTemplate + ';min-width:max-content;border-bottom:1.5px solid #e5e5ea;padding-bottom:4px;margin-bottom:2px;';
-    var hdrNameCell = document.createElement('div');
-    hdrNameCell.style.cssText = 'padding:3px 8px;font-size:11px;color:#8e8e93;';
-    hdrNameCell.textContent = '팀';
-    hdr.appendChild(hdrNameCell);
+    hdr.style.cssText = 'display:grid;grid-template-columns:' + colTemplate + ';min-width:max-content;border-bottom:1.5px solid #e5e5ea;padding-bottom:4px;margin-bottom:2px;align-items:end;';
+    hdr.appendChild(document.createElement('div')); // 핸들 자리
+    var hdrN = document.createElement('div');
+    hdrN.style.cssText = 'padding:3px 4px;font-size:11px;color:#8e8e93;';
+    hdrN.textContent = '팀';
+    hdr.appendChild(hdrN);
     dates.forEach(function(d) {
       var th = document.createElement('div');
-      th.style.cssText = 'padding:3px 2px;font-size:11px;text-align:center;min-width:40px;white-space:nowrap;' +
-        'color:' + (d.isToday ? '#007aff' : '#8e8e93') + ';font-weight:' + (d.isToday ? '700' : '500') + ';';
-      th.textContent = d.label + (d.isToday ? ' 오늘' : '');
+      th.style.cssText = 'padding:3px 2px;font-size:11px;text-align:center;min-width:34px;white-space:nowrap;color:' +
+        (d.isToday ? '#007aff' : '#8e8e93') + ';font-weight:' + (d.isToday ? '700' : '500') + ';';
+      th.textContent = d.label + (d.isToday ? '\n오늘' : '');
       hdr.appendChild(th);
     });
+    hdr.appendChild(document.createElement('div')); // ◀ 자리
+    hdr.appendChild(document.createElement('div')); // ▶ 자리
     tableWrap.appendChild(hdr);
 
-    function makeTableRow(teamName, teamIdx, offsetDays, isMyTeam) {
+    // 팀 행 생성
+    function makeRow(teamName, teamIdx, offsetDays, isMyTeam) {
       var tr = document.createElement('div');
       tr.style.cssText = 'display:grid;grid-template-columns:' + colTemplate + ';min-width:max-content;border-top:1px solid #f2f2f7;align-items:center;';
       if (!isMyTeam) tr.dataset.teamIdx = teamIdx;
 
-      var nameCell = document.createElement('div');
-      nameCell.style.cssText = 'padding:7px 8px;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;';
+      // 핸들 셀
+      var hCell = document.createElement('div');
+      hCell.style.cssText = 'display:flex;align-items:center;justify-content:center;padding:8px 0;font-size:15px;user-select:none;';
       if (isMyTeam) {
-        var ns = document.createElement('span');
-        ns.style.cssText = 'font-weight:600;color:#1c1c1e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
-        ns.textContent = teamName;
-        var tag = document.createElement('span');
-        tag.style.cssText = 'font-size:10px;color:#007aff;background:rgba(0,122,255,0.10);border-radius:4px;padding:1px 4px;margin-left:4px;white-space:nowrap;flex-shrink:0;font-weight:500;';
-        tag.textContent = '내팀';
-        nameCell.appendChild(ns);
-        nameCell.appendChild(tag);
+        hCell.style.opacity = '0'; hCell.textContent = '≡'; // 그리드 정렬용 invisible
       } else {
-        nameCell.textContent = teamName || '미설정';
-        nameCell.style.color = teamName ? '#3c3c43' : '#c7c7cc';
+        hCell.style.cssText += 'color:#c7c7cc;cursor:grab;touch-action:none;';
+        hCell.textContent = '≡';
+        setupLongPressDrag(hCell, tr, tableWrap);
       }
-      tr.appendChild(nameCell);
+      tr.appendChild(hCell);
+
+      // 이름 셀
+      var nCell = document.createElement('div');
+      nCell.style.cssText = 'padding:6px 4px;overflow:hidden;';
+      if (isMyTeam) {
+        var nSpan = document.createElement('span');
+        nSpan.style.cssText = 'font-size:13px;font-weight:600;color:#1c1c1e;';
+        nSpan.textContent = teamName;
+        var badge = document.createElement('span');
+        badge.style.cssText = 'font-size:10px;color:#007aff;background:rgba(0,122,255,0.10);border-radius:4px;padding:1px 4px;margin-left:4px;font-weight:500;white-space:nowrap;';
+        badge.textContent = '내팀';
+        nCell.appendChild(nSpan);
+        nCell.appendChild(badge);
+      } else {
+        var inp = document.createElement('input');
+        inp.type = 'text'; inp.maxLength = 10; inp.value = teamName; inp.placeholder = '팀 이름';
+        inp.style.cssText = 'width:100%;padding:4px 6px;border:1.5px solid #e5e5ea;border-radius:7px;font-size:13px;font-family:inherit;background:#f5f5f7;color:#1c1c1e;outline:none;box-sizing:border-box;';
+        (function(idx, el) {
+          el.addEventListener('input', function() {
+            state.teams[idx].name = el.value.trim();
+            saveState(); renderToday();
+          });
+        }(teamIdx, inp));
+        nCell.appendChild(inp);
+      }
+      tr.appendChild(nCell);
+
+      // shift 날짜 셀들
+      var shiftCells = [];
       dates.forEach(function(d) {
         var sc = document.createElement('div');
-        sc.style.cssText = 'padding:7px 4px;text-align:center;font-size:13px;' +
+        sc.style.cssText = 'padding:8px 2px;text-align:center;font-size:12px;' +
           (d.isToday ? 'color:#007aff;font-weight:700;' : 'color:#1c1c1e;');
         sc.textContent = shiftAt(isMyTeam ? 0 : offsetDays, d.dateStr);
+        shiftCells.push(sc);
         tr.appendChild(sc);
       });
+
+      // ◀ ▶ 버튼
+      if (isMyTeam) {
+        tr.appendChild(document.createElement('div'));
+        tr.appendChild(document.createElement('div'));
+      } else {
+        var dec = document.createElement('button');
+        dec.textContent = '◀';
+        dec.style.cssText = 'width:22px;height:22px;border-radius:50%;border:1.5px solid #d1d1d6;background:none;font-size:9px;cursor:pointer;font-family:inherit;padding:0;';
+        var inc = document.createElement('button');
+        inc.textContent = '▶';
+        inc.style.cssText = 'width:22px;height:22px;border-radius:50%;border:1.5px solid #d1d1d6;background:none;font-size:9px;cursor:pointer;font-family:inherit;padding:0;';
+        (function(idx, cells) {
+          var curOff = state.teams[idx].offsetDays;
+          function apply() {
+            state.teams[idx].offsetDays = curOff;
+            saveState();
+            cells.forEach(function(sc, ci) { sc.textContent = shiftAt(curOff, dates[ci].dateStr); });
+            renderToday();
+          }
+          dec.addEventListener('click', function() {
+            curOff = ((curOff - 1) % state.cycleDays + state.cycleDays) % state.cycleDays; apply();
+          });
+          inc.addEventListener('click', function() {
+            curOff = (curOff + 1) % state.cycleDays; apply();
+          });
+        }(teamIdx, shiftCells));
+        tr.appendChild(dec);
+        tr.appendChild(inc);
+      }
       return tr;
     }
 
     // 내 팀 행 (고정)
-    tableWrap.appendChild(makeTableRow(state.myTeamName, -1, 0, true));
+    tableWrap.appendChild(makeRow(state.myTeamName, -1, 0, true));
     // 다른 팀 행 (내 팀 이름 중복 제외)
     state.teams.forEach(function(team, i) {
       if (team.name === state.myTeamName) return;
-      tableWrap.appendChild(makeTableRow(team.name, i, team.offsetDays, false));
+      tableWrap.appendChild(makeRow(team.name, i, team.offsetDays, false));
     });
     card.appendChild(tableWrap);
-
-    // ── 섹션 2: 편집 목록
-    var editLabel = document.createElement('div');
-    editLabel.style.cssText = 'font-size:11px;color:#8e8e93;font-weight:500;margin-top:16px;margin-bottom:6px;padding:0 2px;';
-    editLabel.textContent = '팀 이름 및 근무 맞추기';
-    card.appendChild(editLabel);
-
-    var editList = document.createElement('div');
-    editList.style.cssText = 'display:flex;flex-direction:column;gap:6px;';
-    card.appendChild(editList);
-
-    state.teams.forEach(function(team, i) {
-      if (team.name === state.myTeamName) return;
-
-      var row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 10px;background:#f5f5f7;border-radius:10px;';
-      row.dataset.teamIdx = i;
-
-      // 드래그 핸들
-      var handle = document.createElement('div');
-      handle.style.cssText = 'color:#c7c7cc;font-size:18px;cursor:grab;user-select:none;flex-shrink:0;padding:0 2px;line-height:1;touch-action:none;';
-      handle.textContent = '≡';
-
-      // 팀 이름 input
-      var inp = document.createElement('input');
-      inp.type = 'text'; inp.maxLength = 10; inp.value = team.name; inp.placeholder = '팀 이름';
-      inp.style.cssText = 'flex:1;padding:6px 8px;border:1.5px solid #e5e5ea;border-radius:8px;font-size:14px;font-family:inherit;background:#fff;color:#1c1c1e;outline:none;min-width:0;';
-
-      // 화살표 버튼
-      var decBtn = document.createElement('button');
-      decBtn.textContent = '◀';
-      decBtn.style.cssText = 'width:28px;height:28px;border-radius:50%;border:1.5px solid #d1d1d6;background:none;font-size:12px;cursor:pointer;font-family:inherit;padding:0;flex-shrink:0;';
-      var incBtn = document.createElement('button');
-      incBtn.textContent = '▶';
-      incBtn.style.cssText = 'width:28px;height:28px;border-radius:50%;border:1.5px solid #d1d1d6;background:none;font-size:12px;cursor:pointer;font-family:inherit;padding:0;flex-shrink:0;';
-
-      // 이름 변경 → 표 해당 행 갱신
-      (function(idx) {
-        inp.addEventListener('input', function() {
-          state.teams[idx].name = inp.value.trim();
-          saveState();
-          var tRow = tableWrap.querySelector('[data-team-idx="' + idx + '"]');
-          if (tRow) {
-            tRow.firstChild.textContent = inp.value.trim() || '미설정';
-            tRow.firstChild.style.color = inp.value.trim() ? '#3c3c43' : '#c7c7cc';
-          }
-          renderToday();
-        });
-
-        // 화살표 → 표 해당 행 shift 셀 갱신
-        var curOffset = state.teams[idx].offsetDays;
-        function applyOffset() {
-          state.teams[idx].offsetDays = curOffset;
-          saveState();
-          var tRow = tableWrap.querySelector('[data-team-idx="' + idx + '"]');
-          if (tRow) {
-            var cells = Array.from(tRow.children).slice(1);
-            cells.forEach(function(sc, ci) { sc.textContent = shiftAt(curOffset, dates[ci].dateStr); });
-          }
-          renderToday();
-        }
-        decBtn.addEventListener('click', function() {
-          curOffset = ((curOffset - 1) % state.cycleDays + state.cycleDays) % state.cycleDays;
-          applyOffset();
-        });
-        incBtn.addEventListener('click', function() {
-          curOffset = (curOffset + 1) % state.cycleDays;
-          applyOffset();
-        });
-      }(i));
-
-      row.appendChild(handle);
-      row.appendChild(inp);
-      row.appendChild(decBtn);
-      row.appendChild(incBtn);
-      editList.appendChild(row);
-
-      setupLongPressDrag(handle, row, editList);
-    });
 
     // 내 팀 이름 변경
     var changeBtn = document.createElement('button');
     changeBtn.textContent = '내 팀 이름 변경';
     changeBtn.style.cssText = 'margin-top:10px;background:none;border:none;font-size:12px;color:#c7c7cc;cursor:pointer;font-family:inherit;padding:4px 0;display:block;';
     changeBtn.addEventListener('click', function() {
-      state.myTeamName = '';
-      saveState();
-      renderTeamSettings();
+      state.myTeamName = ''; saveState(); renderTeamSettings();
     });
     card.appendChild(changeBtn);
   }
