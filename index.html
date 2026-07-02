@@ -1834,6 +1834,11 @@
       width: 100%;
       box-sizing: border-box;
     }
+    .tcal-cal-btn-wrap {
+      display: flex;
+      justify-content: flex-end;
+      padding: 10px 4px 4px;
+    }
     .btn-tcal-go-cal {
       padding: 5px 12px;
       background: #f0f0ff;
@@ -2216,7 +2221,6 @@
 <div id="team-cal-overlay">
   <div class="tcal-header">
     <div class="tcal-header-row1">
-      <button class="btn-tcal-go-cal" id="btn-tcal-close">📅 달력보기</button>
       <span class="settings-detail-title">다른 팀 근무 확인</span>
     </div>
     <div class="cal-nav" style="padding:0 4px 8px">
@@ -2228,6 +2232,9 @@
   </div>
   <div class="tcal-body">
     <div class="day-grid" id="tcal-day-grid"></div>
+    <div class="tcal-cal-btn-wrap">
+      <button class="btn-tcal-go-cal" id="btn-tcal-close">📅 달력보기</button>
+    </div>
   </div>
 </div>
 
