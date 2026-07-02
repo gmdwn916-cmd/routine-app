@@ -2159,13 +2159,9 @@
     '#8e8e93', // 회색
   ];
 
-  function getShiftColor(name) {
-    if (!name) return null;
-    if (state && state.shiftColors && state.shiftColors[name] !== undefined) {
-      return state.shiftColors[name] || null;
-    }
-    const e = SHIFT_COLORS.find(function (s) { return s.name === name; });
-    return e ? e.color : null;
+  function getShiftColorByDay(dayIdx0) {
+    if (!state || !state.days || !state.days[dayIdx0]) return null;
+    return state.days[dayIdx0].shiftType.color || null;
   }
 
   const STORAGE_KEY = 'shiftRoutine';
@@ -2254,6 +2250,15 @@
     if (!Array.isArray(s.teams)) {
       s.teams = [];
       changed = true;
+    }
+    // shiftColors(이름→색) → 각 Day의 shiftType.color(Day별 색) 마이그레이션
+    if (s.shiftColors && Object.keys(s.shiftColors).length > 0) {
+      (s.days || []).forEach(function(day) {
+        if (!day.shiftType.color && s.shiftColors[day.shiftType.name]) {
+          day.shiftType.color = s.shiftColors[day.shiftType.name];
+          changed = true;
+        }
+      });
     }
     s.days.forEach(day => {
       if (!Array.isArray(day.items)) {
@@ -2492,7 +2497,7 @@
     }
 
     const todayCard = document.querySelector('#today-content .card');
-    const todayShiftColor = getShiftColor(todayShiftName);
+    const todayShiftColor = getShiftColorByDay(idx);
     todayCard.style.background = todayShiftColor
       ? 'rgba(' + hexToRgb(todayShiftColor) + ',0.10)'
       : '';
@@ -2652,7 +2657,7 @@
       const cell = document.createElement('div');
       cell.className = 'grid-cell' + (!inMonth ? ' other-month' : '') + (isToday ? ' today' : '');
       const { name: shiftName } = getEffectiveShiftName(cellDateStr, dayIdx0);
-      const shiftColor = getShiftColor(shiftName);
+      const shiftColor = getShiftColorByDay(dayIdx0);
       if (shiftColor) {
         cell.style.background = 'rgba(' + hexToRgb(shiftColor) + ',0.10)';
       }
@@ -2816,32 +2821,21 @@
       card.innerHTML = '<div class="shift-color-empty">주기 설정을 먼저 완료해 주세요.</div>';
       return;
     }
-    const shiftNames = [];
-    state.days.forEach(function (d) {
-      if (d.shiftType.name && !shiftNames.includes(d.shiftType.name)) {
-        shiftNames.push(d.shiftType.name);
-      }
-    });
-    if (shiftNames.length === 0) {
-      card.innerHTML = '<div class="shift-color-empty">등록된 근무유형이 없습니다.</div>';
-      return;
-    }
     card.innerHTML = '';
-    shiftNames.forEach(function (name) {
-      const currentColor = getShiftColor(name) || '#8e8e93';
+    state.days.forEach(function (day, i) {
+      const currentColor = day.shiftType.color || '#8e8e93';
 
       const row = document.createElement('div');
       row.className = 'shift-color-row';
 
-      // 상단: 이름 + 미리보기
       const rowTop = document.createElement('div');
       rowTop.className = 'shift-color-row-top';
       const nameEl = document.createElement('span');
       nameEl.className = 'shift-color-name';
-      nameEl.textContent = name;
+      nameEl.textContent = 'D' + day.dayIndex + (day.shiftType.name ? ' · ' + day.shiftType.name : '');
       const preview = document.createElement('div');
       preview.className = 'shift-color-preview';
-      preview.textContent = name;
+      preview.textContent = day.shiftType.name || '—';
       function applyPreview(color) {
         preview.style.background = 'rgba(' + hexToRgb(color) + ',0.15)';
         preview.style.borderColor = color;
@@ -2852,13 +2846,10 @@
       rowTop.appendChild(preview);
       row.appendChild(rowTop);
 
-      // 하단: 스와치 8개 + 직접 선택
       const rowBottom = document.createElement('div');
       rowBottom.className = 'shift-color-row-bottom';
-
       const swatchWrap = document.createElement('div');
       swatchWrap.className = 'shift-color-swatches';
-
       const colorInput = document.createElement('input');
       colorInput.type = 'color';
       colorInput.value = currentColor;
@@ -2866,8 +2857,7 @@
       colorInput.title = '직접 선택';
 
       function selectColor(color) {
-        if (!state.shiftColors) { state.shiftColors = {}; }
-        state.shiftColors[name] = color;
+        state.days[i].shiftType.color = color;
         applyPreview(color);
         colorInput.value = color;
         swatchWrap.querySelectorAll('.shift-color-swatch').forEach(function (s) {
@@ -3325,7 +3315,7 @@
         (isSelected ? ' selected' : '');
 
       const { name: shiftName } = getEffectiveShiftName(cellDateStr, dayIdx0);
-      const shiftColor = getShiftColor(shiftName);
+      const shiftColor = getShiftColorByDay(dayIdx0);
       if (shiftColor && !isSelected) {
         cell.style.background = 'rgba(' + hexToRgb(shiftColor) + ',0.10)';
       }
@@ -3830,7 +3820,7 @@
       cell.className = 'rd-day-cell' + (selectedIdxSet.has(i) ? ' selected' : '');
       cell.dataset.idx = i;
 
-      const shiftColor = getShiftColor(day.shiftType.name);
+      const shiftColor = getShiftColorByDay(i);
       if (shiftColor) {
         cell.style.background = selectedIdxSet.has(i)
           ? ''
