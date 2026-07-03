@@ -47,7 +47,8 @@
     }
 
     @media (prefers-color-scheme: dark) {
-      :root {
+      /* data-theme로 명시 선택된 경우 이 블록이 절대 끼어들지 못하게 선택자 자체에서 제외 */
+      :root:not([data-theme]) {
         --bg: #1a1c1e;
         --surface: #232528;
         --surface-2: #2c2e32;
