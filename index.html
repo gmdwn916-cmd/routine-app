@@ -1,10 +1,22 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+  <script>
+    // 테마 깜빡임 방지: CSS 파싱 전에 저장된 테마를 <html>에 미리 세팅
+    (function () {
+      try {
+        var raw = localStorage.getItem('shiftRoutine');
+        var s = raw ? JSON.parse(raw) : null;
+        var mode = s && s.themeMode;
+        if (mode === 'light' || mode === 'dark') {
+          document.documentElement.setAttribute('data-theme', mode);
+        }
+      } catch (e) {}
+    })();
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#0f1012" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f5f5f7" id="meta-theme-color">
   <title>교대근무 루틴</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -53,6 +65,45 @@
         --tint-pill: 28%;
         --shadow-card: none;
       }
+    }
+
+    /* 사용자가 테마를 강제 선택한 경우, OS 설정과 무관하게 적용 (속성 선택자가 media query보다 우선) */
+    :root[data-theme="light"] {
+      --bg: #f5f5f7;
+      --surface: #ffffff;
+      --surface-2: #f2f2f7;
+      --text-1: #1c1c1e;
+      --text-2: #8e8e93;
+      --text-3: #c7c7cc;
+      --divider: #f2f2f7;
+      --line: #e5e5ea;
+      --accent: #34c759;
+      --check-border: #d1d1d6;
+      --shift-ink: #000;
+      --shift-ink-mix: 78%;
+      --tint-weak: 12%;
+      --tint-badge: 15%;
+      --tint-pill: 16%;
+      --shadow-card: 0 1px 3px rgba(0,0,0,0.07);
+    }
+
+    :root[data-theme="dark"] {
+      --bg: #0f1012;
+      --surface: #1a1b1e;
+      --surface-2: #26272b;
+      --text-1: #f2f2f7;
+      --text-2: #a0a0a8;
+      --text-3: #63646b;
+      --divider: #2a2b2f;
+      --line: #33343a;
+      --accent: #30d158;
+      --check-border: #3f4046;
+      --shift-ink: #fff;
+      --shift-ink-mix: 66%;
+      --tint-weak: 22%;
+      --tint-badge: 24%;
+      --tint-pill: 28%;
+      --shadow-card: none;
     }
 
     body {
@@ -256,6 +307,18 @@
       font-style: italic;
       line-height: 1.65;
     }
+
+    .today-trigger-group { margin-bottom: 4px; }
+    .today-trigger-group:last-child { margin-bottom: 0; }
+    .today-trigger-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-3, #8e8e93);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin: 12px 0 2px;
+    }
+    .today-trigger-group:first-child .today-trigger-label { margin-top: 0; }
 
     /* ── 오늘 탭 리디자인 (여기 규칙은 오늘 탭에만 적용, 달력 상세는 기존 유지) ── */
     #tab-today .card {
@@ -1611,6 +1674,8 @@
       flex-shrink: 0;
     }
 
+    #rd-trigger { flex: 1; min-width: 0; }
+
     .rd-grid-label {
       font-size: 12px;
       color: #6c6c70;
@@ -2156,6 +2221,20 @@
         </div>
       </div>
 
+      <!-- 테마 -->
+      <div id="sd-theme" style="display:none">
+        <div class="card">
+          <div class="form-group" style="margin-bottom:0">
+            <label for="input-theme">테마</label>
+            <select id="input-theme">
+              <option value="system">시스템 설정</option>
+              <option value="light">라이트 모드</option>
+              <option value="dark">다크 모드</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
       <!-- 리마인더 -->
       <div id="sd-reminders" style="display:none">
         <div class="card">
@@ -2285,6 +2364,9 @@
         <input type="text" id="bulk-text" placeholder="예: 주짓수, 아침 루틴…">
         <select id="bulk-cat"></select>
       </div>
+      <div class="bulk-input-row">
+        <select id="bulk-trigger" style="flex:1;"></select>
+      </div>
       <p class="bulk-repeat-hint">선택한 날짜의 주기(D○)에 추가되며, 다음 주기 같은 Day에도 반복됩니다.</p>
       <div class="cal-nav" style="padding:0 0 8px">
         <button class="btn-cal-nav" id="btn-bulk-cal-prev">‹</button>
@@ -2316,6 +2398,10 @@
         <select id="rd-cat"></select>
         <input type="text" id="rd-name-input" placeholder="루틴 이름">
       </div>
+      <div class="rd-input-row">
+        <select id="rd-trigger"></select>
+        <button type="button" class="btn-dd-edit" id="btn-rd-trigger-manage" style="flex-shrink:0;white-space:nowrap;">트리거 관리</button>
+      </div>
       <div class="rd-grid-label">포함할 Day 선택</div>
     </div>
     <div id="rd-day-grid-wrap">
@@ -2332,24 +2418,38 @@
   </div>
 </div>
 
+<!-- ── 트리거 관리 오버레이 ── -->
+<div id="trigger-manage-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:60; align-items:flex-end; justify-content:center;">
+  <div style="background:#f5f5f7; width:100%; max-width:480px; border-radius:20px 20px 0 0; padding:20px; padding-bottom:calc(20px + env(safe-area-inset-bottom,0)); max-height:78vh; display:flex; flex-direction:column;">
+    <div style="font-weight:700; font-size:16px; margin-bottom:12px; color:#1c1c1e;">트리거 관리</div>
+    <div style="display:flex; gap:8px; margin-bottom:8px;">
+      <input type="text" id="trg-name-input" placeholder="예: 눈 뜨자마자" maxlength="20" style="flex:1; min-width:0; padding:10px 12px; border:1.5px solid #e5e5ea; border-radius:10px; font-size:14px; font-family:inherit; background:#fff; color:#1c1c1e; outline:none;">
+      <button id="btn-trg-add" style="padding:10px 14px; background:#007aff; color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:600; font-family:inherit; cursor:pointer; flex-shrink:0;">추가</button>
+    </div>
+    <div style="color:#ff3b30; font-size:12px; min-height:16px; margin-bottom:4px;" id="trg-warn"></div>
+    <div id="trg-list" style="overflow-y:auto; flex:1; min-height:0;"></div>
+    <button id="btn-trg-close" style="margin-top:14px; padding:12px; border:1.5px solid #d1d1d6; border-radius:12px; background:none; color:#1c1c1e; font-size:15px; font-family:inherit; cursor:pointer; flex-shrink:0;">닫기</button>
+  </div>
+</div>
+
 <!-- ── 리마인더 추가 오버레이 ── -->
 <div id="reminder-add-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:50; align-items:flex-end; justify-content:center;">
   <div style="background:#f5f5f7; width:100%; max-width:480px; border-radius:20px 20px 0 0; padding:20px; padding-bottom:calc(20px + env(safe-area-inset-bottom,0));">
-    <div style="font-weight:700; font-size:16px; margin-bottom:16px;">리마인더 추가</div>
-    <input type="text" id="rem-name-input" placeholder="리마인더 이름" maxlength="30" style="width:100%; padding:10px 12px; border:1.5px solid #e5e5ea; border-radius:10px; font-size:14px; font-family:inherit; background:#fff; margin-bottom:10px; outline:none;">
+    <div style="font-weight:700; font-size:16px; margin-bottom:16px; color:#1c1c1e;">리마인더 추가</div>
+    <input type="text" id="rem-name-input" placeholder="리마인더 이름" maxlength="30" style="width:100%; padding:10px 12px; border:1.5px solid #e5e5ea; border-radius:10px; font-size:14px; font-family:inherit; background:#fff; color:#1c1c1e; margin-bottom:10px; outline:none;">
     <div style="display:flex; gap:8px; margin-bottom:10px;">
       <button class="btn-period active" id="rem-type-interval" style="flex:1">간격형</button>
       <button class="btn-period" id="rem-type-date" style="flex:1">날짜형</button>
     </div>
     <div id="rem-interval-row" style="margin-bottom:10px;">
-      <input type="number" id="rem-interval-days" placeholder="반복 주기 (일)" min="1" max="365" style="width:100%; padding:10px 12px; border:1.5px solid #e5e5ea; border-radius:10px; font-size:14px; font-family:inherit; background:#fff; outline:none;">
+      <input type="number" id="rem-interval-days" placeholder="반복 주기 (일)" min="1" max="365" style="width:100%; padding:10px 12px; border:1.5px solid #e5e5ea; border-radius:10px; font-size:14px; font-family:inherit; background:#fff; color:#1c1c1e; outline:none;">
     </div>
     <div id="rem-date-row" style="margin-bottom:10px; display:none;">
-      <input type="date" id="rem-target-date" style="width:100%; padding:10px 12px; border:1.5px solid #e5e5ea; border-radius:10px; font-size:14px; font-family:inherit; background:#fff; outline:none;">
+      <input type="date" id="rem-target-date" style="width:100%; padding:10px 12px; border:1.5px solid #e5e5ea; border-radius:10px; font-size:14px; font-family:inherit; background:#fff; color:#1c1c1e; outline:none;">
     </div>
     <div style="color:#ff3b30; font-size:12px; min-height:18px; margin-bottom:8px;" id="rem-warn"></div>
     <div style="display:flex; gap:8px;">
-      <button id="btn-rem-cancel" style="flex:1; padding:12px; border:1.5px solid #d1d1d6; border-radius:12px; background:none; font-size:15px; font-family:inherit; cursor:pointer;">취소</button>
+      <button id="btn-rem-cancel" style="flex:1; padding:12px; border:1.5px solid #d1d1d6; border-radius:12px; background:none; color:#1c1c1e; font-size:15px; font-family:inherit; cursor:pointer;">취소</button>
       <button id="btn-rem-save" style="flex:1; padding:12px; background:#007aff; color:#fff; border:none; border-radius:12px; font-size:15px; font-family:inherit; cursor:pointer; font-weight:600;">저장</button>
     </div>
   </div>
@@ -2444,6 +2544,7 @@
   function getCat(id) {
     return CATEGORIES.find(c => c.id === id) ?? CATEGORIES[CATEGORIES.length - 1];
   }
+  const THEME_LABELS = { system: '시스템 설정', light: '라이트 모드', dark: '다크 모드' };
   function hexToRgb(hex) {
     return [parseInt(hex.slice(1,3),16), parseInt(hex.slice(3,5),16), parseInt(hex.slice(5,7),16)].join(',');
   }
@@ -2482,6 +2583,35 @@
 
   const STORAGE_KEY = 'shiftRoutine';
   let state = null;
+
+  // ── 테마(라이트/다크/시스템) ─────────────────────────────
+  function updateThemeColorMeta() {
+    const meta = document.getElementById('meta-theme-color');
+    if (!meta) return;
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark' ||
+      (!document.documentElement.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    meta.setAttribute('content', isDark ? '#0f1012' : '#f5f5f7');
+  }
+
+  function applyTheme() {
+    const mode = (state && state.themeMode) || 'system';
+    if (mode === 'light' || mode === 'dark') {
+      document.documentElement.setAttribute('data-theme', mode);
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+    }
+    updateThemeColorMeta();
+  }
+
+  if (window.matchMedia) {
+    const systemDarkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const onSystemThemeChange = function () {
+      if (!state || !state.themeMode || state.themeMode === 'system') { updateThemeColorMeta(); }
+    };
+    if (systemDarkQuery.addEventListener) { systemDarkQuery.addEventListener('change', onSystemThemeChange); }
+    else if (systemDarkQuery.addListener) { systemDarkQuery.addListener(onSystemThemeChange); }
+  }
+
   let editingIdx = null; // 0-based
   const _now = new Date();
   let calYear = _now.getFullYear();
@@ -2501,6 +2631,37 @@
 
   function saveState() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  // ── 트리거(사용자 정의 시간대/맥락 태그) ────────────────────
+  function getSortedTriggers() {
+    return (state && Array.isArray(state.triggers) ? state.triggers.slice() : [])
+      .sort(function (a, b) { return a.order - b.order; });
+  }
+
+  function genTriggerId() {
+    return 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  }
+
+  function populateTriggerSelect(selectEl, currentId) {
+    if (!selectEl) return;
+    selectEl.innerHTML = '';
+    const noneOpt = document.createElement('option');
+    noneOpt.value = '';
+    noneOpt.textContent = '트리거 없음';
+    selectEl.appendChild(noneOpt);
+    getSortedTriggers().forEach(function (t) {
+      const opt = document.createElement('option');
+      opt.value = t.id;
+      opt.textContent = t.name;
+      selectEl.appendChild(opt);
+    });
+    selectEl.value = currentId || '';
+  }
+
+  function refreshTriggerSelects() {
+    populateTriggerSelect(document.getElementById('rd-trigger'), document.getElementById('rd-trigger') ? document.getElementById('rd-trigger').value : '');
+    populateTriggerSelect(document.getElementById('bulk-trigger'), document.getElementById('bulk-trigger') ? document.getElementById('bulk-trigger').value : '');
   }
 
   function buildEmptyDay(i) {
@@ -2566,6 +2727,14 @@
     }
     if (!Array.isArray(s.teams)) {
       s.teams = [];
+      changed = true;
+    }
+    if (!Array.isArray(s.triggers)) {
+      s.triggers = [];
+      changed = true;
+    }
+    if (s.themeMode !== 'light' && s.themeMode !== 'dark' && s.themeMode !== 'system') {
+      s.themeMode = 'system';
       changed = true;
     }
     if (s.myTeamName === undefined) {
@@ -2764,12 +2933,51 @@
 
     if (_skipMoveRowTarget !== null) {
       var tgt = _skipMoveRowTarget;
-      _skipMoveRowTarget = null;
+      var matched = false;
       ul.querySelectorAll('li.today-item--skip').forEach(function(skipLi) {
         var tEl = skipLi.querySelector('.item-text');
-        if (tEl && tEl.textContent === tgt) { showMoveRow(skipLi, ul, tgt, dateStr); }
+        if (tEl && tEl.textContent === tgt) { showMoveRow(skipLi, ul, tgt, dateStr); matched = true; }
       });
+      if (matched) { _skipMoveRowTarget = null; }
     }
+  }
+
+  // 트리거별로 그룹지어 renderRoutineItems를 반복 호출 (트리거가 없으면 기존과 동일하게 단일 목록)
+  function renderGroupedRoutineItems(containerEl, items, dateStr, refreshFn) {
+    containerEl.innerHTML = '';
+    const triggers = getSortedTriggers();
+    if (triggers.length === 0) {
+      renderRoutineItems(containerEl, items, dateStr, refreshFn);
+      return;
+    }
+
+    const grouped = new Map();
+    triggers.forEach(function (t) { grouped.set(t.id, []); });
+    const untagged = [];
+    items.forEach(function (item) {
+      if (item.triggerId && grouped.has(item.triggerId)) {
+        grouped.get(item.triggerId).push(item);
+      } else {
+        untagged.push(item);
+      }
+    });
+
+    function appendGroup(label, list) {
+      if (list.length === 0) return;
+      const section = document.createElement('div');
+      section.className = 'today-trigger-group';
+      const labelEl = document.createElement('div');
+      labelEl.className = 'today-trigger-label';
+      labelEl.textContent = label;
+      section.appendChild(labelEl);
+      const listEl = document.createElement('div');
+      section.appendChild(listEl);
+      renderRoutineItems(listEl, list, dateStr, refreshFn);
+      containerEl.appendChild(section);
+    }
+
+    triggers.forEach(function (t) { appendGroup(t.name, grouped.get(t.id)); });
+    appendGroup('미지정', untagged);
   }
 
   // ── 오늘 탭 ──────────────────────────────────────────────
@@ -2822,7 +3030,7 @@
     const itemsEl = document.getElementById('td-items');
     const items = day.items || [];
     if (items.length > 0) {
-      renderRoutineItems(itemsEl, items, todayDateStr, renderToday);
+      renderGroupedRoutineItems(itemsEl, items, todayDateStr, renderToday);
     } else {
       itemsEl.innerHTML =
         '<div class="today-items-empty">아직 루틴이 없어요.<br>달력 탭에서 이 날을 탭해 편집할 수 있어요.</div>';
@@ -3046,6 +3254,10 @@
       { key: 'weekstart', icon: '📆', label: '주 시작 요일', getValue: function() {
         return (!state || !state.weekStart) ? '월요일' : '일요일';
       }},
+      { key: 'theme', icon: '🌗', label: '테마', getValue: function() {
+        var mode = (state && state.themeMode) || 'system';
+        return THEME_LABELS[mode] || THEME_LABELS.system;
+      }},
       { key: 'reminders', icon: '🔔', label: '리마인더', getValue: function() {
         var n = (state && state.reminders || []).length;
         return n ? n + '개' : '없음';
@@ -3093,10 +3305,10 @@
     document.getElementById('settings-list-view').style.display = 'none';
     document.getElementById('settings-detail-view').style.display = '';
 
-    var titles = { cycle: '교대 주기', colors: '근무유형 색', weekstart: '주 시작 요일', reminders: '리마인더', teams: '팀 근무' };
+    var titles = { cycle: '교대 주기', colors: '근무유형 색', weekstart: '주 시작 요일', theme: '테마', reminders: '리마인더', teams: '팀 근무' };
     document.getElementById('settings-detail-title').textContent = titles[key] || '';
 
-    ['sd-cycle','sd-colors','sd-weekstart','sd-reminders','sd-teams'].forEach(function(id) {
+    ['sd-cycle','sd-colors','sd-weekstart','sd-theme','sd-reminders','sd-teams'].forEach(function(id) {
       document.getElementById(id).style.display = 'none';
     });
     document.getElementById('sd-' + key).style.display = '';
@@ -3117,6 +3329,8 @@
       renderShiftColorSettings();
     } else if (key === 'weekstart') {
       document.getElementById('input-week-start').value = (state && state.weekStart !== undefined) ? String(state.weekStart) : '0';
+    } else if (key === 'theme') {
+      document.getElementById('input-theme').value = (state && state.themeMode) || 'system';
     } else if (key === 'reminders') {
       renderReminderList();
     } else if (key === 'teams') {
@@ -3238,6 +3452,13 @@
     state.weekStart = parseInt(this.value, 10);
     saveState();
     renderGrid();
+  });
+
+  document.getElementById('input-theme').addEventListener('change', function () {
+    if (!state) return;
+    state.themeMode = this.value;
+    saveState();
+    applyTheme();
   });
 
   // ── Day 편집 바텀시트 ─────────────────────────────────────
@@ -3711,6 +3932,8 @@
       catSel.appendChild(opt);
     });
 
+    populateTriggerSelect(document.getElementById('bulk-trigger'), '');
+
     document.getElementById('bulk-text').value = '';
     document.getElementById('bulk-warn').textContent = '';
 
@@ -3754,6 +3977,7 @@
   document.getElementById('btn-bulk-add').addEventListener('click', function () {
     const text = document.getElementById('bulk-text').value.trim();
     const category = document.getElementById('bulk-cat').value;
+    const triggerId = document.getElementById('bulk-trigger').value;
     const warn = document.getElementById('bulk-warn');
 
     if (!text) { warn.textContent = '루틴 항목을 입력해 주세요.'; return; }
@@ -3771,7 +3995,9 @@
         addedDayIndices.add(dayIdx0);
         const day = state.days[dayIdx0];
         if (!day.items.some(function (it) { return it.text === text; })) {
-          day.items.push({ text: text, category: category });
+          const newItem = { text: text, category: category };
+          if (triggerId) { newItem.triggerId = triggerId; }
+          day.items.push(newItem);
         }
       }
     });
@@ -4463,13 +4689,15 @@
   function openRoutineDetail(name) {
     routineDetailName = name;
 
-    // 현재 어느 Day에 포함돼 있는지 + 카테고리 파악
+    // 현재 어느 Day에 포함돼 있는지 + 카테고리·트리거 파악
     let category = 'etc';
+    let triggerId = '';
     const selectedIdxSet = new Set();
     state.days.forEach(function (day, i) {
       const item = (day.items || []).find(function (it) { return it.text === name; });
       if (item) {
         category = item.category || 'etc';
+        triggerId = item.triggerId || '';
         selectedIdxSet.add(i);
       }
     });
@@ -4484,6 +4712,9 @@
       rdCat.appendChild(opt);
     });
     rdCat.value = category;
+
+    // 트리거 select 초기화
+    populateTriggerSelect(document.getElementById('rd-trigger'), triggerId);
 
     document.getElementById('rd-name-input').value = name;
     document.getElementById('rd-warn').textContent = '';
@@ -4546,6 +4777,7 @@
     if (!newName) { warn.textContent = '루틴 이름을 입력해 주세요.'; return; }
     warn.textContent = '';
     const newCat = document.getElementById('rd-cat').value;
+    const newTriggerId = document.getElementById('rd-trigger').value;
 
     const selectedCells = document.querySelectorAll('#rd-day-grid .rd-day-cell.selected');
     const selectedIdx = new Set(Array.from(selectedCells).map(function (c) { return parseInt(c.dataset.idx, 10); }));
@@ -4555,16 +4787,20 @@
       const itemIdx = day.items.findIndex(function (it) { return it.text === routineDetailName; });
       if (itemIdx !== -1) {
         if (selectedIdx.has(i)) {
-          // 이름·카테고리 업데이트
+          // 이름·카테고리·트리거 업데이트
           day.items[itemIdx].text = newName;
           day.items[itemIdx].category = newCat;
+          if (newTriggerId) { day.items[itemIdx].triggerId = newTriggerId; }
+          else { delete day.items[itemIdx].triggerId; }
         } else {
           // 이 Day에서 제거
           day.items.splice(itemIdx, 1);
         }
       } else if (selectedIdx.has(i)) {
         // 새로 추가
-        day.items.push({ text: newName, category: newCat });
+        const newItem = { text: newName, category: newCat };
+        if (newTriggerId) { newItem.triggerId = newTriggerId; }
+        day.items.push(newItem);
       }
     });
 
@@ -4590,6 +4826,125 @@
 
   document.getElementById('btn-new-routine').addEventListener('click', function () {
     openBulk();
+  });
+
+  // ── 트리거 관리 오버레이 ─────────────────────────────────
+  function renderTriggerList() {
+    const el = document.getElementById('trg-list');
+    el.innerHTML = '';
+    const triggers = getSortedTriggers();
+    if (triggers.length === 0) {
+      el.innerHTML = '<div style="font-size:13px;color:#c7c7cc;padding:4px 0;">등록된 트리거 없음</div>';
+      return;
+    }
+    triggers.forEach(function (t, i) {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:6px;padding:8px 0;border-bottom:1px solid #f2f2f7;';
+
+      const upBtn = document.createElement('button');
+      upBtn.textContent = '▲';
+      upBtn.disabled = i === 0;
+      upBtn.style.cssText = 'background:none;border:none;font-size:12px;color:' + (i === 0 ? '#e5e5ea' : '#8e8e93') + ';cursor:pointer;padding:2px 4px;font-family:inherit;';
+      upBtn.addEventListener('click', function () { moveTrigger(t.id, -1); });
+
+      const downBtn = document.createElement('button');
+      downBtn.textContent = '▼';
+      downBtn.disabled = i === triggers.length - 1;
+      downBtn.style.cssText = 'background:none;border:none;font-size:12px;color:' + (i === triggers.length - 1 ? '#e5e5ea' : '#8e8e93') + ';cursor:pointer;padding:2px 4px;font-family:inherit;';
+      downBtn.addEventListener('click', function () { moveTrigger(t.id, 1); });
+
+      const nameInput = document.createElement('input');
+      nameInput.type = 'text';
+      nameInput.value = t.name;
+      nameInput.maxLength = 20;
+      nameInput.style.cssText = 'flex:1;min-width:0;padding:7px 10px;border:1.5px solid #e5e5ea;border-radius:8px;font-size:14px;font-family:inherit;background:#fff;color:#1c1c1e;outline:none;';
+      nameInput.addEventListener('change', function () {
+        const newName = nameInput.value.trim();
+        if (!newName) { nameInput.value = t.name; return; }
+        t.name = newName;
+        saveState();
+        refreshTriggerSelects();
+      });
+
+      const delBtn = document.createElement('button');
+      delBtn.textContent = '×';
+      delBtn.setAttribute('aria-label', '삭제');
+      delBtn.style.cssText = 'background:none;border:none;font-size:18px;color:#c7c7cc;cursor:pointer;padding:0 4px;font-family:inherit;';
+      delBtn.addEventListener('click', function () { deleteTrigger(t.id); });
+
+      row.appendChild(upBtn);
+      row.appendChild(downBtn);
+      row.appendChild(nameInput);
+      row.appendChild(delBtn);
+      el.appendChild(row);
+    });
+  }
+
+  function moveTrigger(id, dir) {
+    const triggers = getSortedTriggers();
+    const idx = triggers.findIndex(function (t) { return t.id === id; });
+    const swapIdx = idx + dir;
+    if (idx === -1 || swapIdx < 0 || swapIdx >= triggers.length) return;
+    const tmp = triggers[idx].order;
+    triggers[idx].order = triggers[swapIdx].order;
+    triggers[swapIdx].order = tmp;
+    saveState();
+    renderTriggerList();
+  }
+
+  function deleteTrigger(id) {
+    state.triggers = (state.triggers || []).filter(function (t) { return t.id !== id; });
+    state.days.forEach(function (day) {
+      (day.items || []).forEach(function (item) {
+        if (item.triggerId === id) { delete item.triggerId; }
+      });
+    });
+    saveState();
+    renderTriggerList();
+    refreshTriggerSelects();
+    renderToday();
+  }
+
+  function openTriggerManage() {
+    document.getElementById('trg-name-input').value = '';
+    document.getElementById('trg-warn').textContent = '';
+    renderTriggerList();
+    document.getElementById('trigger-manage-overlay').style.display = 'flex';
+  }
+
+  document.getElementById('btn-rd-trigger-manage').addEventListener('click', openTriggerManage);
+
+  document.getElementById('btn-trg-add').addEventListener('click', function () {
+    const input = document.getElementById('trg-name-input');
+    const warn = document.getElementById('trg-warn');
+    const name = input.value.trim();
+    if (!name) { warn.textContent = '트리거 이름을 입력해 주세요.'; return; }
+    warn.textContent = '';
+    if (!Array.isArray(state.triggers)) state.triggers = [];
+    const maxOrder = state.triggers.reduce(function (m, t) { return Math.max(m, t.order); }, -1);
+    state.triggers.push({ id: genTriggerId(), name: name, order: maxOrder + 1 });
+    input.value = '';
+    saveState();
+    renderTriggerList();
+    refreshTriggerSelects();
+  });
+
+  document.getElementById('trg-name-input').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { document.getElementById('btn-trg-add').click(); }
+  });
+
+  document.getElementById('btn-trg-close').addEventListener('click', function () {
+    document.getElementById('trigger-manage-overlay').style.display = 'none';
+    refreshTriggerSelects();
+    renderToday();
+  });
+
+  document.getElementById('trigger-manage-overlay').addEventListener('click', function (e) {
+    if (e.target === this) {
+      this.style.display = 'none';
+      refreshTriggerSelects();
+      renderToday();
+    }
   });
 
   // ── 스킵 / 완료 ──────────────────────────────────────────
@@ -4703,6 +5058,7 @@
     const migrated = migrateState(state);
     if (migrated) saveState();
   }
+  applyTheme();
   switchTab('today');
   if (!state || !state.cycleDays || !state.baseDate) {
     openOnboarding();
