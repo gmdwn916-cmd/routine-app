@@ -16,7 +16,7 @@
   </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#f5f5f7" id="meta-theme-color">
+  <meta name="theme-color" content="#ffffff" id="meta-theme-color">
   <title>교대근무 루틴</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -26,14 +26,14 @@
        두 모드 공통이며, 배경에 옅게 섞는 비율(--tint-*)만 모드별로 다르다. */
     :root {
       color-scheme: light dark;
-      --bg: #f5f5f7;            /* 앱 배경 */
+      --bg: #ffffff;            /* 앱 배경 */
       --surface: #ffffff;       /* 카드 표면 */
-      --surface-2: #f2f2f7;     /* 표면 위 한 단계 (칩, 인셋 행) */
+      --surface-2: #f4f5f7;     /* 표면 위 한 단계 (칩, 인셋 행) */
       --text-1: #1c1c1e;        /* 본문 */
-      --text-2: #8e8e93;        /* 보조 */
+      --text-2: #6c7076;        /* 보조 */
       --text-3: #c7c7cc;        /* 희미 (빈 상태 등) */
       --divider: #f2f2f7;       /* 목록 구분선 */
-      --line: #e5e5ea;          /* 테두리 (헤더/내비/입력) */
+      --line: #e3e5e8;          /* 테두리 (헤더/내비/입력/카드) */
       --accent: #34c759;        /* 포인트 초록 */
       --check-border: #d1d1d6;  /* 완료 전 체크 원 테두리 */
       --shift-ink: #000;        /* 근무 칩 글자를 섞을 바탕색 */
@@ -43,21 +43,21 @@
       --tint-pill: 16%;         /* 근무 칩 배경 틴트 */
       --radius-card: 16px;
       --radius-row: 12px;
-      --shadow-card: 0 1px 3px rgba(0,0,0,0.07);
+      --shadow-card: 0 1px 2px rgba(0,0,0,0.05);
     }
 
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg: #0f1012;
-        --surface: #1a1b1e;
-        --surface-2: #26272b;
-        --text-1: #f2f2f7;
-        --text-2: #a0a0a8;
+        --bg: #1a1c1e;
+        --surface: #232528;
+        --surface-2: #2c2e32;
+        --text-1: #e9e9ea;
+        --text-2: #a3a6ac;
         --text-3: #63646b;
-        --divider: #2a2b2f;
-        --line: #33343a;
-        --accent: #30d158;
-        --check-border: #3f4046;
+        --divider: #2c2e32;
+        --line: #35373c;
+        --accent: #32d158;
+        --check-border: #45474d;
         --shift-ink: #fff;      /* 다크에서는 근무색을 밝게 끌어올림 */
         --shift-ink-mix: 66%;
         --tint-weak: 22%;
@@ -69,14 +69,14 @@
 
     /* 사용자가 테마를 강제 선택한 경우, OS 설정과 무관하게 적용 (속성 선택자가 media query보다 우선) */
     :root[data-theme="light"] {
-      --bg: #f5f5f7;
+      --bg: #ffffff;
       --surface: #ffffff;
-      --surface-2: #f2f2f7;
+      --surface-2: #f4f5f7;
       --text-1: #1c1c1e;
-      --text-2: #8e8e93;
+      --text-2: #6c7076;
       --text-3: #c7c7cc;
       --divider: #f2f2f7;
-      --line: #e5e5ea;
+      --line: #e3e5e8;
       --accent: #34c759;
       --check-border: #d1d1d6;
       --shift-ink: #000;
@@ -84,20 +84,20 @@
       --tint-weak: 12%;
       --tint-badge: 15%;
       --tint-pill: 16%;
-      --shadow-card: 0 1px 3px rgba(0,0,0,0.07);
+      --shadow-card: 0 1px 2px rgba(0,0,0,0.05);
     }
 
     :root[data-theme="dark"] {
-      --bg: #0f1012;
-      --surface: #1a1b1e;
-      --surface-2: #26272b;
-      --text-1: #f2f2f7;
-      --text-2: #a0a0a8;
+      --bg: #1a1c1e;
+      --surface: #232528;
+      --surface-2: #2c2e32;
+      --text-1: #e9e9ea;
+      --text-2: #a3a6ac;
       --text-3: #63646b;
-      --divider: #2a2b2f;
-      --line: #33343a;
-      --accent: #30d158;
-      --check-border: #3f4046;
+      --divider: #2c2e32;
+      --line: #35373c;
+      --accent: #32d158;
+      --check-border: #45474d;
       --shift-ink: #fff;
       --shift-ink-mix: 66%;
       --tint-weak: 22%;
@@ -197,10 +197,11 @@
     /* ── Card ── */
     .card {
       background: var(--surface);
+      border: 1px solid var(--line);
       border-radius: 14px;
       padding: 18px 16px;
       margin-bottom: 12px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+      box-shadow: var(--shadow-card);
     }
 
     /* ── Today Tab ── */
@@ -323,6 +324,7 @@
     /* ── 오늘 탭 리디자인 (여기 규칙은 오늘 탭에만 적용, 달력 상세는 기존 유지) ── */
     #tab-today .card {
       background: var(--surface);
+      border: 1px solid var(--line);
       border-radius: var(--radius-card);
       box-shadow: var(--shadow-card);
     }
@@ -2667,7 +2669,7 @@
     if (!meta) return;
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark' ||
       (!document.documentElement.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    meta.setAttribute('content', isDark ? '#0f1012' : '#f5f5f7');
+    meta.setAttribute('content', isDark ? '#1a1c1e' : '#ffffff');
   }
 
   function applyTheme() {
