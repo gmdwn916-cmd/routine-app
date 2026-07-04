@@ -1871,29 +1871,6 @@
       line-height: 1.4;
     }
 
-    .dd-shift-color-row {
-      margin: -2px 0 8px;
-    }
-
-    .dd-shift-color-label {
-      font-size: 12px;
-      color: var(--text-2);
-      margin-bottom: 6px;
-    }
-
-    #dd-shift-color-input {
-      width: 30px;
-      height: 30px;
-      border: 1.5px solid var(--line);
-      border-radius: 50%;
-      padding: 2px;
-      cursor: pointer;
-      background: var(--surface);
-      flex-shrink: 0;
-      -webkit-appearance: none;
-      margin-bottom: 0;
-    }
-
     .dd-shift-cancel-btn {
       width: 100%;
       padding: 9px;
@@ -2413,13 +2390,6 @@
     <div class="dd-section dd-shift-edit-row" id="dd-shift-edit-row" style="display:none">
       <div class="dd-shift-edit-title">이 근무 변경, 어떻게 적용할까요?</div>
       <input type="text" id="dd-shift-new-input" placeholder="새 근무명…" maxlength="20">
-      <div class="dd-shift-color-row" id="dd-shift-color-row" style="display:none">
-        <div class="dd-shift-color-label">새 근무 색상</div>
-        <div class="shift-color-row-bottom">
-          <div class="shift-color-swatches" id="dd-shift-color-swatches"></div>
-          <input type="color" id="dd-shift-color-input" title="직접 선택">
-        </div>
-      </div>
       <div class="btn-row">
         <button class="btn btn-secondary" id="btn-dd-shift-once">이번 날짜만</button>
         <button class="btn btn-primary" id="btn-dd-shift-pattern">앞으로 <span id="dd-shift-dnum-label">D○</span>마다</button>
@@ -3500,6 +3470,20 @@
         shiftNames.push(d.shiftType.name);
       }
     });
+    if (Array.isArray(state.shiftOverrides)) {
+      state.shiftOverrides.forEach(function (o) {
+        if (o.shiftName && !shiftNames.includes(o.shiftName)) {
+          shiftNames.push(o.shiftName);
+        }
+      });
+    }
+    if (Array.isArray(state.dayOverrides)) {
+      state.dayOverrides.forEach(function (o) {
+        if (o.shiftName && !shiftNames.includes(o.shiftName)) {
+          shiftNames.push(o.shiftName);
+        }
+      });
+    }
     if (shiftNames.length === 0) {
       card.innerHTML = '<div class="shift-color-empty">등록된 근무유형이 없습니다.</div>';
       return;
@@ -3704,7 +3688,6 @@
   // ── 일별 상세 패널 ──────────────────────────────────────────
   let detailDayIdx0 = null;
   let detailDateStr = null;
-  let ddShiftNewColor = null;
 
   function openDayDetail(dayIdx0, dateStr) {
     detailDayIdx0 = dayIdx0;
@@ -3792,37 +3775,6 @@
     });
   }
 
-  function renderDDShiftColorPicker() {
-    const wrap = document.getElementById('dd-shift-color-swatches');
-    wrap.innerHTML = '';
-    SHIFT_COLOR_PRESETS.forEach(function (preset) {
-      const swatch = document.createElement('button');
-      swatch.type = 'button';
-      swatch.className = 'shift-color-swatch' + (preset === ddShiftNewColor ? ' active' : '');
-      swatch.dataset.color = preset;
-      swatch.style.background = preset;
-      swatch.title = preset;
-      swatch.addEventListener('click', function () {
-        ddShiftNewColor = preset;
-        renderDDShiftColorPicker();
-      });
-      wrap.appendChild(swatch);
-    });
-    document.getElementById('dd-shift-color-input').value = ddShiftNewColor || SHIFT_COLOR_PRESETS[0];
-  }
-
-  function updateDDShiftColorVisibility() {
-    const name = document.getElementById('dd-shift-new-input').value.trim();
-    const row = document.getElementById('dd-shift-color-row');
-    if (name && !getShiftColor(name)) {
-      if (!ddShiftNewColor) { ddShiftNewColor = SHIFT_COLOR_PRESETS[0]; }
-      row.style.display = '';
-      renderDDShiftColorPicker();
-    } else {
-      row.style.display = 'none';
-    }
-  }
-
   function renderDDShift(shiftName, isOverride, overrideType) {
     const badge = document.getElementById('dd-shift-override-badge');
     if (isOverride) {
@@ -3851,22 +3803,11 @@
     const day = state.days[detailDayIdx0];
     document.getElementById('dd-shift-dnum-label').textContent = 'D' + day.dayIndex;
     document.getElementById('dd-shift-edit-row').style.display = '';
-    ddShiftNewColor = null;
-    updateDDShiftColorVisibility();
     document.getElementById('dd-shift-new-input').focus();
   });
 
   document.getElementById('btn-dd-shift-cancel').addEventListener('click', function () {
     document.getElementById('dd-shift-edit-row').style.display = 'none';
-    document.getElementById('dd-shift-color-row').style.display = 'none';
-    ddShiftNewColor = null;
-  });
-
-  document.getElementById('dd-shift-new-input').addEventListener('input', updateDDShiftColorVisibility);
-
-  document.getElementById('dd-shift-color-input').addEventListener('change', function () {
-    ddShiftNewColor = this.value;
-    renderDDShiftColorPicker();
   });
 
   document.getElementById('btn-dd-shift-once').addEventListener('click', function () {
@@ -3875,10 +3816,6 @@
     state.shiftOverrides = state.shiftOverrides.filter(function(o) { return o.date !== detailDateStr; });
     if (newShift) {
       state.shiftOverrides.push({ date: detailDateStr, shiftName: newShift });
-      if (!getShiftColor(newShift) && ddShiftNewColor) {
-        if (!state.shiftColors) state.shiftColors = {};
-        state.shiftColors[newShift] = ddShiftNewColor;
-      }
     }
     saveState();
     const day = state.days[detailDayIdx0];
@@ -3897,10 +3834,6 @@
     state.dayOverrides = state.dayOverrides.filter(function(o) { return o.dayIndex !== day.dayIndex; });
     if (newShift) {
       state.dayOverrides.push({ dayIndex: day.dayIndex, shiftName: newShift });
-      if (!getShiftColor(newShift) && ddShiftNewColor) {
-        if (!state.shiftColors) state.shiftColors = {};
-        state.shiftColors[newShift] = ddShiftNewColor;
-      }
     }
     saveState();
     const { name: newName, isOverride: newIsOverride, overrideType: newOverrideType } = getEffectiveShiftName(detailDateStr, detailDayIdx0);
