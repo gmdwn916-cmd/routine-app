@@ -1900,6 +1900,14 @@
       border: 1.5px solid #007aff !important;
     }
     .bulk-cal-cell.selected .cell-date { color: #007aff; }
+    .bulk-cal-cell.today:not(.selected) {
+      background: var(--surface);
+      border: 1.5px solid var(--line);
+    }
+    .bulk-cal-cell.today:not(.selected) .cell-date {
+      color: #007aff;
+      font-weight: 700;
+    }
 
     /* ── 스킵 ── */
     .skip-btn {
