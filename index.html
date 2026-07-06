@@ -1163,6 +1163,21 @@
       box-sizing: border-box;
     }
 
+    /* 같은 근무가 여러 날 이어질 때 하나로 이어진 띠로 표시 (이어지는 칸은 이름 생략) */
+    .cell-shift-band {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 5px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .cell-shift-band.band-start { border-radius: 4px 0 0 4px; }
+    .cell-shift-band.band-end { border-radius: 0 4px 4px 0; }
+
     .cell-dots-row {
       display: flex;
       flex-wrap: wrap;
@@ -3060,6 +3075,12 @@
     }
   }
 
+  function applyShiftBandColor(el, shiftName) {
+    const color = getShiftColor(shiftName);
+    el.style.background = color || 'var(--text-3)';
+    el.style.color = '#fff';
+  }
+
   const STORAGE_KEY = 'shiftRoutine';
   let state = null;
 
@@ -3325,6 +3346,37 @@
     }
     // 우선순위 3: 기본 패턴
     return { name: day ? day.shiftType.name : '', isOverride: false, overrideType: null };
+  }
+
+  function getEffectiveShiftNameFor(dateStr) {
+    const idx0 = dayIndex0ForDate(dateStr);
+    if (idx0 === null) return '';
+    return getEffectiveShiftName(dateStr, idx0).name;
+  }
+
+  // 같은 근무명이 앞뒤로 이어지면 칸마다 반복 표기하지 않고 하나로 이어진 띠로 표시.
+  // 앞뒤 어느 쪽과도 이어지지 않는 하루짜리는 기존 배지 그대로 유지.
+  function appendShiftIndicator(cell, cellDateStr, shiftName) {
+    const d = parseLocalDate(cellDateStr);
+    const prevDateStr = formatDateStr(new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1));
+    const nextDateStr = formatDateStr(new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1));
+    const isStart = getEffectiveShiftNameFor(prevDateStr) !== shiftName;
+    const isEnd = getEffectiveShiftNameFor(nextDateStr) !== shiftName;
+
+    if (isStart && isEnd) {
+      const shiftEl = document.createElement('div');
+      shiftEl.className = 'cell-shift-badge';
+      shiftEl.textContent = shiftName;
+      applyShiftBadgeColor(shiftEl, shiftName);
+      cell.appendChild(shiftEl);
+      return;
+    }
+
+    const band = document.createElement('div');
+    band.className = 'cell-shift-band' + (isStart ? ' band-start' : '') + (isEnd ? ' band-end' : '');
+    if (isStart) band.textContent = shiftName;
+    applyShiftBandColor(band, shiftName);
+    cell.appendChild(band);
   }
 
   // ── 날짜 처리 (로컬 자정 기준) ───────────────────────────
@@ -3841,11 +3893,7 @@
       cell.appendChild(dateEl);
 
       if (shiftName) {
-        const shiftEl = document.createElement('div');
-        shiftEl.className = 'cell-shift-badge';
-        shiftEl.textContent = shiftName;
-        applyShiftBadgeColor(shiftEl, shiftName);
-        cell.appendChild(shiftEl);
+        appendShiftIndicator(cell, cellDateStr, shiftName);
       }
 
       // 점 표시 행: 루틴 카테고리 점 + 일정 점 (완료된 항목은 숨김)
@@ -4672,11 +4720,7 @@
       cell.appendChild(dateEl);
 
       if (shiftName) {
-        const shiftEl = document.createElement('div');
-        shiftEl.className = 'cell-shift-badge';
-        shiftEl.textContent = shiftName;
-        applyShiftBadgeColor(shiftEl, shiftName);
-        cell.appendChild(shiftEl);
+        appendShiftIndicator(cell, cellDateStr, shiftName);
       }
 
       // 루틴 dots + 이벤트 바 (일반 달력과 동일)
@@ -5126,11 +5170,7 @@
       if (dayIdx0 !== null) {
         const { name: shiftName } = getEffectiveShiftName(cellDateStr, dayIdx0);
         if (shiftName) {
-          const shiftEl = document.createElement('div');
-          shiftEl.className = 'cell-shift-badge';
-          shiftEl.textContent = shiftName;
-          applyShiftBadgeColor(shiftEl, shiftName);
-          cell.appendChild(shiftEl);
+          appendShiftIndicator(cell, cellDateStr, shiftName);
         }
       }
 
