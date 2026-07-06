@@ -1134,6 +1134,11 @@
 
     .grid-cell.range-pick { box-shadow: inset 0 0 0 2px #007aff; }
 
+    .grid-cell.bulk-shift-selected {
+      box-shadow: inset 0 0 0 2px #007aff;
+      background: rgba(0,122,255,0.14);
+    }
+
     .cell-date {
       font-size: 13px;
       font-weight: 700;
@@ -1974,7 +1979,7 @@
     }
 
     /* ── 인박스 / 배치 / 반복 승격 / 기간 수정 오버레이(공통 바텀시트 패턴) ── */
-    #inbox-overlay, #place-overlay, #promote-overlay, #period-edit-overlay {
+    #inbox-overlay, #place-overlay, #promote-overlay, #period-edit-overlay, #bulk-shift-overlay {
       display: none;
       position: fixed;
       inset: 0;
@@ -1984,9 +1989,9 @@
       justify-content: center;
     }
 
-    #inbox-overlay.open, #place-overlay.open, #promote-overlay.open, #period-edit-overlay.open { display: flex; }
+    #inbox-overlay.open, #place-overlay.open, #promote-overlay.open, #period-edit-overlay.open, #bulk-shift-overlay.open { display: flex; }
 
-    #inbox-panel, #place-panel, #promote-panel, #period-edit-panel {
+    #inbox-panel, #place-panel, #promote-panel, #period-edit-panel, #bulk-shift-panel {
       background: var(--bg);
       width: 100%;
       max-width: 480px;
@@ -1996,7 +2001,7 @@
       padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 0));
     }
 
-    #inbox-panel h2, #place-panel h2, #promote-panel h2, #period-edit-panel h2 {
+    #inbox-panel h2, #place-panel h2, #promote-panel h2, #period-edit-panel h2, #bulk-shift-panel h2 {
       font-size: 16px;
       font-weight: 700;
       color: var(--text-1);
@@ -2730,6 +2735,22 @@
   </div>
 </div>
 
+<!-- ── 근무 일괄 수정 바텀시트 ── -->
+<div id="bulk-shift-overlay">
+  <div id="bulk-shift-panel">
+    <h2>근무 일괄 수정</h2>
+    <div class="form-group">
+      <label id="bulk-shift-count"></label>
+      <input type="text" id="bulk-shift-input" placeholder="새 근무명…" maxlength="20">
+    </div>
+    <div class="onboard-warn" id="bulk-shift-warn"></div>
+    <div class="btn-row" style="padding-top:8px">
+      <button class="btn btn-secondary" id="btn-bulk-shift-cancel">취소</button>
+      <button class="btn btn-primary" id="btn-bulk-shift-apply">적용</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── Day 편집 바텀시트 ── -->
 <div id="edit-overlay">
   <div id="edit-panel">
@@ -3074,6 +3095,12 @@
   const _now = new Date();
   let calYear = _now.getFullYear();
   let calMonth = _now.getMonth();
+  // 근무 일괄 수정: 날짜 셀 길게 누른 채 드래그로 범위 선택
+  let bulkShiftDragging = false;
+  let bulkShiftAnchorDate = null;
+  let bulkShiftSelectedDates = new Set();
+  let bulkShiftLastRangeKey = '';
+  let bulkShiftSuppressClick = false;
   let bulkCalYear = _now.getFullYear();
   let bulkCalMonth = _now.getMonth();
   let bulkSelectedDates = new Set();
@@ -3803,7 +3830,9 @@
       const cellDateStr = formatDateStr(dateMid);
 
       const cell = document.createElement('div');
-      cell.className = 'grid-cell' + (!inMonth ? ' other-month' : '') + (isToday ? ' today' : '');
+      cell.className = 'grid-cell' + (!inMonth ? ' other-month' : '') + (isToday ? ' today' : '') +
+        (bulkShiftSelectedDates.has(cellDateStr) ? ' bulk-shift-selected' : '');
+      cell.dataset.dateStr = cellDateStr;
       const { name: shiftName } = getEffectiveShiftName(cellDateStr, dayIdx0);
 
       const dateEl = document.createElement('div');
@@ -3836,10 +3865,113 @@
       }
       appendEventIndicators(cell, cellDateStr, cellEvents);
 
-      cell.addEventListener('click', function () { openDayDetail(dayIdx0, cellDateStr); });
+      cell.addEventListener('click', function () {
+        if (bulkShiftSuppressClick) { bulkShiftSuppressClick = false; return; }
+        openDayDetail(dayIdx0, cellDateStr);
+      });
+      setupBulkShiftLongPress(cell, cellDateStr);
       grid.appendChild(cell);
     });
   }
+
+  // 달력 날짜 셀 길게 누른 채 드래그 → 범위 선택 (근무 일괄 수정)
+  function setupBulkShiftLongPress(cell, cellDateStr) {
+    cell.addEventListener('touchstart', function (e) {
+      const startX = e.touches[0].clientX;
+      const startY = e.touches[0].clientY;
+      let activated = false;
+
+      const timer = setTimeout(function () {
+        activated = true;
+        bulkShiftDragging = true;
+        bulkShiftAnchorDate = cellDateStr;
+        bulkShiftSuppressClick = true;
+        bulkShiftLastRangeKey = '';
+        selectBulkShiftRange(cellDateStr, cellDateStr);
+        if (navigator.vibrate) navigator.vibrate(40);
+      }, 500);
+
+      function onMove(e2) {
+        const t = e2.touches[0];
+        if (!activated) {
+          if (Math.abs(t.clientX - startX) > 8 || Math.abs(t.clientY - startY) > 8) clearTimeout(timer);
+          return;
+        }
+        e2.preventDefault();
+        const el = document.elementFromPoint(t.clientX, t.clientY);
+        const targetCell = el ? el.closest('.grid-cell[data-date-str]') : null;
+        if (targetCell) selectBulkShiftRange(bulkShiftAnchorDate, targetCell.dataset.dateStr);
+      }
+
+      function onEnd() {
+        clearTimeout(timer);
+        document.removeEventListener('touchmove', onMove);
+        document.removeEventListener('touchend', onEnd);
+        document.removeEventListener('touchcancel', onEnd);
+        if (activated) {
+          bulkShiftDragging = false;
+          openBulkShiftSheet();
+        }
+      }
+
+      document.addEventListener('touchmove', onMove, { passive: false });
+      document.addEventListener('touchend', onEnd, { passive: true });
+      document.addEventListener('touchcancel', onEnd, { passive: true });
+    }, { passive: true });
+  }
+
+  function selectBulkShiftRange(dateA, dateB) {
+    const lo = dateA < dateB ? dateA : dateB;
+    const hi = dateA < dateB ? dateB : dateA;
+    const key = lo + '_' + hi;
+    if (key === bulkShiftLastRangeKey) return;
+    bulkShiftLastRangeKey = key;
+
+    const set = new Set();
+    const cur = parseLocalDate(lo);
+    const end = parseLocalDate(hi);
+    while (cur <= end) {
+      set.add(formatDateStr(cur));
+      cur.setDate(cur.getDate() + 1);
+    }
+    bulkShiftSelectedDates = set;
+    renderGrid();
+  }
+
+  function openBulkShiftSheet() {
+    if (bulkShiftSelectedDates.size === 0) return;
+    document.getElementById('bulk-shift-count').textContent = bulkShiftSelectedDates.size + '개 날짜 선택됨';
+    document.getElementById('bulk-shift-input').value = '';
+    document.getElementById('bulk-shift-warn').textContent = '';
+    document.getElementById('bulk-shift-overlay').classList.add('open');
+    document.getElementById('bulk-shift-input').focus();
+  }
+
+  function closeBulkShiftSheet() {
+    document.getElementById('bulk-shift-overlay').classList.remove('open');
+    bulkShiftSelectedDates = new Set();
+    bulkShiftLastRangeKey = '';
+    renderGrid();
+  }
+
+  document.getElementById('btn-bulk-shift-cancel').addEventListener('click', closeBulkShiftSheet);
+  document.getElementById('bulk-shift-overlay').addEventListener('click', function (e) {
+    if (e.target === this) closeBulkShiftSheet();
+  });
+
+  document.getElementById('btn-bulk-shift-apply').addEventListener('click', function () {
+    const newShift = document.getElementById('bulk-shift-input').value.trim();
+    const warn = document.getElementById('bulk-shift-warn');
+    if (!newShift) { warn.textContent = '근무명을 입력해 주세요.'; return; }
+    if (!Array.isArray(state.shiftOverrides)) state.shiftOverrides = [];
+    state.shiftOverrides = state.shiftOverrides.filter(function (o) { return !bulkShiftSelectedDates.has(o.date); });
+    bulkShiftSelectedDates.forEach(function (dateStr) {
+      state.shiftOverrides.push({ date: dateStr, shiftName: newShift });
+    });
+    saveState();
+    closeBulkShiftSheet();
+    renderToday();
+  });
 
   // ── 설정 탭 ──────────────────────────────────────────────
   function renderSettings() {
@@ -4444,6 +4576,7 @@
       sy = e.touches[0].clientY;
     }, { passive: true });
     gridTab.addEventListener('touchend', function (e) {
+      if (bulkShiftDragging) return;
       var dx = e.changedTouches[0].clientX - sx;
       var dy = e.changedTouches[0].clientY - sy;
       if (Math.abs(dx) >= 50 && Math.abs(dx) > Math.abs(dy)) {
