@@ -3848,13 +3848,18 @@
         cell.appendChild(shiftEl);
       }
 
-      // 점 표시 행: 루틴 카테고리 점 + 일정 점
+      // 점 표시 행: 루틴 카테고리 점 + 일정 점 (완료된 항목은 숨김)
       const items = dayObj.items || [];
       const cellEvents = getEventsForDate(cellDateStr);
-      if (items.length > 0) {
+      const cellDateDones = new Set(
+        (state.done_log || []).filter(function (d) { return d.date === cellDateStr; }).map(function (d) { return d.text; })
+      );
+      const undoneItems = items.filter(function (item) { return !cellDateDones.has(item.text); });
+      const undoneCellEvents = cellEvents.filter(function (ev) { return !ev.done; });
+      if (undoneItems.length > 0) {
         const dotsRow = document.createElement('div');
         dotsRow.className = 'cell-dots-row';
-        items.slice(0, 4).forEach(function (item) {
+        undoneItems.slice(0, 4).forEach(function (item) {
           const cat = getCat(item.category);
           const dot = document.createElement('div');
           dot.className = 'cell-dot';
@@ -3863,7 +3868,7 @@
         });
         cell.appendChild(dotsRow);
       }
-      appendEventIndicators(cell, cellDateStr, cellEvents);
+      appendEventIndicators(cell, cellDateStr, undoneCellEvents);
 
       cell.addEventListener('click', function () {
         if (bulkShiftSuppressClick) { bulkShiftSuppressClick = false; return; }
