@@ -1060,8 +1060,6 @@
 
     .grid-cell.other-month { opacity: 0.38; }
 
-    .grid-cell.range-pick { box-shadow: inset 0 0 0 2px #007aff; }
-
     .grid-cell.bulk-shift-selected {
       box-shadow: inset 0 0 0 2px #007aff;
       background: rgba(0,122,255,0.14);
@@ -2225,12 +2223,6 @@
 <!-- ── 배치 날짜 선택 오버레이 ── -->
 <div id="place-overlay">
   <div id="place-panel">
-    <h2 id="place-title">언제로 배치할까요?</h2>
-    <div class="btn-row" id="place-mode-row" style="margin-bottom:8px">
-      <button class="btn btn-secondary" id="btn-place-mode-single">하루</button>
-      <button class="btn btn-secondary" id="btn-place-mode-range">기간</button>
-    </div>
-    <div class="onboard-warn" id="place-range-hint" style="display:none;color:var(--text-2);"></div>
     <div class="cal-nav" style="padding:0 0 8px">
       <button class="btn-cal-nav" id="btn-place-cal-prev">‹</button>
       <span id="place-cal-title"></span>
@@ -4229,26 +4221,6 @@
   let placeCalYear = _now.getFullYear();
   let placeCalMonth = _now.getMonth();
   let placingInboxId = null;
-  let placeMode = 'single';
-  let placeRangeStart = null;
-
-  function setPlaceMode(mode) {
-    placeMode = mode;
-    placeRangeStart = null;
-    document.getElementById('btn-place-mode-single').classList.toggle('active', mode === 'single');
-    document.getElementById('btn-place-mode-range').classList.toggle('active', mode === 'range');
-    const hint = document.getElementById('place-range-hint');
-    if (mode === 'range') {
-      hint.style.display = '';
-      hint.textContent = '시작일을 선택하세요.';
-    } else {
-      hint.style.display = 'none';
-    }
-    renderPlaceCal();
-  }
-
-  document.getElementById('btn-place-mode-single').addEventListener('click', function () { setPlaceMode('single'); });
-  document.getElementById('btn-place-mode-range').addEventListener('click', function () { setPlaceMode('range'); });
 
   function openPlace(inboxId) {
     if (!state || !state.cycleDays || !state.baseDate) {
@@ -4259,14 +4231,13 @@
     const today = new Date();
     placeCalYear = today.getFullYear();
     placeCalMonth = today.getMonth();
-    setPlaceMode('single');
+    renderPlaceCal();
     document.getElementById('place-overlay').classList.add('open');
   }
 
   function closePlace() {
     document.getElementById('place-overlay').classList.remove('open');
     placingInboxId = null;
-    placeRangeStart = null;
   }
 
   function renderPlaceCal() {
@@ -4312,8 +4283,7 @@
       const dayIdx0 = dayIndex0ForDate(cellDateStr);
 
       const cell = document.createElement('div');
-      cell.className = 'grid-cell' + (!inMonth ? ' other-month' : '') + (isToday ? ' today' : '') +
-        (placeMode === 'range' && placeRangeStart === cellDateStr ? ' range-pick' : '');
+      cell.className = 'grid-cell' + (!inMonth ? ' other-month' : '') + (isToday ? ' today' : '');
 
       const dateEl = document.createElement('div');
       dateEl.className = 'cell-date';
@@ -4328,32 +4298,20 @@
       }
 
       cell.addEventListener('click', function () {
-        if (placeMode === 'single') {
-          placeInboxItem(placingInboxId, cellDateStr);
-          return;
-        }
-        if (placeRangeStart === null) {
-          placeRangeStart = cellDateStr;
-          document.getElementById('place-range-hint').textContent = '종료일을 선택하세요.';
-          renderPlaceCal();
-          return;
-        }
-        const lo = placeRangeStart < cellDateStr ? placeRangeStart : cellDateStr;
-        const hi = placeRangeStart < cellDateStr ? cellDateStr : placeRangeStart;
-        placeInboxItem(placingInboxId, lo, hi);
+        placeInboxItem(placingInboxId, cellDateStr);
       });
 
       grid.appendChild(cell);
     });
   }
 
-  function placeInboxItem(inboxId, dateStr, endDateStr) {
+  function placeInboxItem(inboxId, dateStr) {
     const idx = (state.inbox || []).findIndex(function (it) { return it.id === inboxId; });
     if (idx === -1) return;
     const item = state.inbox[idx];
     state.inbox.splice(idx, 1);
     if (!Array.isArray(state.events)) state.events = [];
-    state.events.push({ id: genId('e'), date: dateStr, endDate: endDateStr || dateStr, text: item.text, done: false });
+    state.events.push({ id: genId('e'), date: dateStr, endDate: dateStr, text: item.text, done: false });
     saveState();
     closePlace();
     renderInboxList();
