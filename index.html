@@ -604,6 +604,19 @@
 
     .dd-event-text { flex: 1; }
 
+    /* 할 일 글씨를 눌렀을 때 그 자리에서 바로 고치는 입력창 (여러 목록에서 공용) */
+    .inline-edit-input {
+      flex: 1;
+      font: inherit;
+      color: inherit;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid #007aff;
+      outline: none;
+      padding: 0;
+      min-width: 0;
+    }
+
     .btn-dd-del-event {
       background: none;
       border: none;
@@ -3337,6 +3350,38 @@
     return ev.text;
   }
 
+  // 할 일 글씨를 누르면 그 자리에서 바로 텍스트를 고칠 수 있게 함(하루짜리 할 일 전용).
+  function makeEventTextEditable(textEl, ev, afterSave) {
+    textEl.style.cursor = 'pointer';
+    textEl.addEventListener('click', function () {
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'inline-edit-input';
+      input.maxLength = 50;
+      input.value = ev.text;
+      textEl.replaceWith(input);
+      input.focus();
+      input.select();
+
+      let done = false;
+      function commit() {
+        if (done) return;
+        done = true;
+        const newText = input.value.trim();
+        if (newText && newText !== ev.text) {
+          ev.text = newText;
+          saveState();
+        }
+        afterSave();
+      }
+      input.addEventListener('blur', commit);
+      input.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') input.blur();
+        else if (e.key === 'Escape') { done = true; afterSave(); }
+      });
+    });
+  }
+
   function getEffectiveShiftName(dateStr, dayIdx0) {
     // 우선순위 1: 날짜 예외
     if (state && Array.isArray(state.shiftOverrides)) {
@@ -3737,6 +3782,12 @@
           const text = document.createElement('span');
           text.className = 'today-event-text';
           text.textContent = eventDisplayText(ev);
+          if (!isMultiDay(ev)) {
+            makeEventTextEditable(text, ev, function () {
+              renderToday();
+              renderGrid();
+            });
+          }
           row.appendChild(text);
 
           eventsEl.appendChild(row);
@@ -4473,6 +4524,12 @@
         text.style.cursor = 'pointer';
         text.style.textDecoration = 'underline dotted';
         text.addEventListener('click', function () { openPeriodEdit(ev); });
+      } else {
+        makeEventTextEditable(text, ev, function () {
+          renderDDEvents();
+          renderGrid();
+          renderToday();
+        });
       }
       row.appendChild(text);
       if (!isMultiDay(ev)) {
