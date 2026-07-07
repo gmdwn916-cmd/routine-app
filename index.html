@@ -1070,7 +1070,7 @@
     .grid-header {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap: 2px;
+      gap: 0;
       margin-bottom: 2px;
     }
 
@@ -1103,7 +1103,7 @@
     .day-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap: 2px;
+      gap: 0;
       align-items: start;
     }
 
@@ -1163,7 +1163,8 @@
       box-sizing: border-box;
     }
 
-    /* 같은 근무가 여러 날 이어질 때 하나로 이어진 띠로 표시 (이어지는 칸은 이름 대신 점으로 표시) */
+    /* 같은 근무가 여러 날 이어질 때 하나로 이어진 띠로 표시.
+       칸 자체의 좌우 여백(4px)만큼 옆으로 늘려서 옆 칸 띠와 맞닿게 한다. */
     .cell-shift-band {
       font-size: 10px;
       font-weight: 700;
@@ -1173,12 +1174,11 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      width: 100%;
+      width: calc(100% + 8px);
+      margin: 0 -4px;
       box-sizing: border-box;
       color: #fff;
     }
-
-    .cell-shift-band.band-continue { text-align: center; opacity: 0.6; letter-spacing: 1px; }
 
     .cell-shift-band.band-start { border-radius: 5px 0 0 5px; }
     .cell-shift-band.band-end { border-radius: 0 5px 5px 0; }
@@ -3391,9 +3391,8 @@
     }
 
     const band = document.createElement('div');
-    band.className = 'cell-shift-band' + (isStart ? ' band-start' : '') + (isEnd ? ' band-end' : '') +
-      (isStart ? '' : ' band-continue');
-    band.textContent = isStart ? shiftName : '···';
+    band.className = 'cell-shift-band' + (isStart ? ' band-start' : '') + (isEnd ? ' band-end' : '');
+    if (isStart) band.textContent = shiftName;
     applyShiftBandColor(band, shiftName);
     cell.appendChild(band);
   }
