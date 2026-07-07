@@ -1163,20 +1163,25 @@
       box-sizing: border-box;
     }
 
-    /* 같은 근무가 여러 날 이어질 때 하나로 이어진 띠로 표시 (이어지는 칸은 이름 생략) */
+    /* 같은 근무가 여러 날 이어질 때 하나로 이어진 띠로 표시 (이어지는 칸은 이름 대신 점으로 표시) */
     .cell-shift-band {
       font-size: 10px;
       font-weight: 700;
-      padding: 1px 5px;
+      height: 16px;
+      line-height: 16px;
+      padding: 0 5px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
       width: 100%;
       box-sizing: border-box;
+      color: #fff;
     }
 
-    .cell-shift-band.band-start { border-radius: 4px 0 0 4px; }
-    .cell-shift-band.band-end { border-radius: 0 4px 4px 0; }
+    .cell-shift-band.band-continue { text-align: center; opacity: 0.6; letter-spacing: 1px; }
+
+    .cell-shift-band.band-start { border-radius: 5px 0 0 5px; }
+    .cell-shift-band.band-end { border-radius: 0 5px 5px 0; }
 
     .cell-dots-row {
       display: flex;
@@ -3348,20 +3353,33 @@
     return { name: day ? day.shiftType.name : '', isOverride: false, overrideType: null };
   }
 
-  function getEffectiveShiftNameFor(dateStr) {
-    const idx0 = dayIndex0ForDate(dateStr);
-    if (idx0 === null) return '';
-    return getEffectiveShiftName(dateStr, idx0).name;
+  // 날짜 예외(근무 일괄변경/근무 변경으로 만들어진 override)만 조회. 기본 패턴·D번호 패턴은 대상 아님.
+  function getDateOverride(dateStr) {
+    if (!state || !Array.isArray(state.shiftOverrides)) return null;
+    return state.shiftOverrides.find(function (o) { return o.date === dateStr; }) || null;
   }
 
-  // 같은 근무명이 앞뒤로 이어지면 칸마다 반복 표기하지 않고 하나로 이어진 띠로 표시.
-  // 앞뒤 어느 쪽과도 이어지지 않는 하루짜리는 기존 배지 그대로 유지.
+  // 근무 일괄변경(혹은 날짜별 근무 변경)으로 같은 근무명이 앞뒤로 이어질 때만
+  // 칸마다 반복 표기하지 않고 하나로 이어진 띠로 표시. 기본 패턴이 우연히 같은
+  // 이름을 반복하는 경우는 병합하지 않고 항상 기존 배지로 표시한다.
   function appendShiftIndicator(cell, cellDateStr, shiftName) {
+    const ov = getDateOverride(cellDateStr);
+    if (!ov) {
+      const shiftEl = document.createElement('div');
+      shiftEl.className = 'cell-shift-badge';
+      shiftEl.textContent = shiftName;
+      applyShiftBadgeColor(shiftEl, shiftName);
+      cell.appendChild(shiftEl);
+      return;
+    }
+
     const d = parseLocalDate(cellDateStr);
     const prevDateStr = formatDateStr(new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1));
     const nextDateStr = formatDateStr(new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1));
-    const isStart = getEffectiveShiftNameFor(prevDateStr) !== shiftName;
-    const isEnd = getEffectiveShiftNameFor(nextDateStr) !== shiftName;
+    const prevOv = getDateOverride(prevDateStr);
+    const nextOv = getDateOverride(nextDateStr);
+    const isStart = !(prevOv && prevOv.shiftName === shiftName);
+    const isEnd = !(nextOv && nextOv.shiftName === shiftName);
 
     if (isStart && isEnd) {
       const shiftEl = document.createElement('div');
@@ -3373,8 +3391,9 @@
     }
 
     const band = document.createElement('div');
-    band.className = 'cell-shift-band' + (isStart ? ' band-start' : '') + (isEnd ? ' band-end' : '');
-    if (isStart) band.textContent = shiftName;
+    band.className = 'cell-shift-band' + (isStart ? ' band-start' : '') + (isEnd ? ' band-end' : '') +
+      (isStart ? '' : ' band-continue');
+    band.textContent = isStart ? shiftName : '···';
     applyShiftBandColor(band, shiftName);
     cell.appendChild(band);
   }
