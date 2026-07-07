@@ -3135,18 +3135,16 @@
       li.appendChild(repeatBtn);
     }
 
-    if (kind === 'onetime') {
-      const starBtn = document.createElement('button');
-      starBtn.className = 'btn-important-toggle' + (item.important ? ' is-on' : '');
-      starBtn.setAttribute('aria-label', item.important ? '중요 표시 해제' : '중요 표시');
-      starBtn.textContent = item.important ? '★' : '☆';
-      starBtn.addEventListener('click', function () {
-        item.important = !item.important;
-        saveState();
-        refreshFn();
-      });
-      li.appendChild(starBtn);
-    }
+    const starBtn = document.createElement('button');
+    starBtn.className = 'btn-important-toggle' + (item.important ? ' is-on' : '');
+    starBtn.setAttribute('aria-label', item.important ? '중요 표시 해제' : '중요 표시');
+    starBtn.textContent = item.important ? '★' : '☆';
+    starBtn.addEventListener('click', function () {
+      item.important = !item.important;
+      saveState();
+      refreshFn();
+    });
+    li.appendChild(starBtn);
 
     const checkBtn = document.createElement('button');
     checkBtn.className = 'item-check-btn';
@@ -4623,7 +4621,10 @@
       repeatEditorTargetEvent.repeat = rule;
     } else {
       if (!Array.isArray(state.events)) state.events = [];
-      state.events.push({ id: genId('e'), text: text, category: category, repeat: rule });
+      state.events.push({
+        id: genId('e'), text: text, category: category, repeat: rule,
+        important: repeatEditorSourceEvent ? !!repeatEditorSourceEvent.important : false,
+      });
     }
 
     if (repeatEditorSourceEvent) {
