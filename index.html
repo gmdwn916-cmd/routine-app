@@ -5088,6 +5088,20 @@
     const input = document.getElementById('quick-add-input');
     const text = input.value.trim();
     if (!text) return;
+
+    // 오늘 탭은 날짜가 정해진 화면이므로 미배치를 거치지 않고 오늘 날짜에 바로 배치한다.
+    const onTodayTab = document.getElementById('tab-today').classList.contains('active');
+    if (onTodayTab) {
+      const todayStr = formatDateStr(todayMidnight());
+      if (!Array.isArray(state.events)) state.events = [];
+      state.events.push({ id: genId('e'), date: todayStr, endDate: todayStr, text: text });
+      input.value = '';
+      saveState();
+      renderToday();
+      renderGrid();
+      return;
+    }
+
     if (!Array.isArray(state.inbox)) state.inbox = [];
     state.inbox.push({ id: genId('i'), text: text, createdAt: Date.now() });
     input.value = '';
