@@ -375,25 +375,6 @@
     /* --cat-color는 JS가 li에 인라인으로 지정 (기존 인라인 색 지정 대체) */
     .today-items .item-text { color: var(--cat-color, var(--text-1)); }
 
-    .today-items-empty {
-      font-size: 15px;
-      color: var(--text-3);
-      font-style: italic;
-      line-height: 1.65;
-    }
-
-    .today-trigger-group { margin-bottom: 4px; }
-    .today-trigger-group:last-child { margin-bottom: 0; }
-    .today-trigger-label {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--text-3);
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      margin: 12px 0 2px;
-    }
-    .today-trigger-group:first-child .today-trigger-label { margin-top: 0; }
-
     /* ── 오늘 탭 리디자인 (여기 규칙은 오늘 탭에만 적용, 달력 상세는 기존 유지) ── */
     #tab-today .card {
       background: var(--surface);
@@ -425,7 +406,6 @@
       background: color-mix(in srgb, var(--cat-color, var(--text-2)) var(--tint-badge), transparent);
     }
     #tab-today .item-text { color: var(--text-1); }
-    #tab-today .today-items-empty { color: var(--text-3); }
     #tab-today .item-check-btn {
       width: 28px;
       height: 28px;
@@ -459,21 +439,6 @@
     #tab-today .today-events-empty-msg { color: var(--text-3); }
 
     /* ── Category ── */
-    .cat-picker {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      flex-shrink: 0;
-    }
-
-    .cat-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      flex-shrink: 0;
-      transition: background 0.15s;
-    }
-
     .cat-select {
       padding: 7px 4px 7px 6px;
       border: 1.5px solid var(--line);
@@ -561,7 +526,6 @@
       margin-bottom: 8px;
     }
 
-    .dd-routine-list { margin-bottom: 8px; max-height: 110px; overflow-y: auto; }
     #dd-events-list { max-height: 110px; overflow-y: auto; }
     #dd-events-section .dd-section-label { color: #d97000; }
 
@@ -670,14 +634,13 @@
 
     .btn-dd-repeat-event:active { color: #007aff; border-color: #007aff; }
 
-    .dd-routine-hint {
-      font-size: 11px;
+    .dd-repeat-toggle-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
       color: var(--text-2);
-      line-height: 1.5;
-      margin: 6px 0 2px;
-      padding: 5px 8px;
-      background: var(--surface-2);
-      border-radius: 7px;
+      margin-top: 6px;
     }
 
     .btn-dd-del-routine {
@@ -716,10 +679,6 @@
     }
 
     .dd-add-row input:focus { border-color: #007aff; }
-
-    .dd-add-row .cat-select {
-      flex-shrink: 0;
-    }
 
     .btn-dd-add {
       padding: 9px 14px;
@@ -1373,101 +1332,6 @@
     .btn-row { display: flex; gap: 10px; }
     .btn-row .btn { flex: 1; }
 
-    /* ── Edit Bottom Sheet ── */
-    #edit-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.45);
-      z-index: 40;
-      align-items: flex-end;
-      justify-content: center;
-    }
-
-    #edit-overlay.open { display: flex; }
-
-    #edit-panel {
-      background: var(--bg);
-      width: 100%;
-      max-width: 480px;
-      border-radius: 20px 20px 0 0;
-      padding: 20px 20px calc(40px + env(safe-area-inset-bottom, 0));
-      max-height: 80vh;
-      overflow-y: auto;
-    }
-
-    #edit-panel h2 {
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--text-1);
-      margin-bottom: 18px;
-    }
-
-    #edit-panel .form-group label { color: var(--text-2); }
-
-    /* 편집 패널 항목 행 */
-    .item-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-
-    .item-row input {
-      flex: 1;
-      padding: 11px 12px;
-      border: 1.5px solid var(--line);
-      border-radius: 10px;
-      font-size: 15px;
-      background: var(--surface);
-      color: var(--text-1);
-      font-family: inherit;
-      outline: none;
-      transition: border-color 0.15s;
-      -webkit-appearance: none;
-      min-width: 0;
-    }
-
-    .item-row input:focus { border-color: #007aff; }
-
-    .item-del-btn {
-      width: 34px;
-      height: 34px;
-      border-radius: 50%;
-      background: rgba(255, 59, 48, 0.1);
-      border: none;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      font-size: 20px;
-      color: #ff3b30;
-      line-height: 1;
-      padding: 0;
-      font-family: inherit;
-      transition: background 0.12s;
-    }
-
-    .item-del-btn:active { background: rgba(255, 59, 48, 0.2); }
-
-    .btn-add-item {
-      width: 100%;
-      padding: 11px;
-      border-radius: 10px;
-      background: var(--surface-2);
-      border: 1.5px dashed var(--text-3);
-      color: #007aff;
-      font-size: 14px;
-      font-weight: 600;
-      font-family: inherit;
-      cursor: pointer;
-      margin-bottom: 16px;
-      transition: background 0.12s;
-    }
-
-    .btn-add-item:active { background: var(--line); }
-
     /* ── Onboarding ── */
     #onboard-overlay {
       display: none;
@@ -1820,23 +1684,6 @@
       border-color: #007aff;
       color: #fff;
     }
-    .routine-rate {
-      font-size: 11px;
-      color: var(--text-2);
-      margin-top: 3px;
-    }
-    .routine-rate-bar {
-      height: 3px;
-      border-radius: 2px;
-      background: var(--surface-2);
-      margin-top: 4px;
-      overflow: hidden;
-    }
-    .routine-rate-fill {
-      height: 100%;
-      border-radius: 2px;
-      background: var(--accent);
-    }
     .team-chip {
       display: inline-block;
       padding: 2px 8px;
@@ -1857,157 +1704,6 @@
       font-size: 13px;
       font-family: inherit;
       cursor: pointer;
-    }
-
-    /* ── 루틴 상세 오버레이 ── */
-    #routine-detail-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.4);
-      z-index: 40;
-      align-items: flex-end;
-      justify-content: center;
-    }
-
-    #routine-detail-overlay.open { display: flex; }
-
-    #routine-detail-panel {
-      background: var(--bg);
-      width: 100%;
-      max-width: 480px;
-      border-radius: 20px 20px 0 0;
-      max-height: 78vh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    #rd-panel-top {
-      flex-shrink: 0;
-      padding: 16px 16px 0;
-    }
-
-    #rd-panel-top h2 {
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--text-1);
-      margin-bottom: 12px;
-    }
-
-    .rd-input-row {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-
-    .rd-input-row input {
-      flex: 1;
-      min-width: 0;
-      padding: 10px 12px;
-      border: 1.5px solid var(--line);
-      border-radius: 10px;
-      font-size: 14px;
-      background: var(--surface);
-      color: var(--text-1);
-      font-family: inherit;
-      outline: none;
-      -webkit-appearance: none;
-    }
-
-    .rd-input-row input:focus { border-color: #007aff; }
-
-    .rd-input-row select {
-      padding: 10px 6px;
-      border: 1.5px solid var(--line);
-      border-radius: 10px;
-      font-size: 12px;
-      font-family: inherit;
-      background: var(--surface);
-      color: var(--text-1);
-      outline: none;
-      cursor: pointer;
-      -webkit-appearance: none;
-      flex-shrink: 0;
-    }
-
-    #rd-trigger { flex: 1; min-width: 0; }
-
-    .rd-grid-label {
-      font-size: 12px;
-      color: var(--text-2);
-      margin-bottom: 6px;
-    }
-
-    #rd-day-grid-wrap {
-      flex: 1;
-      min-height: 0;
-      overflow-y: auto;
-      padding: 0 16px 8px;
-    }
-
-    .rd-day-grid {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 3px;
-    }
-
-    .rd-day-cell {
-      background: var(--surface);
-      border-radius: 7px;
-      padding: 5px 2px;
-      cursor: pointer;
-      min-height: 46px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 2px;
-      border: 1.5px solid transparent;
-      box-sizing: border-box;
-      transition: background 0.1s, border-color 0.1s;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .rd-day-cell:active { background: var(--surface-2); }
-
-    .rd-day-cell.selected {
-      background: rgba(0,122,255,0.12);
-      border-color: #007aff;
-    }
-
-    .rd-cell-dnum {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--text-1);
-      line-height: 1;
-    }
-
-    .rd-day-cell.selected .rd-cell-dnum { color: #007aff; }
-
-    .rd-cell-shift {
-      font-size: 7px;
-      color: #5e5ce6;
-      font-weight: 600;
-      text-align: center;
-      max-width: 100%;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      width: 100%;
-    }
-
-    #rd-panel-bottom {
-      flex-shrink: 0;
-      padding: 8px 16px calc(28px + env(safe-area-inset-bottom, 0));
-    }
-
-    .rd-warn {
-      font-size: 13px;
-      color: #ff3b30;
-      min-height: 18px;
-      margin-bottom: 4px;
     }
 
     /* ── 인박스 / 배치 / 반복 승격 / 기간 수정 오버레이(공통 바텀시트 패턴) ── */
@@ -2104,11 +1800,6 @@
       color: #fff;
     }
 
-    #promote-manual-grid-wrap {
-      max-height: 40vh;
-      overflow-y: auto;
-    }
-
     .dd-shift-view {
       display: flex;
       align-items: center;
@@ -2175,12 +1866,6 @@
     }
 
     /* ── bulk 달력 추가 스타일 ── */
-    .bulk-repeat-hint {
-      font-size: 11px;
-      color: var(--text-2);
-      margin: -2px 0 10px;
-      line-height: 1.45;
-    }
     .bulk-sel-label {
       font-size: 12px;
       color: var(--text-2);
@@ -2487,7 +2172,7 @@
 
   <!-- ── 루틴 탭 ── -->
   <div class="tab-content" id="tab-routine">
-    <button class="btn-bulk-open" id="btn-new-routine">+ 새 루틴 만들기</button>
+    <button class="btn-bulk-open" id="btn-new-routine">+ 새로 만들기</button>
     <div id="routine-list"></div>
   </div>
 
@@ -2506,13 +2191,9 @@
         </div>
         <div class="today-shift" id="td-shift"></div>
       </div>
-      <div class="card">
-        <div class="section-label">루틴 항목</div>
-        <div id="td-items"></div>
-      </div>
-      <div class="card" id="td-events-card" style="display:none">
+      <div class="card" id="td-events-card">
         <div class="today-events-header">
-          <div class="section-label">📅 오늘 할 일</div>
+          <div class="section-label">오늘 할 일</div>
           <button type="button" class="today-events-toggle" id="td-events-toggle"></button>
         </div>
         <div id="td-events"></div>
@@ -2622,7 +2303,7 @@
   <div id="bottom-fixed">
   <!-- ── 전역 빠른 추가 바 ── -->
   <div id="quick-bar">
-    <input type="text" id="quick-add-input" placeholder="할 일이나 루틴을 입력하세요…" maxlength="50">
+    <input type="text" id="quick-add-input" placeholder="할 일을 입력하세요…" maxlength="50">
     <button id="btn-quick-add" aria-label="추가">+</button>
     <button id="btn-inbox-open" aria-label="미배치">📥<span id="inbox-badge" class="inbox-badge" style="display:none">0</span></button>
   </div>
@@ -2635,7 +2316,7 @@
         <line x1="9" y1="12" x2="15" y2="12"/>
         <line x1="9" y1="16" x2="13" y2="16"/>
       </svg>
-      루틴
+      반복 할일
     </button>
     <button id="nav-today" onclick="switchTab('today')">
       <svg viewBox="0 0 24 24">
@@ -2699,10 +2380,16 @@
   </div>
 </div>
 
-<!-- ── 반복 승격 오버레이 ── -->
+<!-- ── 반복 할 일 만들기/전환/편집 (공용 시트) ── -->
 <div id="promote-overlay">
   <div id="promote-panel">
-    <h2>어떤 날마다 반복할까요?</h2>
+    <h2 id="promote-title">반복 할 일 만들기</h2>
+    <div class="form-group">
+      <input type="text" id="promote-text-input" maxlength="50" placeholder="예: 물 마시기, 주짓수…">
+    </div>
+    <div class="bulk-input-row">
+      <select id="promote-cat-select" class="cat-select" style="flex:1; max-width:none;"></select>
+    </div>
     <div class="btn-row" id="promote-mode-row">
       <button class="btn btn-secondary" id="btn-promote-mode-shift">근무로 고르기</button>
       <button class="btn btn-secondary" id="btn-promote-mode-weekday">요일로 고르기</button>
@@ -2729,13 +2416,21 @@
     </div>
 
     <div id="promote-manual-section" style="display:none">
-      <div id="promote-manual-grid-wrap">
-        <div id="promote-manual-grid" class="rd-day-grid"></div>
+      <div class="cal-nav" style="padding:0 0 8px">
+        <button class="btn-cal-nav" id="btn-bulk-cal-prev">‹</button>
+        <span id="bulk-cal-title"></span>
+        <button class="btn-cal-nav" id="btn-bulk-cal-next">›</button>
+      </div>
+      <div class="grid-header" id="bulk-grid-header"></div>
+      <div class="bulk-sel-label">날짜 선택<span id="bulk-sel-count" class="bulk-sel-count"></span></div>
+      <div id="bulk-day-grid-wrap">
+        <div class="day-grid" id="bulk-cal-grid"></div>
       </div>
     </div>
 
     <div class="onboard-warn" id="promote-warn"></div>
     <div class="btn-row" style="padding-top:8px">
+      <button class="btn btn-secondary" id="btn-promote-delete" style="display:none">삭제</button>
       <button class="btn btn-secondary" id="btn-promote-cancel">취소</button>
       <button class="btn btn-primary" id="btn-promote-confirm" style="display:none">확인</button>
     </div>
@@ -2783,26 +2478,6 @@
   </div>
 </div>
 
-<!-- ── Day 편집 바텀시트 ── -->
-<div id="edit-overlay">
-  <div id="edit-panel">
-    <h2 id="edit-title">Day N 편집</h2>
-    <div class="form-group">
-      <label for="edit-shift">근무유형 이름 (선택)</label>
-      <input type="text" id="edit-shift" placeholder="예: 야간, 주간, 비번…">
-    </div>
-    <div class="form-group">
-      <label>루틴 항목</label>
-      <div id="edit-item-list"></div>
-      <button class="btn-add-item" id="btn-add-item">+ 항목 추가</button>
-    </div>
-    <div class="btn-row">
-      <button class="btn btn-secondary" id="btn-cancel-edit">취소</button>
-      <button class="btn btn-primary" id="btn-save-edit">저장</button>
-    </div>
-  </div>
-</div>
-
 <!-- ── 일별 상세 패널 ── -->
 <div id="day-detail-overlay">
   <div id="day-detail-panel">
@@ -2824,107 +2499,21 @@
       <div class="dd-shift-note">설정탭의 기본 근무 패턴은 바뀌지 않아요.</div>
       <button class="dd-shift-cancel-btn" id="btn-dd-shift-cancel">취소</button>
     </div>
-    <div class="dd-section">
-      <div class="dd-section-label">루틴</div>
-      <div id="dd-routines" class="dd-routine-list"></div>
-      <div class="dd-add-row" style="margin-top:8px">
-        <select id="dd-routine-cat" class="cat-select"></select>
-        <input type="text" id="dd-routine-input" placeholder="루틴 추가…" maxlength="50">
-        <button class="btn-dd-add" id="btn-dd-add-routine">추가</button>
-      </div>
-      <div class="dd-routine-hint">↩ 루틴은 D번호 기준으로 반복됩니다. 추가하면 다음 주기 같은 Day에도 적용돼요.</div>
-      <div class="onboard-warn" id="dd-routine-warn"></div>
-      <button class="btn-dd-edit" id="btn-dd-edit-routine">상세 편집 →</button>
-    </div>
     <div class="dd-section" id="dd-events-section">
-      <div class="dd-section-label">📅 할 일</div>
+      <div class="dd-section-label">할 일</div>
       <div id="dd-events-list"></div>
       <div class="dd-add-row">
-        <input type="text" id="dd-event-input" placeholder="일정 추가…" maxlength="50">
+        <input type="text" id="dd-event-input" placeholder="할 일 추가…" maxlength="50">
         <button class="btn-dd-add" id="btn-dd-add-event">추가</button>
       </div>
+      <label class="dd-repeat-toggle-label">
+        <input type="checkbox" id="dd-event-repeat-toggle"> 반복
+      </label>
       <div class="onboard-warn" id="dd-warn"></div>
     </div>
     <div class="btn-row" style="padding-top:4px">
       <button class="btn btn-secondary" id="btn-dd-close">닫기</button>
     </div>
-  </div>
-</div>
-
-<!-- ── 일괄 추가 바텀시트 ── -->
-<div id="bulk-overlay">
-  <div id="bulk-panel">
-    <div id="bulk-panel-top">
-      <h2>여러 Day에 루틴 추가</h2>
-      <div class="bulk-input-row">
-        <input type="text" id="bulk-text" placeholder="예: 주짓수, 아침 루틴…">
-        <select id="bulk-cat"></select>
-      </div>
-      <div class="bulk-input-row">
-        <select id="bulk-trigger" style="flex:1;"></select>
-      </div>
-      <p class="bulk-repeat-hint">선택한 날짜의 주기(D○)에 추가되며, 다음 주기 같은 Day에도 반복됩니다.</p>
-      <div class="cal-nav" style="padding:0 0 8px">
-        <button class="btn-cal-nav" id="btn-bulk-cal-prev">‹</button>
-        <span id="bulk-cal-title"></span>
-        <button class="btn-cal-nav" id="btn-bulk-cal-next">›</button>
-      </div>
-      <div class="grid-header" id="bulk-grid-header"></div>
-      <div class="bulk-sel-label">날짜 선택<span id="bulk-sel-count" class="bulk-sel-count"></span></div>
-    </div>
-    <div id="bulk-day-grid-wrap">
-      <div class="day-grid" id="bulk-cal-grid"></div>
-    </div>
-    <div id="bulk-panel-bottom">
-      <div class="onboard-warn" id="bulk-warn"></div>
-      <div class="btn-row">
-        <button class="btn btn-secondary" id="btn-bulk-cancel">취소</button>
-        <button class="btn btn-primary" id="btn-bulk-add">추가</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ── 루틴 상세 오버레이 ── -->
-<div id="routine-detail-overlay">
-  <div id="routine-detail-panel">
-    <div id="rd-panel-top">
-      <h2>루틴 편집</h2>
-      <div class="rd-input-row">
-        <select id="rd-cat"></select>
-        <input type="text" id="rd-name-input" placeholder="루틴 이름">
-      </div>
-      <div class="rd-input-row">
-        <select id="rd-trigger"></select>
-        <button type="button" class="btn-dd-edit" id="btn-rd-trigger-manage" style="flex-shrink:0;white-space:nowrap;">트리거 관리</button>
-      </div>
-      <div class="rd-grid-label">포함할 Day 선택</div>
-    </div>
-    <div id="rd-day-grid-wrap">
-      <div id="rd-day-grid" class="rd-day-grid"></div>
-    </div>
-    <div id="rd-panel-bottom">
-      <div class="rd-warn" id="rd-warn"></div>
-      <div class="btn-row" style="margin-bottom:8px">
-        <button class="btn btn-secondary" id="btn-rd-del-all">전체 삭제</button>
-        <button class="btn btn-primary" id="btn-rd-save">저장</button>
-      </div>
-      <button class="btn btn-secondary" id="btn-rd-close">닫기</button>
-    </div>
-  </div>
-</div>
-
-<!-- ── 트리거 관리 오버레이 ── -->
-<div id="trigger-manage-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:60; align-items:flex-end; justify-content:center;">
-  <div style="background:var(--bg); width:100%; max-width:480px; border-radius:20px 20px 0 0; padding:20px; padding-bottom:calc(20px + env(safe-area-inset-bottom,0)); max-height:78vh; display:flex; flex-direction:column;">
-    <div style="font-weight:700; font-size:16px; margin-bottom:12px; color:var(--text-1);">트리거 관리</div>
-    <div style="display:flex; gap:8px; margin-bottom:8px;">
-      <input type="text" id="trg-name-input" placeholder="예: 눈 뜨자마자" maxlength="20" style="flex:1; min-width:0; padding:10px 12px; border:1.5px solid var(--line); border-radius:10px; font-size:14px; font-family:inherit; background:var(--surface); color:var(--text-1); outline:none;">
-      <button id="btn-trg-add" style="padding:10px 14px; background:#007aff; color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:600; font-family:inherit; cursor:pointer; flex-shrink:0;">추가</button>
-    </div>
-    <div style="color:#ff3b30; font-size:12px; min-height:16px; margin-bottom:4px;" id="trg-warn"></div>
-    <div id="trg-list" style="overflow-y:auto; flex:1; min-height:0;"></div>
-    <button id="btn-trg-close" style="margin-top:14px; padding:12px; border:1.5px solid var(--check-border); border-radius:12px; background:none; color:var(--text-1); font-size:15px; font-family:inherit; cursor:pointer; flex-shrink:0;">닫기</button>
   </div>
 </div>
 
@@ -3125,7 +2714,6 @@
     else if (systemDarkQuery.addListener) { systemDarkQuery.addListener(onSystemThemeChange); }
   }
 
-  let editingIdx = null; // 0-based
   const _now = new Date();
   let calYear = _now.getFullYear();
   let calMonth = _now.getMonth();
@@ -3153,39 +2741,8 @@
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }
 
-  // ── 트리거(사용자 정의 시간대/맥락 태그) ────────────────────
-  function getSortedTriggers() {
-    return (state && Array.isArray(state.triggers) ? state.triggers.slice() : [])
-      .sort(function (a, b) { return a.order - b.order; });
-  }
-
-  function genTriggerId() {
-    return 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-  }
-
   function genId(prefix) {
     return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-  }
-
-  function populateTriggerSelect(selectEl, currentId) {
-    if (!selectEl) return;
-    selectEl.innerHTML = '';
-    const noneOpt = document.createElement('option');
-    noneOpt.value = '';
-    noneOpt.textContent = '트리거 없음';
-    selectEl.appendChild(noneOpt);
-    getSortedTriggers().forEach(function (t) {
-      const opt = document.createElement('option');
-      opt.value = t.id;
-      opt.textContent = t.name;
-      selectEl.appendChild(opt);
-    });
-    selectEl.value = currentId || '';
-  }
-
-  function refreshTriggerSelects() {
-    populateTriggerSelect(document.getElementById('rd-trigger'), document.getElementById('rd-trigger') ? document.getElementById('rd-trigger').value : '');
-    populateTriggerSelect(document.getElementById('bulk-trigger'), document.getElementById('bulk-trigger') ? document.getElementById('bulk-trigger').value : '');
   }
 
   function buildEmptyDay(i) {
@@ -3226,7 +2783,7 @@
       changed = true;
     }
     s.events.forEach(function(ev) {
-      if (typeof ev.done !== 'boolean') {
+      if (!ev.repeat && typeof ev.done !== 'boolean') {
         ev.done = false;
         changed = true;
       }
@@ -3259,10 +2816,6 @@
       s.teams = [];
       changed = true;
     }
-    if (!Array.isArray(s.triggers)) {
-      s.triggers = [];
-      changed = true;
-    }
     if (!Array.isArray(s.inbox)) {
       s.inbox = [];
       changed = true;
@@ -3272,7 +2825,7 @@
         ev.id = genId('e');
         changed = true;
       }
-      if (!ev.endDate) {
+      if (!ev.repeat && !ev.endDate) {
         ev.endDate = ev.date;
         changed = true;
       }
@@ -3314,6 +2867,56 @@
         }
       });
     });
+
+    // 루틴(day.items, D번호 기준 배치) → 반복 할일(state.events, repeat 규칙) 1회 전환.
+    // 같은 이름의 항목을 모아 하나의 반복 할일로 만들고, done_log/skips도 이름 대신 새 id 기준으로 옮긴다.
+    if (!s.routinesMigratedV1) {
+      const routineMap = new Map();
+      s.days.forEach(function (day, i) {
+        (day.items || []).forEach(function (item) {
+          if (!routineMap.has(item.text)) {
+            routineMap.set(item.text, { category: item.category || 'etc', dayIndices: [], rules: [] });
+          }
+          const info = routineMap.get(item.text);
+          info.dayIndices.push(i);
+          info.rules.push(item.rule || null);
+        });
+      });
+
+      const textToId = new Map();
+      routineMap.forEach(function (info, text) {
+        const sortedIdx = info.dayIndices.slice().sort(function (a, b) { return a - b; });
+        const firstRule = info.rules[0];
+        const sameRule = firstRule && firstRule.type && firstRule.type !== 'manual' &&
+          info.rules.every(function (r) { return r && JSON.stringify(r) === JSON.stringify(firstRule); });
+        let rule = { type: 'manual', dayIndices: sortedIdx };
+        if (sameRule) {
+          const recomputed = computeIndicesForRule(firstRule).slice().sort(function (a, b) { return a - b; });
+          const matches = recomputed.length === sortedIdx.length && recomputed.every(function (v, i) { return v === sortedIdx[i]; });
+          if (matches) rule = firstRule;
+        }
+        const id = genId('e');
+        textToId.set(text, id);
+        s.events.push({ id: id, text: text, category: info.category, repeat: rule });
+      });
+
+      function rekeyByText(list) {
+        return list
+          .map(function (item) {
+            if (item.id) return item;
+            const id = textToId.get(item.text);
+            return id ? { date: item.date, id: id } : null;
+          })
+          .filter(Boolean);
+      }
+      s.skips = rekeyByText(s.skips || []);
+      s.done_log = rekeyByText(s.done_log || []);
+
+      s.days.forEach(function (day) { day.items = []; });
+      s.triggers = [];
+      s.routinesMigratedV1 = true;
+      changed = true;
+    }
     return changed;
   }
 
@@ -3325,8 +2928,43 @@
 
   function getEventsForDate(dateStr) {
     return (state.events || []).filter(function (e) {
-      return e.date <= dateStr && (e.endDate || e.date) >= dateStr;
+      return !e.repeat && e.date <= dateStr && (e.endDate || e.date) >= dateStr;
     });
+  }
+
+  // 그 날짜에 해당하는 반복 할일들(카테고리 점/체크 대상)
+  function getRepeatTodosForDate(dateStr) {
+    const idx0 = dayIndex0ForDate(dateStr);
+    if (idx0 === null) return [];
+    return (state.events || []).filter(function (e) {
+      return e.repeat && computeIndicesForRule(e.repeat).indexOf(idx0) !== -1;
+    });
+  }
+
+  function isRepeatDoneOn(id, dateStr) {
+    return (state.done_log || []).some(function (d) { return d.date === dateStr && d.id === id; });
+  }
+
+  function isRepeatSkippedOn(id, dateStr) {
+    return (state.skips || []).some(function (s) { return s.date === dateStr && s.id === id; });
+  }
+
+  function describeRepeatRule(rule) {
+    if (!rule) return '';
+    const DOW = ['일', '월', '화', '수', '목', '금', '토'];
+    if (rule.type === 'shift') {
+      const name = (rule.shiftNames || [])[0] || '';
+      if (rule.weekdays && rule.weekdays.length) {
+        const wds = rule.weekdays.slice().sort().map(function (w) { return DOW[w] + '요일'; }).join('·');
+        return name + '인 ' + wds + '마다';
+      }
+      return rule.offset === 1 ? (name + ' 다음날마다') : (name + '날마다');
+    }
+    if (rule.type === 'weekday') {
+      const wds = (rule.weekdays || []).slice().sort().map(function (w) { return '매주 ' + DOW[w] + '요일'; });
+      return wds.join(', ');
+    }
+    return '직접 고른 날짜들';
   }
 
   function isMultiDay(ev) {
@@ -3584,19 +3222,12 @@
       }
       return result;
     }
+    if (rule.type === 'manual') {
+      return (rule.dayIndices || []).filter(function (i) { return i >= 0 && i < n; });
+    }
     return [];
   }
 
-  // 계산된 인덱스들의 day.items에 항목 추가(중복 방지)
-  function addRoutineFromRule(text, category, rule, indices) {
-    indices.forEach(function(i) {
-      const day = state.days[i];
-      if (!Array.isArray(day.items)) day.items = [];
-      if (!day.items.some(function(it) { return it.text === text; })) {
-        day.items.push({ text: text, category: category || 'etc', rule: rule });
-      }
-    });
-  }
 
   // ── 탭 전환 ──────────────────────────────────────────────
   function switchTab(name) {
@@ -3612,25 +3243,20 @@
   }
 
   // ── 루틴 항목 공유 렌더링 ────────────────────────────────
+  // items: 반복 할일(state.events, repeat 있는 것) 목록. id 기준으로 완료/스킵 기록.
   function renderRoutineItems(containerEl, items, dateStr, refreshFn) {
     containerEl.innerHTML = '';
     if (!items || items.length === 0) return;
-
-    const dateSkips = new Set(
-      (state.skips || []).filter(function(s) { return s.date === dateStr; }).map(function(s) { return s.text; })
-    );
-    const dateDones = new Set(
-      (state.done_log || []).filter(function(d) { return d.date === dateStr; }).map(function(d) { return d.text; })
-    );
 
     const ul = document.createElement('ul');
     ul.className = 'today-items';
 
     items.forEach(function(item) {
       const cat = getCat(item.category);
-      const isSkipped = dateSkips.has(item.text);
-      const isDone = dateDones.has(item.text);
+      const isSkipped = isRepeatSkippedOn(item.id, dateStr);
+      const isDone = isRepeatDoneOn(item.id, dateStr);
       const li = document.createElement('li');
+      li.dataset.id = item.id;
       li.className = 'today-item' +
         (isDone ? ' today-item--done' : '') +
         (isSkipped ? ' today-item--skip' : '');
@@ -3647,8 +3273,7 @@
       textEl.style.cursor = 'pointer';
       textEl.addEventListener('click', function(e) {
         e.stopPropagation();
-        switchTab('routine');
-        openRoutineDetail(item.text);
+        openRepeatEditor({ editEvent: item });
       });
       li.appendChild(textEl);
 
@@ -3658,7 +3283,7 @@
           unskipBtn.className = 'unskip-btn';
           unskipBtn.textContent = '스킵 취소';
           unskipBtn.addEventListener('click', function() {
-            state.skips = (state.skips || []).filter(function(s) { return !(s.date === dateStr && s.text === item.text); });
+            state.skips = (state.skips || []).filter(function(s) { return !(s.date === dateStr && s.id === item.id); });
             saveState();
             refreshFn();
           });
@@ -3669,12 +3294,12 @@
           skipBtn.textContent = '스킵';
           skipBtn.addEventListener('click', function() {
             if (!Array.isArray(state.skips)) state.skips = [];
-            if (!state.skips.some(function(s) { return s.date === dateStr && s.text === item.text; })) {
-              state.skips.push({ date: dateStr, text: item.text });
+            if (!state.skips.some(function(s) { return s.date === dateStr && s.id === item.id; })) {
+              state.skips.push({ date: dateStr, id: item.id });
             }
-            state.done_log = (state.done_log || []).filter(function(d) { return !(d.date === dateStr && d.text === item.text); });
+            state.done_log = (state.done_log || []).filter(function(d) { return !(d.date === dateStr && d.id === item.id); });
             saveState();
-            _skipMoveRowTarget = item.text;
+            _skipMoveRowTarget = item.id;
             refreshFn();
           });
           li.appendChild(skipBtn);
@@ -3693,10 +3318,10 @@
       if (!isSkipped) {
         checkBtn.addEventListener('click', function() {
           if (!Array.isArray(state.done_log)) state.done_log = [];
-          const idx = state.done_log.findIndex(function(d) { return d.date === dateStr && d.text === item.text; });
+          const idx = state.done_log.findIndex(function(d) { return d.date === dateStr && d.id === item.id; });
           if (idx === -1) {
-            state.done_log.push({ date: dateStr, text: item.text });
-            state.skips = (state.skips || []).filter(function(s) { return !(s.date === dateStr && s.text === item.text); });
+            state.done_log.push({ date: dateStr, id: item.id });
+            state.skips = (state.skips || []).filter(function(s) { return !(s.date === dateStr && s.id === item.id); });
           } else {
             state.done_log.splice(idx, 1);
           }
@@ -3714,49 +3339,14 @@
       var tgt = _skipMoveRowTarget;
       var matched = false;
       ul.querySelectorAll('li.today-item--skip').forEach(function(skipLi) {
-        var tEl = skipLi.querySelector('.item-text');
-        if (tEl && tEl.textContent === tgt) { showMoveRow(skipLi, ul, tgt, dateStr); matched = true; }
+        if (skipLi.dataset.id === tgt) {
+          var tEl = skipLi.querySelector('.item-text');
+          showMoveRow(skipLi, ul, tEl ? tEl.textContent : '', dateStr);
+          matched = true;
+        }
       });
       if (matched) { _skipMoveRowTarget = null; }
     }
-  }
-
-  // 트리거별로 그룹지어 renderRoutineItems를 반복 호출 (트리거가 없으면 기존과 동일하게 단일 목록)
-  function renderGroupedRoutineItems(containerEl, items, dateStr, refreshFn) {
-    containerEl.innerHTML = '';
-    const triggers = getSortedTriggers();
-    if (triggers.length === 0) {
-      renderRoutineItems(containerEl, items, dateStr, refreshFn);
-      return;
-    }
-
-    const grouped = new Map();
-    triggers.forEach(function (t) { grouped.set(t.id, []); });
-    const untagged = [];
-    items.forEach(function (item) {
-      if (item.triggerId && grouped.has(item.triggerId)) {
-        grouped.get(item.triggerId).push(item);
-      } else {
-        untagged.push(item);
-      }
-    });
-
-    function appendGroup(label, list) {
-      if (list.length === 0) return;
-      const section = document.createElement('div');
-      section.className = 'today-trigger-group';
-      const labelEl = document.createElement('div');
-      labelEl.className = 'today-trigger-label';
-      labelEl.textContent = label;
-      section.appendChild(labelEl);
-      const listEl = document.createElement('div');
-      section.appendChild(listEl);
-      renderRoutineItems(listEl, list, dateStr, refreshFn);
-      containerEl.appendChild(section);
-    }
-
-    triggers.forEach(function (t) { appendGroup(t.name, grouped.get(t.id)); });
-    appendGroup('미지정', untagged);
   }
 
   // ── 오늘 탭 ──────────────────────────────────────────────
@@ -3806,79 +3396,73 @@
       shiftEl.style.removeProperty('--shift-color');
     }
 
-    const itemsEl = document.getElementById('td-items');
-    const items = day.items || [];
-    if (items.length > 0) {
-      renderGroupedRoutineItems(itemsEl, items, todayDateStr, renderToday);
-    } else {
-      itemsEl.innerHTML =
-        '<div class="today-items-empty">아직 루틴이 없어요.<br>달력 탭에서 이 날을 탭해 편집할 수 있어요.</div>';
-    }
-
-    // 오늘 할 일
-    const todayEvents = getEventsForDate(todayDateStr);
-    const eventsCard = document.getElementById('td-events-card');
+    // 오늘 할 일 (반복 할일 + 한 번짜리 할 일을 하나의 목록으로 합쳐 보여줌)
+    const repeatTodos = getRepeatTodosForDate(todayDateStr);
+    const oneTimeEvents = getEventsForDate(todayDateStr);
     const eventsEl = document.getElementById('td-events');
     const toggleBtn = document.getElementById('td-events-toggle');
-    if (todayEvents.length > 0) {
-      eventsCard.style.display = '';
-      toggleBtn.style.display = '';
-      toggleBtn.textContent = showDoneEvents ? '완료 숨기기' : '완료 보기';
-      toggleBtn.classList.toggle('is-on', showDoneEvents);
-      toggleBtn.onclick = function () {
-        showDoneEvents = !showDoneEvents;
+
+    toggleBtn.style.display = '';
+    toggleBtn.textContent = showDoneEvents ? '완료 숨기기' : '완료 보기';
+    toggleBtn.classList.toggle('is-on', showDoneEvents);
+    toggleBtn.onclick = function () {
+      showDoneEvents = !showDoneEvents;
+      renderToday();
+    };
+
+    eventsEl.innerHTML = '';
+
+    const visibleRepeat = repeatTodos.filter(function (ev) {
+      return showDoneEvents || !isRepeatDoneOn(ev.id, todayDateStr);
+    });
+    renderRoutineItems(eventsEl, visibleRepeat, todayDateStr, renderToday);
+
+    const visibleOneTime = oneTimeEvents.filter(function (ev) {
+      return showDoneEvents || !ev.done;
+    });
+    visibleOneTime.forEach(function (ev) {
+      const row = document.createElement('div');
+      row.className = 'today-event-item' + (ev.done ? ' today-event-item--done' : '');
+
+      const checkBtn = document.createElement('button');
+      checkBtn.className = 'today-event-check';
+      checkBtn.setAttribute('aria-label', ev.done ? '완료 취소' : '완료');
+      if (ev.done) {
+        checkBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 14 14" fill="none"><polyline points="2,7 5.5,11 12,3" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      }
+      checkBtn.addEventListener('click', function () {
+        ev.done = !ev.done;
+        saveState();
         renderToday();
-      };
+      });
+      row.appendChild(checkBtn);
 
-      eventsEl.innerHTML = '';
-      const visibleEvents = showDoneEvents
-        ? todayEvents
-        : todayEvents.filter(function (ev) { return !ev.done; });
-
-      if (visibleEvents.length === 0) {
-        const msg = document.createElement('div');
-        msg.className = 'today-events-empty-msg';
-        msg.textContent = '완료한 할 일만 있어요.';
-        eventsEl.appendChild(msg);
-      } else {
-        visibleEvents.forEach(function (ev) {
-          const row = document.createElement('div');
-          row.className = 'today-event-item' + (ev.done ? ' today-event-item--done' : '');
-
-          const checkBtn = document.createElement('button');
-          checkBtn.className = 'today-event-check';
-          checkBtn.setAttribute('aria-label', ev.done ? '완료 취소' : '완료');
-          if (ev.done) {
-            checkBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 14 14" fill="none"><polyline points="2,7 5.5,11 12,3" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-          }
-          checkBtn.addEventListener('click', function () {
-            ev.done = !ev.done;
-            saveState();
-            renderToday();
-          });
-          row.appendChild(checkBtn);
-
-          const text = document.createElement('span');
-          text.className = 'today-event-text';
-          text.textContent = eventDisplayText(ev);
-          if (!isMultiDay(ev)) {
-            makeEventTextEditable(text, ev, function () {
-              renderToday();
-              renderGrid();
-            });
-          }
-          row.appendChild(text);
-
-          eventsEl.appendChild(wrapWithSwipeToDelete(row, 'var(--surface)', function () {
-            state.events = state.events.filter(function (e) { return e !== ev; });
-            saveState();
-            renderToday();
-            renderGrid();
-          }));
+      const text = document.createElement('span');
+      text.className = 'today-event-text';
+      text.textContent = eventDisplayText(ev);
+      if (!isMultiDay(ev)) {
+        makeEventTextEditable(text, ev, function () {
+          renderToday();
+          renderGrid();
         });
       }
-    } else {
-      eventsCard.style.display = 'none';
+      row.appendChild(text);
+
+      eventsEl.appendChild(wrapWithSwipeToDelete(row, 'var(--surface)', function () {
+        state.events = state.events.filter(function (e) { return e !== ev; });
+        saveState();
+        renderToday();
+        renderGrid();
+      }));
+    });
+
+    if (eventsEl.children.length === 0) {
+      const msg = document.createElement('div');
+      msg.className = 'today-events-empty-msg';
+      msg.textContent = (repeatTodos.length + oneTimeEvents.length) === 0
+        ? '아직 할 일이 없어요.'
+        : '완료한 할 일만 있어요.';
+      eventsEl.appendChild(msg);
     }
 
     // 오늘 리마인더
@@ -4031,7 +3615,6 @@
       const isToday = dateMid.getTime() === todayMid.getTime();
       const diff = Math.round((dateMid - baseMid) / 86400000);
       const dayIdx0 = ((diff % state.cycleDays) + state.cycleDays) % state.cycleDays;
-      const dayObj = state.days[dayIdx0];
       const cellDateStr = formatDateStr(dateMid);
 
       const cell = document.createElement('div');
@@ -4049,13 +3632,10 @@
         appendShiftIndicator(cell, cellDateStr, shiftName);
       }
 
-      // 점 표시 행: 루틴 카테고리 점 + 일정 점 (완료된 항목은 숨김)
-      const items = dayObj.items || [];
+      // 점 표시 행: 반복 할일 카테고리 점 + 일정 점 (완료된 항목은 숨김)
+      const repeatTodos = getRepeatTodosForDate(cellDateStr);
       const cellEvents = getEventsForDate(cellDateStr);
-      const cellDateDones = new Set(
-        (state.done_log || []).filter(function (d) { return d.date === cellDateStr; }).map(function (d) { return d.text; })
-      );
-      const undoneItems = items.filter(function (item) { return !cellDateDones.has(item.text); });
+      const undoneItems = repeatTodos.filter(function (item) { return !isRepeatDoneOn(item.id, cellDateStr); });
       const undoneCellEvents = cellEvents.filter(function (ev) { return !ev.done; });
       if (undoneItems.length > 0) {
         const dotsRow = document.createElement('div');
@@ -4434,100 +4014,6 @@
     applyTheme();
   });
 
-  // ── Day 편집 바텀시트 ─────────────────────────────────────
-  function addItemRow(text, category) {
-    const list = document.getElementById('edit-item-list');
-    const row = document.createElement('div');
-    row.className = 'item-row';
-
-    const picker = document.createElement('div');
-    picker.className = 'cat-picker';
-
-    const dot = document.createElement('span');
-    dot.className = 'cat-dot';
-
-    const sel = document.createElement('select');
-    sel.className = 'cat-select';
-    CATEGORIES.forEach(c => {
-      const opt = document.createElement('option');
-      opt.value = c.id;
-      opt.textContent = (c.icon ? c.icon + ' ' : '') + c.name;
-      sel.appendChild(opt);
-    });
-    sel.value = category || 'etc';
-
-    const updateDot = () => { dot.style.background = getCat(sel.value).color; };
-    updateDot();
-    sel.addEventListener('change', updateDot);
-
-    picker.appendChild(dot);
-    picker.appendChild(sel);
-
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.value = text || '';
-    input.placeholder = '루틴 항목을 입력하세요';
-
-    const delBtn = document.createElement('button');
-    delBtn.className = 'item-del-btn';
-    delBtn.textContent = '×';
-    delBtn.setAttribute('aria-label', '삭제');
-    delBtn.addEventListener('click', () => row.remove());
-
-    row.appendChild(picker);
-    row.appendChild(input);
-    row.appendChild(delBtn);
-    list.appendChild(row);
-    return input;
-  }
-
-  function openEdit(idx) {
-    editingIdx = idx;
-    const day = state.days[idx];
-    document.getElementById('edit-title').textContent = 'Day ' + day.dayIndex + ' 편집';
-    document.getElementById('edit-shift').value = day.shiftType.name || '';
-
-    const list = document.getElementById('edit-item-list');
-    list.innerHTML = '';
-    (day.items || []).forEach(item => addItemRow(item.text, item.category));
-
-    document.getElementById('edit-overlay').classList.add('open');
-  }
-
-  function closeEdit() {
-    document.getElementById('edit-overlay').classList.remove('open');
-    editingIdx = null;
-  }
-
-  document.getElementById('edit-overlay').addEventListener('click', function (e) {
-    if (e.target === this) closeEdit();
-  });
-
-  document.getElementById('btn-cancel-edit').addEventListener('click', closeEdit);
-
-  document.getElementById('btn-add-item').addEventListener('click', function () {
-    addItemRow('').focus();
-  });
-
-  document.getElementById('btn-save-edit').addEventListener('click', function () {
-    if (editingIdx === null) return;
-    const day = state.days[editingIdx];
-    day.shiftType.name = document.getElementById('edit-shift').value.trim();
-
-    const rows = document.querySelectorAll('#edit-item-list .item-row');
-    day.items = Array.from(rows)
-      .map(row => ({
-        text: row.querySelector('input').value.trim(),
-        category: row.querySelector('select').value,
-      }))
-      .filter(item => item.text !== '');
-
-    saveState();
-    renderRoutine();
-    closeEdit();
-    renderGrid();
-  });
-
   // ── 일별 상세 패널 ──────────────────────────────────────────
   let detailDayIdx0 = null;
   let detailDateStr = null;
@@ -4547,51 +4033,27 @@
       'D' + day.dayIndex + (effShiftName ? ' · ' + effShiftName : '');
     renderDDShift(effShiftName, effIsOverride, effOverrideType);
 
-    // 루틴 목록 (읽기 전용)
-    renderDDRoutines(day);
-
-    // 일정 목록
-    renderDDEvents();
+    renderDDTodos();
 
     document.getElementById('dd-event-input').value = '';
+    document.getElementById('dd-event-repeat-toggle').checked = false;
     document.getElementById('dd-warn').textContent = '';
-
-    // 루틴 추가 행 초기화
-    const ddCatSel = document.getElementById('dd-routine-cat');
-    ddCatSel.innerHTML = '';
-    CATEGORIES.forEach(function (c) {
-      const opt = document.createElement('option');
-      opt.value = c.id;
-      opt.textContent = (c.icon ? c.icon + ' ' : '') + c.name;
-      ddCatSel.appendChild(opt);
-    });
-    document.getElementById('dd-routine-input').value = '';
-    document.getElementById('dd-routine-warn').textContent = '';
 
     document.getElementById('day-detail-overlay').classList.add('open');
   }
 
-  function renderDDRoutines(day) {
-    const el = document.getElementById('dd-routines');
+  // 그 날짜에 해당하는 반복 할일 + 한 번짜리 할 일을 하나의 목록으로 합쳐 보여줌
+  function renderDDTodos() {
+    const el = document.getElementById('dd-events-list');
     el.innerHTML = '';
-    const items = day.items || [];
-    if (items.length === 0) {
-      const empty = document.createElement('div');
-      empty.className = 'dd-routine-empty';
-      empty.textContent = '루틴 없음';
-      el.appendChild(empty);
-      return;
-    }
-    renderRoutineItems(el, items, detailDateStr, function() {
-      renderDDRoutines(state.days[detailDayIdx0]);
+
+    const repeatTodos = getRepeatTodosForDate(detailDateStr);
+    renderRoutineItems(el, repeatTodos, detailDateStr, function () {
+      renderDDTodos();
       renderGrid();
       renderToday();
     });
-  }
 
-  function renderDDEvents() {
-    const el = document.getElementById('dd-events-list');
-    el.innerHTML = '';
     const events = getEventsForDate(detailDateStr);
     events.forEach(function (ev) {
       const row = document.createElement('div');
@@ -4605,7 +4067,7 @@
         text.addEventListener('click', function () { openPeriodEdit(ev); });
       } else {
         makeEventTextEditable(text, ev, function () {
-          renderDDEvents();
+          renderDDTodos();
           renderGrid();
           renderToday();
         });
@@ -4616,7 +4078,7 @@
         repeatBtn.className = 'btn-dd-repeat-event';
         repeatBtn.textContent = '반복';
         repeatBtn.setAttribute('aria-label', '반복으로 전환');
-        repeatBtn.addEventListener('click', function () { openPromote(ev); });
+        repeatBtn.addEventListener('click', function () { openRepeatEditor({ sourceEvent: ev }); });
         row.appendChild(repeatBtn);
       }
       const del = document.createElement('button');
@@ -4633,13 +4095,20 @@
           return e.id ? e.id !== ev.id : !(e.date === detailDateStr && e.text === ev.text);
         });
         saveState();
-        renderDDEvents();
+        renderDDTodos();
         renderGrid();
         renderToday();
       }
 
       el.appendChild(wrapWithSwipeToDelete(row, 'var(--bg)', deleteThisEvent));
     });
+
+    if (el.children.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'dd-routine-empty';
+      empty.textContent = '할 일 없음';
+      el.appendChild(empty);
+    }
   }
 
   function renderDDShift(shiftName, isOverride, overrideType) {
@@ -4711,52 +4180,31 @@
     renderToday();
   });
 
-  document.getElementById('btn-dd-edit-routine').addEventListener('click', function () {
-    const idx = detailDayIdx0;
-    closeDayDetail();
-    openEdit(idx);
-  });
-
   document.getElementById('btn-dd-add-event').addEventListener('click', function () {
     const input = document.getElementById('dd-event-input');
     const warn = document.getElementById('dd-warn');
     const text = input.value.trim();
-    if (!text) { warn.textContent = '일정을 입력해 주세요.'; return; }
+    if (!text) { warn.textContent = '할 일을 입력해 주세요.'; return; }
     warn.textContent = '';
+
+    if (document.getElementById('dd-event-repeat-toggle').checked) {
+      input.value = '';
+      document.getElementById('dd-event-repeat-toggle').checked = false;
+      openRepeatEditor({ presetText: text });
+      return;
+    }
+
     if (!Array.isArray(state.events)) { state.events = []; }
     state.events.push({ id: genId('e'), date: detailDateStr, endDate: detailDateStr, text: text });
     input.value = '';
     saveState();
-    renderDDEvents();
+    renderDDTodos();
     renderGrid();
     renderToday();
   });
 
   document.getElementById('dd-event-input').addEventListener('keydown', function (e) {
     if (e.key === 'Enter') { document.getElementById('btn-dd-add-event').click(); }
-  });
-
-  document.getElementById('btn-dd-add-routine').addEventListener('click', function () {
-    const input = document.getElementById('dd-routine-input');
-    const warn = document.getElementById('dd-routine-warn');
-    const text = input.value.trim();
-    if (!text) { warn.textContent = '루틴을 입력해 주세요.'; return; }
-    warn.textContent = '';
-    const category = document.getElementById('dd-routine-cat').value;
-    const day = state.days[detailDayIdx0];
-    if (!day.items.some(function (it) { return it.text === text; })) {
-      day.items.push({ text: text, category: category });
-    }
-    input.value = '';
-    saveState();
-    renderDDRoutines(state.days[detailDayIdx0]);
-    renderRoutine();
-    renderGrid();
-    renderToday();
-  });
-
-  document.getElementById('dd-routine-input').addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') { document.getElementById('btn-dd-add-routine').click(); }
   });
 
   // ── 달력 월 이동 ──────────────────────────────────────────
@@ -4793,7 +4241,8 @@
   })();
 
   // ── 일괄 추가 ──────────────────────────────────────────
-  function renderBulkCal() {
+  // 반복 규칙의 "달력에서 선택" 모드용 달력 (근무 일괄변경 달력과 별개, 반복 편집 시트 안에 표시)
+  function renderRepeatManualCal() {
     document.getElementById('bulk-cal-title').textContent = bulkCalYear + '년 ' + (bulkCalMonth + 1) + '월';
 
     const weekStart = (state && state.weekStart === 1) ? 1 : 0;
@@ -4843,7 +4292,6 @@
       const isToday = dateMid.getTime() === todayMid.getTime();
       const diff = Math.round((dateMid - baseMid) / 86400000);
       const dayIdx0 = ((diff % state.cycleDays) + state.cycleDays) % state.cycleDays;
-      const dayObj = state.days[dayIdx0];
       const cellDateStr = formatDateStr(dateMid);
       const isSelected = bulkSelectedDates.has(cellDateStr);
 
@@ -4855,7 +4303,6 @@
 
       const { name: shiftName } = getEffectiveShiftName(cellDateStr, dayIdx0);
 
-      // 날짜 + 근무명 배지 (일반 달력과 동일)
       const dateEl = document.createElement('div');
       dateEl.className = 'cell-date';
       dateEl.textContent = date.getDate();
@@ -4865,21 +4312,7 @@
         appendShiftIndicator(cell, cellDateStr, shiftName);
       }
 
-      // 루틴 dots + 이벤트 바 (일반 달력과 동일)
-      const items = dayObj.items || [];
       const cellEvents = getEventsForDate(cellDateStr);
-      if (items.length > 0) {
-        const dotsRow = document.createElement('div');
-        dotsRow.className = 'cell-dots-row';
-        items.slice(0, 4).forEach(function (item) {
-          const cat = getCat(item.category);
-          const dot = document.createElement('div');
-          dot.className = 'cell-dot';
-          dot.style.background = cat.color;
-          dotsRow.appendChild(dot);
-        });
-        cell.appendChild(dotsRow);
-      }
       if (cellEvents.length > 0) {
         const evBar = document.createElement('div');
         evBar.className = 'cell-event-bar';
@@ -4901,93 +4334,21 @@
     });
   }
 
-  function openBulk() {
-    if (!state || !state.cycleDays) return;
-
-    const catSel = document.getElementById('bulk-cat');
-    catSel.innerHTML = '';
-    CATEGORIES.forEach(function (c) {
-      const opt = document.createElement('option');
-      opt.value = c.id;
-      opt.textContent = (c.icon ? c.icon + ' ' : '') + c.name;
-      catSel.appendChild(opt);
-    });
-
-    populateTriggerSelect(document.getElementById('bulk-trigger'), '');
-
-    document.getElementById('bulk-text').value = '';
-    document.getElementById('bulk-warn').textContent = '';
-
-    bulkSelectedDates = new Set();
-    const now = new Date();
-    bulkCalYear = now.getFullYear();
-    bulkCalMonth = now.getMonth();
-
-    renderBulkCal();
-    updateBulkCount();
-    document.getElementById('bulk-overlay').classList.add('open');
-    document.getElementById('bulk-text').focus();
-  }
-
   function updateBulkCount() {
     const el = document.getElementById('bulk-sel-count');
     el.textContent = bulkSelectedDates.size > 0 ? ' ' + bulkSelectedDates.size + '개 선택됨' : '';
   }
 
-  function closeBulk() {
-    document.getElementById('bulk-overlay').classList.remove('open');
-  }
-
-  document.getElementById('btn-bulk-cancel').addEventListener('click', closeBulk);
-  document.getElementById('bulk-overlay').addEventListener('click', function (e) {
-    if (e.target === this) closeBulk();
-  });
-
   document.getElementById('btn-bulk-cal-prev').addEventListener('click', function () {
     bulkCalMonth--;
     if (bulkCalMonth < 0) { bulkCalMonth = 11; bulkCalYear--; }
-    renderBulkCal();
+    renderRepeatManualCal();
   });
 
   document.getElementById('btn-bulk-cal-next').addEventListener('click', function () {
     bulkCalMonth++;
     if (bulkCalMonth > 11) { bulkCalMonth = 0; bulkCalYear++; }
-    renderBulkCal();
-  });
-
-  document.getElementById('btn-bulk-add').addEventListener('click', function () {
-    const text = document.getElementById('bulk-text').value.trim();
-    const category = document.getElementById('bulk-cat').value;
-    const triggerId = document.getElementById('bulk-trigger').value;
-    const warn = document.getElementById('bulk-warn');
-
-    if (!text) { warn.textContent = '루틴 항목을 입력해 주세요.'; return; }
-    if (bulkSelectedDates.size === 0) { warn.textContent = '추가할 날짜를 하나 이상 선택해 주세요.'; return; }
-    warn.textContent = '';
-
-    const baseMid = parseLocalDate(state.baseDate);
-    const addedDayIndices = new Set();
-
-    bulkSelectedDates.forEach(function (dateStr) {
-      const dateMid = parseLocalDate(dateStr);
-      const diff = Math.round((dateMid - baseMid) / 86400000);
-      const dayIdx0 = ((diff % state.cycleDays) + state.cycleDays) % state.cycleDays;
-      if (!addedDayIndices.has(dayIdx0)) {
-        addedDayIndices.add(dayIdx0);
-        const day = state.days[dayIdx0];
-        if (!day.items.some(function (it) { return it.text === text; })) {
-          const newItem = { text: text, category: category };
-          if (triggerId) { newItem.triggerId = triggerId; }
-          day.items.push(newItem);
-        }
-      }
-    });
-
-    saveState();
-    renderToday();
-    renderGrid();
-    renderRoutine();
-    closeBulk();
+    renderRepeatManualCal();
   });
 
   // ── 온보딩 ──────────────────────────────────────────────
@@ -5065,36 +4426,6 @@
     document.getElementById('onboard-overlay').classList.remove('open');
     switchTab('today');
   });
-
-  // ── 성취율 계산 ──────────────────────────────────────────
-  function calcCompletionRate(routineName, dayIndices0) {
-    if (!state || !state.cycleDays || !state.baseDate) return { expected: 0, done: 0, rate: null };
-    const dayIdxSet = new Set(dayIndices0);
-    const baseMid = parseLocalDate(state.baseDate);
-    const todayMid = todayMidnight();
-    const cycleDays = state.cycleDays;
-
-    const todayDiff = Math.round((todayMid - baseMid) / 86400000);
-    const cycleOffset = ((todayDiff % cycleDays) + cycleDays) % cycleDays;
-    const startDate = new Date(baseMid.getFullYear(), baseMid.getMonth(), baseMid.getDate() + (todayDiff - cycleOffset));
-
-    const doneSet = new Set(
-      (state.done_log || []).filter(function(d) { return d.text === routineName; }).map(function(d) { return d.date; })
-    );
-
-    let expected = 0, done = 0;
-    let cur = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
-    while (cur <= todayMid) {
-      const diff = Math.round((cur - baseMid) / 86400000);
-      const idx0 = ((diff % cycleDays) + cycleDays) % cycleDays;
-      if (dayIdxSet.has(idx0)) {
-        expected++;
-        if (doneSet.has(formatDateStr(cur))) done++;
-      }
-      cur = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate() + 1);
-    }
-    return { expected: expected, done: done, rate: expected === 0 ? null : Math.round(done / expected * 100) };
-  }
 
   // ── 팀 근무 계산 ─────────────────────────────────────────
   function getTeamShift(team, dateStr) {
@@ -5363,7 +4694,7 @@
     renderInboxBadge();
     renderToday();
     renderGrid();
-    renderDDEvents();
+    renderDDTodos();
   }
 
   document.getElementById('btn-place-cancel').addEventListener('click', closePlace);
@@ -5381,11 +4712,11 @@
     renderPlaceCal();
   });
 
-  // ── 반복 승격: 배치된 할 일 → 루틴 규칙 지정 ─────────────────
-  let promoteEvent = null;
+  // ── 반복 할 일 만들기 / 전환 / 편집 (공용 시트) ─────────────────
+  let repeatEditorTargetEvent = null; // 편집 중인 기존 반복 할일 (없으면 새로 만들기/전환)
+  let repeatEditorSourceEvent = null; // 반복으로 전환 중인 원래 한 번짜리 할 일 (확정 시 삭제됨)
   let promoteMode = null;
   let promoteOffset = 0;
-  let promoteManualSelected = new Set();
 
   function renderWeekdayPicker(containerEl, selectedSet) {
     containerEl.innerHTML = '';
@@ -5424,14 +4755,35 @@
     document.getElementById('btn-promote-mode-manual').classList.toggle('active', mode === 'manual');
   }
 
-  function openPromote(ev) {
-    promoteEvent = ev;
+  // 반복 규칙 없이(=처음 만들 때) 이 사이클 안에서 오늘과 가장 가까운, 주어진 D인덱스에 해당하는 실제 날짜.
+  // 기존에 선택돼 있던 dayIndices를 달력 선택 화면에 다시 보여줄 때 씀.
+  function representativeDateForDayIndex(idx0) {
+    const baseMid = parseLocalDate(state.baseDate);
+    const todayMid = todayMidnight();
+    const diff = Math.round((todayMid - baseMid) / 86400000);
+    const todayIdx = ((diff % state.cycleDays) + state.cycleDays) % state.cycleDays;
+    const delta = idx0 - todayIdx;
+    const d = new Date(todayMid.getFullYear(), todayMid.getMonth(), todayMid.getDate() + delta);
+    return formatDateStr(d);
+  }
+
+  function openRepeatEditor(opts) {
+    opts = opts || {};
+    repeatEditorTargetEvent = opts.editEvent || null;
+    repeatEditorSourceEvent = opts.sourceEvent || null;
     promoteMode = null;
     promoteOffset = 0;
-    promoteManualSelected = new Set();
-    const evIdx0 = dayIndex0ForDate(ev.date);
-    if (evIdx0 !== null) promoteManualSelected.add(evIdx0);
-    const evWeekday = parseLocalDate(ev.date).getDay();
+    bulkSelectedDates = new Set();
+
+    const existing = repeatEditorTargetEvent;
+    const initialText = existing ? existing.text : (repeatEditorSourceEvent ? repeatEditorSourceEvent.text : (opts.presetText || ''));
+    const initialCategory = existing ? existing.category : 'etc';
+    const initialRule = existing ? existing.repeat : null;
+
+    document.getElementById('promote-title').textContent =
+      existing ? '반복 할 일 편집' : (repeatEditorSourceEvent ? '반복으로 전환' : '반복 할 일 만들기');
+    document.getElementById('promote-text-input').value = initialText;
+    document.getElementById('btn-promote-delete').style.display = existing ? '' : 'none';
 
     document.getElementById('promote-warn').textContent = '';
     document.getElementById('promote-shift-section').style.display = 'none';
@@ -5439,6 +4791,16 @@
     document.getElementById('promote-manual-section').style.display = 'none';
     document.getElementById('btn-promote-confirm').style.display = 'none';
     document.querySelectorAll('#promote-mode-row .btn').forEach(function (b) { b.classList.remove('active'); });
+
+    const catSel = document.getElementById('promote-cat-select');
+    catSel.innerHTML = '';
+    CATEGORIES.forEach(function (c) {
+      const opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = (c.icon ? c.icon + ' ' : '') + c.name;
+      catSel.appendChild(opt);
+    });
+    catSel.value = initialCategory;
 
     const shiftSel = document.getElementById('promote-shift-name');
     shiftSel.innerHTML = '';
@@ -5452,38 +4814,91 @@
       opt.value = n; opt.textContent = n;
       shiftSel.appendChild(opt);
     });
-    setPromoteOffset(0);
-    document.getElementById('promote-shift-weekday-toggle').checked = false;
-    document.getElementById('promote-shift-weekday-picker').style.display = 'none';
 
-    renderWeekdayPicker(document.getElementById('promote-weekday-picker'), new Set([evWeekday]));
-    renderWeekdayPicker(document.getElementById('promote-shift-weekday-picker'), new Set([evWeekday]));
-    renderDayIndexGrid(document.getElementById('promote-manual-grid'), promoteManualSelected);
+    const now = new Date();
+    bulkCalYear = now.getFullYear();
+    bulkCalMonth = now.getMonth();
+    let initialWeekday = now.getDay();
+    if (repeatEditorSourceEvent) initialWeekday = parseLocalDate(repeatEditorSourceEvent.date).getDay();
+
+    if (initialRule && initialRule.type === 'shift') {
+      shiftSel.value = (initialRule.shiftNames || [])[0] || '';
+      setPromoteOffset(initialRule.offset || 0);
+      const hasWd = !!(initialRule.weekdays && initialRule.weekdays.length);
+      document.getElementById('promote-shift-weekday-toggle').checked = hasWd;
+      document.getElementById('promote-shift-weekday-picker').style.display = hasWd ? '' : 'none';
+      renderWeekdayPicker(document.getElementById('promote-shift-weekday-picker'), new Set(hasWd ? initialRule.weekdays : [initialWeekday]));
+      renderWeekdayPicker(document.getElementById('promote-weekday-picker'), new Set([initialWeekday]));
+      setPromoteMode('shift');
+    } else if (initialRule && initialRule.type === 'weekday') {
+      setPromoteOffset(0);
+      document.getElementById('promote-shift-weekday-toggle').checked = false;
+      document.getElementById('promote-shift-weekday-picker').style.display = 'none';
+      renderWeekdayPicker(document.getElementById('promote-shift-weekday-picker'), new Set([initialWeekday]));
+      renderWeekdayPicker(document.getElementById('promote-weekday-picker'), new Set(initialRule.weekdays || []));
+      setPromoteMode('weekday');
+    } else {
+      setPromoteOffset(0);
+      document.getElementById('promote-shift-weekday-toggle').checked = false;
+      document.getElementById('promote-shift-weekday-picker').style.display = 'none';
+      renderWeekdayPicker(document.getElementById('promote-shift-weekday-picker'), new Set([initialWeekday]));
+      renderWeekdayPicker(document.getElementById('promote-weekday-picker'), new Set([initialWeekday]));
+      if (initialRule && initialRule.type === 'manual') {
+        (initialRule.dayIndices || []).forEach(function (idx0) {
+          bulkSelectedDates.add(representativeDateForDayIndex(idx0));
+        });
+        setPromoteMode('manual');
+      } else if (repeatEditorSourceEvent) {
+        bulkSelectedDates.add(repeatEditorSourceEvent.date);
+        setPromoteMode('manual');
+      }
+    }
+
+    renderRepeatManualCal();
+    updateBulkCount();
 
     document.getElementById('promote-overlay').classList.add('open');
+    document.getElementById('promote-text-input').focus();
   }
 
-  function closePromote() {
+  function closeRepeatEditor() {
     document.getElementById('promote-overlay').classList.remove('open');
-    promoteEvent = null;
+    repeatEditorTargetEvent = null;
+    repeatEditorSourceEvent = null;
   }
 
   document.getElementById('btn-promote-mode-shift').addEventListener('click', function () { setPromoteMode('shift'); });
   document.getElementById('btn-promote-mode-weekday').addEventListener('click', function () { setPromoteMode('weekday'); });
-  document.getElementById('btn-promote-mode-manual').addEventListener('click', function () { setPromoteMode('manual'); });
+  document.getElementById('btn-promote-mode-manual').addEventListener('click', function () { setPromoteMode('manual'); renderRepeatManualCal(); updateBulkCount(); });
   document.getElementById('btn-promote-offset-0').addEventListener('click', function () { setPromoteOffset(0); });
   document.getElementById('btn-promote-offset-1').addEventListener('click', function () { setPromoteOffset(1); });
   document.getElementById('promote-shift-weekday-toggle').addEventListener('change', function () {
     document.getElementById('promote-shift-weekday-picker').style.display = this.checked ? '' : 'none';
   });
-  document.getElementById('btn-promote-cancel').addEventListener('click', closePromote);
+  document.getElementById('btn-promote-cancel').addEventListener('click', closeRepeatEditor);
   document.getElementById('promote-overlay').addEventListener('click', function (e) {
-    if (e.target === this) closePromote();
+    if (e.target === this) closeRepeatEditor();
+  });
+
+  document.getElementById('btn-promote-delete').addEventListener('click', function () {
+    if (repeatEditorTargetEvent) {
+      state.events = state.events.filter(function (e) { return e.id !== repeatEditorTargetEvent.id; });
+      saveState();
+    }
+    closeRepeatEditor();
+    renderRoutine();
+    renderGrid();
+    renderToday();
+    if (detailDateStr !== null) { renderDDTodos(); }
   });
 
   document.getElementById('btn-promote-confirm').addEventListener('click', function () {
     const warn = document.getElementById('promote-warn');
     warn.textContent = '';
+    const text = document.getElementById('promote-text-input').value.trim();
+    if (!text) { warn.textContent = '내용을 입력해 주세요.'; return; }
+    const category = document.getElementById('promote-cat-select').value;
+
     let rule = null;
     let indices = [];
 
@@ -5501,28 +4916,40 @@
       rule = { type: 'weekday', weekdays: weekdays };
       indices = computeIndicesForRule(rule);
     } else if (promoteMode === 'manual') {
-      const selectedCells = document.querySelectorAll('#promote-manual-grid .rd-day-cell.selected');
-      indices = Array.from(selectedCells).map(function (c) { return parseInt(c.dataset.idx, 10); });
-      rule = { type: 'manual' };
+      if (bulkSelectedDates.size === 0) { warn.textContent = '날짜를 하나 이상 선택해 주세요.'; return; }
+      const idxSet = new Set();
+      bulkSelectedDates.forEach(function (dateStr) { idxSet.add(dayIndex0ForDate(dateStr)); });
+      indices = Array.from(idxSet);
+      rule = { type: 'manual', dayIndices: indices };
     } else {
-      warn.textContent = '방법을 선택해 주세요.';
+      warn.textContent = '반복 방법을 선택해 주세요.';
       return;
     }
 
     if (indices.length === 0) {
-      warn.textContent = promoteMode === 'manual' ? 'Day를 선택해 주세요.' : '조건에 맞는 날이 없어요.';
+      warn.textContent = '조건에 맞는 날이 없어요.';
       return;
     }
 
-    addRoutineFromRule(promoteEvent.text, 'etc', rule, indices);
-    state.events = state.events.filter(function (e) { return e.id !== promoteEvent.id; });
+    if (repeatEditorTargetEvent) {
+      repeatEditorTargetEvent.text = text;
+      repeatEditorTargetEvent.category = category;
+      repeatEditorTargetEvent.repeat = rule;
+    } else {
+      if (!Array.isArray(state.events)) state.events = [];
+      state.events.push({ id: genId('e'), text: text, category: category, repeat: rule });
+    }
+
+    if (repeatEditorSourceEvent) {
+      state.events = state.events.filter(function (e) { return e.id !== repeatEditorSourceEvent.id; });
+    }
+
     saveState();
-    closePromote();
-    renderDDEvents();
-    if (detailDayIdx0 !== null) renderDDRoutines(state.days[detailDayIdx0]);
+    closeRepeatEditor();
     renderRoutine();
     renderGrid();
     renderToday();
+    if (detailDateStr !== null) { renderDDTodos(); }
   });
 
   // ── 기간 할 일 수정 ──────────────────────────────────────────
@@ -5561,7 +4988,7 @@
     ev.endDate = end;
     saveState();
     closePeriodEdit();
-    renderDDEvents();
+    renderDDTodos();
     renderGrid();
     renderToday();
   });
@@ -5570,7 +4997,7 @@
     state.events = (state.events || []).filter(function (e) { return e.id !== periodEditingId; });
     saveState();
     closePeriodEdit();
-    renderDDEvents();
+    renderDDTodos();
     renderGrid();
     renderToday();
   });
@@ -6016,26 +5443,16 @@
       return;
     }
 
-    // 이름 기준으로 그룹핑 (첫 번째로 등장한 category 사용)
-    const routineMap = new Map();
-    state.days.forEach(function (day, i) {
-      (day.items || []).forEach(function (item) {
-        if (!routineMap.has(item.text)) {
-          routineMap.set(item.text, { category: item.category || 'etc', dayIndices: [] });
-        }
-        routineMap.get(item.text).dayIndices.push(i);
-      });
-    });
+    const repeatTodos = (state.events || []).filter(function (e) { return !!e.repeat; });
 
     list.innerHTML = '';
-    if (routineMap.size === 0) {
-      list.innerHTML = '<div class="routine-empty">등록된 루틴이 없어요.<br>새 루틴 만들기를 눌러 추가해 보세요.</div>';
+    if (repeatTodos.length === 0) {
+      list.innerHTML = '<div class="routine-empty">등록된 반복 할일이 없어요.<br>+ 새로 만들기를 눌러 추가해 보세요.</div>';
       return;
     }
 
-
-    routineMap.forEach(function (info, name) {
-      const cat = getCat(info.category);
+    repeatTodos.forEach(function (ev) {
+      const cat = getCat(ev.category);
 
       const card = document.createElement('div');
       card.className = 'routine-card';
@@ -6054,33 +5471,15 @@
 
       const nameEl = document.createElement('div');
       nameEl.className = 'routine-name';
-      nameEl.textContent = name;
+      nameEl.textContent = ev.text;
       nameEl.style.color = cat.color;
 
       const daysEl = document.createElement('div');
       daysEl.className = 'routine-days';
-      const sortedIdx = info.dayIndices.slice().sort(function (a, b) { return a - b; });
-      daysEl.textContent = sortedIdx.map(function (i) { return 'D' + state.days[i].dayIndex; }).join(' · ');
-
-      const rateResult = calcCompletionRate(name, info.dayIndices);
-      const rateEl = document.createElement('div');
-      rateEl.className = 'routine-rate';
-      if (rateResult.expected === 0) {
-        rateEl.textContent = '이번 주기 기록 없음';
-      } else {
-        rateEl.textContent = '이번 주기 ' + rateResult.done + '/' + rateResult.expected + ' (' + rateResult.rate + '%)';
-      }
-      const barEl = document.createElement('div');
-      barEl.className = 'routine-rate-bar';
-      const fillEl = document.createElement('div');
-      fillEl.className = 'routine-rate-fill';
-      fillEl.style.width = (rateResult.rate || 0) + '%';
-      barEl.appendChild(fillEl);
+      daysEl.textContent = describeRepeatRule(ev.repeat);
 
       infoEl.appendChild(nameEl);
       infoEl.appendChild(daysEl);
-      infoEl.appendChild(rateEl);
-      infoEl.appendChild(barEl);
 
       const chevron = document.createElement('span');
       chevron.className = 'routine-chevron';
@@ -6090,276 +5489,14 @@
       card.appendChild(infoEl);
       card.appendChild(chevron);
 
-      card.addEventListener('click', function () { openRoutineDetail(name); });
+      card.addEventListener('click', function () { openRepeatEditor({ editEvent: ev }); });
       list.appendChild(card);
     });
   }
 
-  let routineDetailName = null;
-
-  // D-index 다중 선택 그리드 (rd-day-grid, promote-overlay 수동 선택에서 공용)
-  function renderDayIndexGrid(containerEl, selectedIdxSet) {
-    containerEl.innerHTML = '';
-    state.days.forEach(function (day, i) {
-      const cell = document.createElement('div');
-      cell.className = 'rd-day-cell' + (selectedIdxSet.has(i) ? ' selected' : '');
-      cell.dataset.idx = i;
-
-      const shiftColor = getShiftColor(day.shiftType.name);
-      if (shiftColor) {
-        cell.style.background = selectedIdxSet.has(i)
-          ? ''
-          : 'rgba(' + hexToRgb(shiftColor) + ',0.08)';
-      }
-
-      const dnumEl = document.createElement('div');
-      dnumEl.className = 'rd-cell-dnum';
-      dnumEl.textContent = 'D' + day.dayIndex;
-
-      const shiftEl = document.createElement('div');
-      shiftEl.className = 'rd-cell-shift';
-      shiftEl.textContent = day.shiftType.name || '';
-
-      cell.appendChild(dnumEl);
-      cell.appendChild(shiftEl);
-
-      cell.addEventListener('click', function () {
-        cell.classList.toggle('selected');
-        if (shiftColor) {
-          cell.style.background = cell.classList.contains('selected')
-            ? ''
-            : 'rgba(' + hexToRgb(shiftColor) + ',0.08)';
-        }
-      });
-
-      containerEl.appendChild(cell);
-    });
-  }
-
-  function openRoutineDetail(name) {
-    routineDetailName = name;
-
-    // 현재 어느 Day에 포함돼 있는지 + 카테고리·트리거 파악
-    let category = 'etc';
-    let triggerId = '';
-    const selectedIdxSet = new Set();
-    state.days.forEach(function (day, i) {
-      const item = (day.items || []).find(function (it) { return it.text === name; });
-      if (item) {
-        category = item.category || 'etc';
-        triggerId = item.triggerId || '';
-        selectedIdxSet.add(i);
-      }
-    });
-
-    // 카테고리 select 초기화
-    const rdCat = document.getElementById('rd-cat');
-    rdCat.innerHTML = '';
-    CATEGORIES.forEach(function (c) {
-      const opt = document.createElement('option');
-      opt.value = c.id;
-      opt.textContent = (c.icon ? c.icon + ' ' : '') + c.name;
-      rdCat.appendChild(opt);
-    });
-    rdCat.value = category;
-
-    // 트리거 select 초기화
-    populateTriggerSelect(document.getElementById('rd-trigger'), triggerId);
-
-    document.getElementById('rd-name-input').value = name;
-    document.getElementById('rd-warn').textContent = '';
-
-    // Day 그리드 렌더
-    renderDayIndexGrid(document.getElementById('rd-day-grid'), selectedIdxSet);
-
-    document.getElementById('routine-detail-overlay').classList.add('open');
-  }
-
-  function closeRoutineDetail() {
-    document.getElementById('routine-detail-overlay').classList.remove('open');
-    routineDetailName = null;
-  }
-
-  document.getElementById('routine-detail-overlay').addEventListener('click', function (e) {
-    if (e.target === this) closeRoutineDetail();
-  });
-
-  document.getElementById('btn-rd-close').addEventListener('click', closeRoutineDetail);
-
-  document.getElementById('btn-rd-save').addEventListener('click', function () {
-    const newName = document.getElementById('rd-name-input').value.trim();
-    const warn = document.getElementById('rd-warn');
-    if (!newName) { warn.textContent = '루틴 이름을 입력해 주세요.'; return; }
-    warn.textContent = '';
-    const newCat = document.getElementById('rd-cat').value;
-    const newTriggerId = document.getElementById('rd-trigger').value;
-
-    const selectedCells = document.querySelectorAll('#rd-day-grid .rd-day-cell.selected');
-    const selectedIdx = new Set(Array.from(selectedCells).map(function (c) { return parseInt(c.dataset.idx, 10); }));
-
-    state.days.forEach(function (day, i) {
-      if (!Array.isArray(day.items)) day.items = [];
-      const itemIdx = day.items.findIndex(function (it) { return it.text === routineDetailName; });
-      if (itemIdx !== -1) {
-        if (selectedIdx.has(i)) {
-          // 이름·카테고리·트리거 업데이트
-          day.items[itemIdx].text = newName;
-          day.items[itemIdx].category = newCat;
-          if (newTriggerId) { day.items[itemIdx].triggerId = newTriggerId; }
-          else { delete day.items[itemIdx].triggerId; }
-        } else {
-          // 이 Day에서 제거
-          day.items.splice(itemIdx, 1);
-        }
-      } else if (selectedIdx.has(i)) {
-        // 새로 추가
-        const newItem = { text: newName, category: newCat };
-        if (newTriggerId) { newItem.triggerId = newTriggerId; }
-        day.items.push(newItem);
-      }
-    });
-
-    saveState();
-    renderRoutine();
-    renderToday();
-    renderGrid();
-    closeRoutineDetail();
-  });
-
-  document.getElementById('btn-rd-del-all').addEventListener('click', function () {
-    if (!routineDetailName) return;
-    const nameToDelete = routineDetailName;
-    state.days.forEach(function (day) {
-      day.items = (day.items || []).filter(function (it) { return it.text !== nameToDelete; });
-    });
-    saveState();
-    renderRoutine();
-    renderToday();
-    renderGrid();
-    closeRoutineDetail();
-  });
-
+  // D-index 다중 선택 그리드 (사용처 없음 — 남아있는 참조 정리용)
   document.getElementById('btn-new-routine').addEventListener('click', function () {
-    openBulk();
-  });
-
-  // ── 트리거 관리 오버레이 ─────────────────────────────────
-  function renderTriggerList() {
-    const el = document.getElementById('trg-list');
-    el.innerHTML = '';
-    const triggers = getSortedTriggers();
-    if (triggers.length === 0) {
-      el.innerHTML = '<div style="font-size:13px;color:var(--text-3);padding:4px 0;">등록된 트리거 없음</div>';
-      return;
-    }
-    triggers.forEach(function (t, i) {
-      const row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:center;gap:6px;padding:8px 0;border-bottom:1px solid var(--divider);';
-
-      const upBtn = document.createElement('button');
-      upBtn.textContent = '▲';
-      upBtn.disabled = i === 0;
-      upBtn.style.cssText = 'background:none;border:none;font-size:12px;color:' + (i === 0 ? 'var(--line)' : 'var(--text-2)') + ';cursor:pointer;padding:2px 4px;font-family:inherit;';
-      upBtn.addEventListener('click', function () { moveTrigger(t.id, -1); });
-
-      const downBtn = document.createElement('button');
-      downBtn.textContent = '▼';
-      downBtn.disabled = i === triggers.length - 1;
-      downBtn.style.cssText = 'background:none;border:none;font-size:12px;color:' + (i === triggers.length - 1 ? 'var(--line)' : 'var(--text-2)') + ';cursor:pointer;padding:2px 4px;font-family:inherit;';
-      downBtn.addEventListener('click', function () { moveTrigger(t.id, 1); });
-
-      const nameInput = document.createElement('input');
-      nameInput.type = 'text';
-      nameInput.value = t.name;
-      nameInput.maxLength = 20;
-      nameInput.style.cssText = 'flex:1;min-width:0;padding:7px 10px;border:1.5px solid var(--line);border-radius:8px;font-size:14px;font-family:inherit;background:var(--surface);color:var(--text-1);outline:none;';
-      nameInput.addEventListener('change', function () {
-        const newName = nameInput.value.trim();
-        if (!newName) { nameInput.value = t.name; return; }
-        t.name = newName;
-        saveState();
-        refreshTriggerSelects();
-      });
-
-      const delBtn = document.createElement('button');
-      delBtn.textContent = '×';
-      delBtn.setAttribute('aria-label', '삭제');
-      delBtn.style.cssText = 'background:none;border:none;font-size:18px;color:var(--text-3);cursor:pointer;padding:0 4px;font-family:inherit;';
-      delBtn.addEventListener('click', function () { deleteTrigger(t.id); });
-
-      row.appendChild(upBtn);
-      row.appendChild(downBtn);
-      row.appendChild(nameInput);
-      row.appendChild(delBtn);
-      el.appendChild(row);
-    });
-  }
-
-  function moveTrigger(id, dir) {
-    const triggers = getSortedTriggers();
-    const idx = triggers.findIndex(function (t) { return t.id === id; });
-    const swapIdx = idx + dir;
-    if (idx === -1 || swapIdx < 0 || swapIdx >= triggers.length) return;
-    const tmp = triggers[idx].order;
-    triggers[idx].order = triggers[swapIdx].order;
-    triggers[swapIdx].order = tmp;
-    saveState();
-    renderTriggerList();
-  }
-
-  function deleteTrigger(id) {
-    state.triggers = (state.triggers || []).filter(function (t) { return t.id !== id; });
-    state.days.forEach(function (day) {
-      (day.items || []).forEach(function (item) {
-        if (item.triggerId === id) { delete item.triggerId; }
-      });
-    });
-    saveState();
-    renderTriggerList();
-    refreshTriggerSelects();
-    renderToday();
-  }
-
-  function openTriggerManage() {
-    document.getElementById('trg-name-input').value = '';
-    document.getElementById('trg-warn').textContent = '';
-    renderTriggerList();
-    document.getElementById('trigger-manage-overlay').style.display = 'flex';
-  }
-
-  document.getElementById('btn-rd-trigger-manage').addEventListener('click', openTriggerManage);
-
-  document.getElementById('btn-trg-add').addEventListener('click', function () {
-    const input = document.getElementById('trg-name-input');
-    const warn = document.getElementById('trg-warn');
-    const name = input.value.trim();
-    if (!name) { warn.textContent = '트리거 이름을 입력해 주세요.'; return; }
-    warn.textContent = '';
-    if (!Array.isArray(state.triggers)) state.triggers = [];
-    const maxOrder = state.triggers.reduce(function (m, t) { return Math.max(m, t.order); }, -1);
-    state.triggers.push({ id: genTriggerId(), name: name, order: maxOrder + 1 });
-    input.value = '';
-    saveState();
-    renderTriggerList();
-    refreshTriggerSelects();
-  });
-
-  document.getElementById('trg-name-input').addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') { document.getElementById('btn-trg-add').click(); }
-  });
-
-  document.getElementById('btn-trg-close').addEventListener('click', function () {
-    document.getElementById('trigger-manage-overlay').style.display = 'none';
-    refreshTriggerSelects();
-    renderToday();
-  });
-
-  document.getElementById('trigger-manage-overlay').addEventListener('click', function (e) {
-    if (e.target === this) {
-      this.style.display = 'none';
-      refreshTriggerSelects();
-      renderToday();
-    }
+    openRepeatEditor({});
   });
 
   // ── 스킵 / 완료 ──────────────────────────────────────────

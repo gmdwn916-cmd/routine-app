@@ -65,11 +65,16 @@
 - index.html 단일 파일(HTML/CSS/JS 일체). 외부 라이브러리 없음.
 
 ## 용어 (통일 — 혼동 금지)
-- 루틴 = 반복 배치된 것 (근무/요일/직접 규칙으로)
-- 할 일 = 한 번짜리 (특정 날짜, events)
+- 할 일 = state.events[] 전체. 반복이 꺼져 있으면 한 번짜리(특정 날짜),
+  반복이 켜져 있으면 반복 할일(근무/요일/직접 규칙으로 매번 계산해서 나타남).
+  둘 다 같은 객체(할 일 + repeat 여부)일 뿐, 서로 다른 종류의 물건이 아니다.
+- 반복 할일 = 할 일 중 repeat 규칙이 있는 것 (예전 "루틴". 하단 탭 이름도 "반복 할일").
+  더 이상 날짜별로 복사돼 있지 않고, 하나의 객체 + 규칙으로 존재하며
+  화면에 뿌릴 때만 그 날짜에 해당하는지 계산한다.
 - 미배치 = 아직 안 놓은 것 (인박스)
 - 리마인더 = 층3 (추후)
 - "일정"이라는 표현은 쓰지 않는다.
+- "트리거"(항목 묶어 보여주던 태그) 기능은 폐기됨. 다시 만들지 말 것.
 
 ## 작업 방식 (반드시 지킬 것)
 1. 코드 수정 전 항상 계획 먼저 제시, 사용자 확인 후에만 수정.
@@ -85,14 +90,28 @@
 
 ## 데이터 모델 (localStorage key: shiftRoutine)
 - cycleDays, baseDate("YYYY-MM-DD"), days[]{dayIndex, shiftType:{name}, items[]}
-- items[]: { text, category, triggerId? }
-- events[]: 할 일 { date, text, done? }
-- inbox[]: 미배치 { text, repeat(O/X), createdAt } ← 신규 예정
+  ※ days[].items는 더 이상 쓰지 않음(항상 빈 배열). 과거 루틴 데이터 마이그레이션
+    이후의 흔적일 뿐이니 이 필드 기준으로 새 기능을 만들지 말 것.
+- events[]: 할 일 전체(한 번짜리 + 반복 할일 모두 여기 하나에 있음)
+  - 공통: { id, text, category }
+  - 한 번짜리(repeat 없음): { date, endDate, done }
+  - 반복 할일(repeat 있음): { repeat: rule } — date/endDate/done은 안 씀,
+    대신 done_log/skips를 (date, id) 기준으로 찾아서 그날 완료/스킵 여부 판단.
+  - rule 종류: {type:'shift', shiftNames:[...], offset, weekdays?}
+              {type:'weekday', weekdays:[...]}
+              {type:'manual', dayIndices:[...]}  (달력에서 직접 고른 날짜 → D인덱스로 변환해서 저장)
+  - computeIndicesForRule(rule)로 그 규칙에 맞는 D인덱스 목록 계산,
+    getRepeatTodosForDate(dateStr)로 그 날짜에 해당하는 반복 할일 목록 조회.
+  - 반복 규칙 고르는 화면(근무로/요일로/달력에서)은 openRepeatEditor() 하나로 공용
+    (새로 만들기·기존 할일을 반복으로 전환·기존 반복 할일 편집 모두 이 함수).
+- inbox[]: 미배치 { text, createdAt } (반복 배치 옵션은 아직 없음, 범위 밖으로 보류 중)
 - shiftOverrides: 날짜 예외{date,shiftName} / D번호 예외{dayIndex,shiftName}
-- shiftColors { 근무이름: 색 }, weekStart, triggers[], done_log[], skips[]
+- shiftColors { 근무이름: 색 }, weekStart
+- done_log[]/skips[]: { date, id } — 반복 할일의 그 날짜 완료/스킵 기록.
+  (예전엔 text로 저장해서 이름 바꾸면 기록이 끊겼는데, id로 바꿔서 해결됨)
 - teams[] { name, offsetDays }
-- 반복 규칙 확장 예정: 근무 기준("비번마다")·요일 기준을 담을 규칙 구조
-  (구현 시 계획에서 제시할 것. 기존 데이터 보존 필수)
+- routinesMigratedV1: true — 예전 루틴(day.items)을 반복 할일로 1회 변환했다는 표시.
+  이 값이 있으면 마이그레이션을 다시 돌리지 않는다(중복 생성 방지).
 
 ## 핵심 로직 (건드릴 때 주의)
 - 날짜는 반드시 로컬 자정 기준. parseLocalDate() 사용.
@@ -107,7 +126,9 @@
 - 달력 칸 렌더링은 화면 간 공유(달력 탭/팀 근무/복수선택 통일 유지).
 
 ## 화면 구성 (하단 탭 4개)
-- 루틴 / 오늘 / 달력 / 설정 (+ 미배치 버튼은 전 화면 공통으로 추가 예정)
+- 반복 할일(구 루틴) / 오늘 / 달력 / 설정 (+ 미배치 버튼은 전 화면 공통)
+- 오늘 탭·날짜 상세 모두 "반복 할일 + 한 번짜리 할 일"을 한 목록으로 합쳐서 보여줌
+  (따로 섹션 나누지 않음).
 
 ## 안 만들 것 (포지션 유지)
 - 범용 습관 트래커·만능 투두·일반 근무자용 확장 금지.
