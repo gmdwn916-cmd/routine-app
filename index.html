@@ -2804,12 +2804,14 @@
     });
   }
 
-  // 그 날짜에 해당하는 반복 할일들(카테고리 점/체크 대상)
+  // 그 날짜에 해당하는 반복 할일들(카테고리 점/체크 대상). 그 날짜만 뺀 것(excludedDates)은 제외.
   function getRepeatTodosForDate(dateStr) {
     const idx0 = dayIndex0ForDate(dateStr);
     if (idx0 === null) return [];
     return (state.events || []).filter(function (e) {
-      return e.repeat && computeIndicesForRule(e.repeat).indexOf(idx0) !== -1;
+      if (!e.repeat) return false;
+      if ((e.excludedDates || []).indexOf(dateStr) !== -1) return false;
+      return computeIndicesForRule(e.repeat).indexOf(idx0) !== -1;
     });
   }
 
@@ -3157,8 +3159,11 @@
       });
       li.appendChild(checkBtn);
 
+      // 여기서 스와이프 삭제는 이 날짜만 제외(excludedDates). 반복 할일 자체를
+      // 통째로 지우려면 "반복 할일" 탭에서 지워야 함.
       ul.appendChild(wrapWithSwipeToDelete(li, 'var(--surface)', function () {
-        state.events = state.events.filter(function (e) { return e.id !== item.id; });
+        if (!Array.isArray(item.excludedDates)) item.excludedDates = [];
+        if (item.excludedDates.indexOf(dateStr) === -1) item.excludedDates.push(dateStr);
         saveState();
         refreshFn();
       }));

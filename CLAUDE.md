@@ -104,6 +104,10 @@
     getRepeatTodosForDate(dateStr)로 그 날짜에 해당하는 반복 할일 목록 조회.
   - 반복 규칙 고르는 화면(근무로/요일로/달력에서)은 openRepeatEditor() 하나로 공용
     (새로 만들기·기존 할일을 반복으로 전환·기존 반복 할일 편집 모두 이 함수).
+  - excludedDates?: [dateStr,...] — 오늘 탭/날짜 상세에서 반복 할일을 왼쪽으로
+    쓸어 삭제하면 그 날짜만 여기 추가됨(반복 할일 자체는 안 지워짐).
+    반복 할일 전체 삭제는 반드시 "반복 할일" 탭에서만(openRepeatEditor의
+    삭제 버튼). 이 구분 헷갈리지 말 것 — 실제로 헷갈려서 버그 신고된 적 있음.
 - inbox[]: 미배치 { text, createdAt } (반복 배치 옵션은 아직 없음, 범위 밖으로 보류 중)
 - shiftOverrides: 날짜 예외{date,shiftName} / D번호 예외{dayIndex,shiftName}
 - shiftColors { 근무이름: 색 }, weekStart
