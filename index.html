@@ -363,7 +363,7 @@
       border-bottom: 1px solid var(--divider);
     }
 
-    .today-items li:last-child { border-bottom: none; }
+    .today-items > .swipe-delete-wrap:last-child li { border-bottom: none; }
 
     .item-icon {
       font-size: 16px;
@@ -392,7 +392,7 @@
       border-bottom: 1px solid var(--divider);
       color: var(--text-1);
     }
-    #tab-today .today-items li:last-child { border-bottom: none; }
+    #tab-today .today-items > .swipe-delete-wrap:last-child li { border-bottom: none; }
     #tab-today .item-icon {
       width: 36px;
       height: 36px;
@@ -3150,11 +3150,7 @@
       const textEl = document.createElement('span');
       textEl.className = 'item-text';
       textEl.textContent = item.text;
-      textEl.style.cursor = 'pointer';
-      textEl.addEventListener('click', function(e) {
-        e.stopPropagation();
-        openRepeatEditor({ editEvent: item });
-      });
+      makeEventTextEditable(textEl, item, refreshFn);
       li.appendChild(textEl);
 
       const checkBtn = document.createElement('button');
@@ -3175,7 +3171,12 @@
         refreshFn();
       });
       li.appendChild(checkBtn);
-      ul.appendChild(li);
+
+      ul.appendChild(wrapWithSwipeToDelete(li, 'var(--surface)', function () {
+        state.events = state.events.filter(function (e) { return e.id !== item.id; });
+        saveState();
+        refreshFn();
+      }));
     });
 
     containerEl.appendChild(ul);
