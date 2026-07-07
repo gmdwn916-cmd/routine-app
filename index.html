@@ -1142,21 +1142,6 @@
     .cell-shift-band.band-start { border-radius: 5px 0 0 5px; }
     .cell-shift-band.band-end { border-radius: 0 5px 5px 0; }
 
-    .cell-dots-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 3px;
-      margin-top: 5px;
-      padding: 0 1px;
-    }
-
-    .cell-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-
     .cell-event-bar {
       width: 100%;
       height: 2.5px;
@@ -3465,24 +3450,12 @@
         appendShiftIndicator(cell, cellDateStr, shiftName);
       }
 
-      // 점 표시 행: 반복 할일 카테고리 점 + 일정 점 (완료된 항목은 숨김)
+      // 반복 할일 + 한 번짜리 할 일을 달력에서 같은 방식으로 표시 (완료된 항목은 숨김)
       const repeatTodos = getRepeatTodosForDate(cellDateStr);
       const cellEvents = getEventsForDate(cellDateStr);
-      const undoneItems = repeatTodos.filter(function (item) { return !isRepeatDoneOn(item.id, cellDateStr); });
+      const undoneRepeat = repeatTodos.filter(function (item) { return !isRepeatDoneOn(item.id, cellDateStr); });
       const undoneCellEvents = cellEvents.filter(function (ev) { return !ev.done; });
-      if (undoneItems.length > 0) {
-        const dotsRow = document.createElement('div');
-        dotsRow.className = 'cell-dots-row';
-        undoneItems.slice(0, 4).forEach(function (item) {
-          const cat = getCat(item.category);
-          const dot = document.createElement('div');
-          dot.className = 'cell-dot';
-          dot.style.background = cat.color;
-          dotsRow.appendChild(dot);
-        });
-        cell.appendChild(dotsRow);
-      }
-      appendEventIndicators(cell, cellDateStr, undoneCellEvents);
+      appendEventIndicators(cell, cellDateStr, undoneRepeat.concat(undoneCellEvents));
 
       cell.addEventListener('click', function () {
         if (bulkShiftSuppressClick) { bulkShiftSuppressClick = false; return; }
