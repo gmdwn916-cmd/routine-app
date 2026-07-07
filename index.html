@@ -3321,14 +3321,23 @@
   }
 
   // 그 달(year, month0)에 시작하는 "중요 표시"된 한 번짜리 할 일을 날짜 이른 순으로 반환.
+  // 그 달에 "중요 표시"된 할 일(반복 여부 상관없이)을 그 달에서 처음 나타나는 날짜
+  // 순으로 반환. 생일처럼 매년 반복되는 것도 중요 표시만 해두면 뜨게 하기 위함
+  // (반복이라고 걸러내지 않음 — 걸러낼지는 사용자가 별표로 알아서 정한다).
   function getImportantEventsForMonth(year, month0) {
-    return (state.events || [])
-      .filter(function (e) {
-        if (e.repeat || !e.important || !e.date) return false;
-        const d = parseLocalDate(e.date);
-        return d.getFullYear() === year && d.getMonth() === month0;
-      })
-      .sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
+    const daysInMonth = new Date(year, month0 + 1, 0).getDate();
+    const seen = new Set();
+    const results = [];
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = formatDateStr(new Date(year, month0, d));
+      const todos = getEventsForDate(dateStr).concat(getRepeatTodosForDate(dateStr));
+      todos.forEach(function (e) {
+        if (!e.important || seen.has(e.id)) return;
+        seen.add(e.id);
+        results.push(e);
+      });
+    }
+    return results;
   }
 
   // ── 연간 보기 ────────────────────────────────────────────
