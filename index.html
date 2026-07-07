@@ -1692,6 +1692,22 @@
       margin-bottom: 14px;
     }
 
+    .promote-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .promote-header-row h2 { margin-bottom: 0; }
+
+    #promote-source-date-info {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-2);
+      flex-shrink: 0;
+    }
+
     .inbox-item-row {
       display: flex;
       align-items: center;
@@ -2265,7 +2281,10 @@
 <!-- ── 반복 할 일 만들기/전환/편집 (공용 시트) ── -->
 <div id="promote-overlay">
   <div id="promote-panel">
-    <h2 id="promote-title">반복 할 일 만들기</h2>
+    <div class="promote-header-row">
+      <h2 id="promote-title">반복 할 일 만들기</h2>
+      <span id="promote-source-date-info"></span>
+    </div>
     <div class="form-group">
       <input type="text" id="promote-text-input" maxlength="50" placeholder="예: 물 마시기, 주짓수…">
     </div>
@@ -4670,6 +4689,19 @@
 
     document.getElementById('promote-title').textContent =
       existing ? '반복 할 일 편집' : (repeatEditorSourceEvent ? '반복으로 전환' : '반복 할 일 만들기');
+
+    const sourceDateInfoEl = document.getElementById('promote-source-date-info');
+    if (repeatEditorSourceEvent) {
+      const DOW_KR = ['일','월','화','수','목','금','토'];
+      const d = parseLocalDate(repeatEditorSourceEvent.date);
+      const idx0 = dayIndex0ForDate(repeatEditorSourceEvent.date);
+      const shiftName = idx0 !== null ? getEffectiveShiftName(repeatEditorSourceEvent.date, idx0).name : '';
+      sourceDateInfoEl.textContent = (d.getMonth() + 1) + '월 ' + d.getDate() + '일 (' + DOW_KR[d.getDay()] + ')' + (shiftName ? ' ' + shiftName : '');
+      sourceDateInfoEl.style.display = '';
+    } else {
+      sourceDateInfoEl.textContent = '';
+      sourceDateInfoEl.style.display = 'none';
+    }
     document.getElementById('promote-text-input').value = initialText;
     document.getElementById('btn-promote-delete').style.display = existing ? '' : 'none';
 
