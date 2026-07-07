@@ -617,6 +617,31 @@
       min-width: 0;
     }
 
+    /* 아이폰처럼 왼쪽으로 쓸어서 삭제 (여러 목록에서 공용) */
+    .swipe-delete-wrap {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .swipe-delete-btn {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 72px;
+      border: none;
+      background: #ff3b30;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .swipe-delete-content {
+      position: relative;
+      will-change: transform;
+    }
+
     .btn-dd-del-event {
       background: none;
       border: none;
@@ -696,29 +721,6 @@
       flex-shrink: 0;
     }
 
-    .dd-period-toggle-label {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      color: var(--text-2);
-      margin-top: 6px;
-    }
-
-    .dd-period-end-input {
-      width: 100%;
-      margin-top: 6px;
-      padding: 9px 12px;
-      border: 1.5px solid var(--line);
-      border-radius: 10px;
-      font-size: 14px;
-      font-family: inherit;
-      background: var(--surface-2);
-      color: var(--text-1);
-      outline: none;
-      box-sizing: border-box;
-    }
-
     .btn-dd-add {
       padding: 9px 14px;
       background: #007aff;
@@ -759,9 +761,6 @@
       padding: 4px 0;
     }
 
-    .today-event-icon { color: #ff9500; }
-
-    .today-event-item--done .today-event-icon,
     .today-event-item--done .today-event-text {
       opacity: 0.4;
       text-decoration: line-through;
@@ -2844,10 +2843,6 @@
         <input type="text" id="dd-event-input" placeholder="일정 추가…" maxlength="50">
         <button class="btn-dd-add" id="btn-dd-add-event">추가</button>
       </div>
-      <label class="dd-period-toggle-label">
-        <input type="checkbox" id="dd-event-period-toggle"> 기간으로 추가
-      </label>
-      <input type="date" id="dd-event-end-input" class="dd-period-end-input" style="display:none">
       <div class="onboard-warn" id="dd-warn"></div>
     </div>
     <div class="btn-row" style="padding-top:4px">
@@ -3382,6 +3377,95 @@
     });
   }
 
+  // 아이폰처럼 왼쪽으로 쓸면 삭제 버튼이 나타나는 줄을 만든다.
+  // rowEl을 감싼 wrap을 만들어 반환하므로, 호출하는 쪽은 rowEl 대신 이 wrap을 목록에 붙여야 한다.
+  function wrapWithSwipeToDelete(rowEl, bgVar, onDelete) {
+    const REVEAL = 72;
+    const wrap = document.createElement('div');
+    wrap.className = 'swipe-delete-wrap';
+
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'swipe-delete-btn';
+    delBtn.textContent = '삭제';
+    wrap.appendChild(delBtn);
+
+    rowEl.classList.add('swipe-delete-content');
+    rowEl.style.background = bgVar;
+    wrap.appendChild(rowEl);
+
+    let open = false;
+    let startX = 0, startY = 0, dx = 0, dragging = false, decided = false, horizontal = false;
+
+    function setX(x) { rowEl.style.transform = 'translateX(' + x + 'px)'; }
+
+    wrap.addEventListener('touchstart', function (e) {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      dragging = true; decided = false; horizontal = false;
+      rowEl.style.transition = 'none';
+    }, { passive: true });
+
+    wrap.addEventListener('touchmove', function (e) {
+      if (!dragging) return;
+      const t = e.touches[0];
+      const mdx = t.clientX - startX;
+      const mdy = t.clientY - startY;
+      if (!decided) {
+        if (Math.abs(mdx) < 6 && Math.abs(mdy) < 6) return;
+        decided = true;
+        horizontal = Math.abs(mdx) > Math.abs(mdy);
+        if (!horizontal) { dragging = false; return; }
+      }
+      if (!horizontal) return;
+      e.preventDefault();
+      let x = (open ? -REVEAL : 0) + mdx;
+      x = Math.max(-REVEAL, Math.min(0, x));
+      dx = x;
+      setX(x);
+    }, { passive: false });
+
+    function endDrag() {
+      if (!dragging) return;
+      dragging = false;
+      if (!decided) return;
+      rowEl.style.transition = 'transform 0.18s ease';
+      if (dx < -REVEAL / 2) {
+        setX(-REVEAL);
+        open = true;
+      } else {
+        setX(0);
+        open = false;
+      }
+    }
+    wrap.addEventListener('touchend', endDrag, { passive: true });
+    wrap.addEventListener('touchcancel', endDrag, { passive: true });
+
+    // 열려 있을 때 그 줄을 탭하면 원래 동작 대신 닫히기만 함
+    rowEl.addEventListener('click', function (e) {
+      if (open) {
+        e.preventDefault();
+        e.stopPropagation();
+        rowEl.style.transition = 'transform 0.18s ease';
+        setX(0);
+        open = false;
+      }
+    }, true);
+
+    delBtn.addEventListener('click', function () {
+      wrap.style.overflow = 'hidden';
+      wrap.style.transition = 'max-height 0.18s ease, opacity 0.18s ease';
+      wrap.style.maxHeight = wrap.offsetHeight + 'px';
+      requestAnimationFrame(function () {
+        wrap.style.maxHeight = '0px';
+        wrap.style.opacity = '0';
+      });
+      setTimeout(onDelete, 180);
+    });
+
+    return wrap;
+  }
+
   function getEffectiveShiftName(dateStr, dayIdx0) {
     // 우선순위 1: 날짜 예외
     if (state && Array.isArray(state.shiftOverrides)) {
@@ -3774,11 +3858,6 @@
           });
           row.appendChild(checkBtn);
 
-          const icon = document.createElement('span');
-          icon.className = 'today-event-icon';
-          icon.textContent = '📅';
-          row.appendChild(icon);
-
           const text = document.createElement('span');
           text.className = 'today-event-text';
           text.textContent = eventDisplayText(ev);
@@ -3790,7 +3869,12 @@
           }
           row.appendChild(text);
 
-          eventsEl.appendChild(row);
+          eventsEl.appendChild(wrapWithSwipeToDelete(row, 'var(--surface)', function () {
+            state.events = state.events.filter(function (e) { return e !== ev; });
+            saveState();
+            renderToday();
+            renderGrid();
+          }));
         });
       }
     } else {
@@ -4471,11 +4555,6 @@
 
     document.getElementById('dd-event-input').value = '';
     document.getElementById('dd-warn').textContent = '';
-    document.getElementById('dd-event-period-toggle').checked = false;
-    const ddEndInput = document.getElementById('dd-event-end-input');
-    ddEndInput.style.display = 'none';
-    ddEndInput.min = dateStr;
-    ddEndInput.value = '';
 
     // 루틴 추가 행 초기화
     const ddCatSel = document.getElementById('dd-routine-cat');
@@ -4545,6 +4624,11 @@
       del.textContent = '×';
       del.setAttribute('aria-label', '삭제');
       del.addEventListener('click', function () {
+        deleteThisEvent();
+      });
+      row.appendChild(del);
+
+      function deleteThisEvent() {
         state.events = state.events.filter(function (e) {
           return e.id ? e.id !== ev.id : !(e.date === detailDateStr && e.text === ev.text);
         });
@@ -4552,9 +4636,9 @@
         renderDDEvents();
         renderGrid();
         renderToday();
-      });
-      row.appendChild(del);
-      el.appendChild(row);
+      }
+
+      el.appendChild(wrapWithSwipeToDelete(row, 'var(--bg)', deleteThisEvent));
     });
   }
 
@@ -4638,23 +4722,10 @@
     const warn = document.getElementById('dd-warn');
     const text = input.value.trim();
     if (!text) { warn.textContent = '일정을 입력해 주세요.'; return; }
-    const isPeriod = document.getElementById('dd-event-period-toggle').checked;
-    let endDate = detailDateStr;
-    if (isPeriod) {
-      const endInput = document.getElementById('dd-event-end-input').value;
-      if (!endInput || endInput < detailDateStr) {
-        warn.textContent = '종료일을 시작일 이후로 선택해 주세요.';
-        return;
-      }
-      endDate = endInput;
-    }
     warn.textContent = '';
     if (!Array.isArray(state.events)) { state.events = []; }
-    state.events.push({ id: genId('e'), date: detailDateStr, endDate: endDate, text: text });
+    state.events.push({ id: genId('e'), date: detailDateStr, endDate: detailDateStr, text: text });
     input.value = '';
-    document.getElementById('dd-event-period-toggle').checked = false;
-    document.getElementById('dd-event-end-input').style.display = 'none';
-    document.getElementById('dd-event-end-input').value = '';
     saveState();
     renderDDEvents();
     renderGrid();
@@ -4663,10 +4734,6 @@
 
   document.getElementById('dd-event-input').addEventListener('keydown', function (e) {
     if (e.key === 'Enter') { document.getElementById('btn-dd-add-event').click(); }
-  });
-
-  document.getElementById('dd-event-period-toggle').addEventListener('change', function () {
-    document.getElementById('dd-event-end-input').style.display = this.checked ? '' : 'none';
   });
 
   document.getElementById('btn-dd-add-routine').addEventListener('click', function () {
