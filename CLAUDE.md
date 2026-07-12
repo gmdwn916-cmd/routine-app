@@ -27,7 +27,9 @@
    - 반복 O → "어떤 날마다?" : 아래 4가지 방식 제공.
      a. 근무로 고르기: "비번날마다", "야간 다음날마다" 등
         (교대근무자의 자연어. 근무 조건 + 요일 조건 AND 조합 가능:
-         예 "주간인 월요일마다")
+         예 "주간인 월요일마다". 이런 (근무+요일) 조건 묶음을 "+ 조건 추가"로
+         여러 개 쌓을 수 있고, 묶음들끼리는 OR — 예 "주간인 토요일마다" +
+         "비번날마다"를 같이 걸면 둘 중 하나만 맞아도 나타남)
      b. 요일로 고르기: "매주 화요일" (일반 반복도 지원)
      c. 기간으로 고르기: "3개월마다" 등 년/개월/일 간격 (근무 주기와 무관,
         실제 달력 날짜로 계산. 전환 시작일 = 그 할 일의 원래 날짜, 새로
@@ -110,7 +112,13 @@
   - 한 번짜리(repeat 없음): { date, endDate, done }
   - 반복 할일(repeat 있음): { repeat: rule } — date/endDate/done은 안 씀,
     대신 done_log를 (date, id) 기준으로 찾아서 그날 완료 여부 판단.
-  - rule 종류: {type:'shift', shiftNames:[...], offset, weekdays?}
+  - rule 종류: {type:'shift', groups:[{shiftNames:[...], offset, weekdays?}, ...]}
+               (근무로 고르기. groups는 (근무+요일) 조건 묶음 여러 개를 쌓은 것 —
+                묶음들끼리는 OR. 화면에서 "+ 조건 추가"로 쌓고, 쌓인 묶음을 다시
+                누르면 빠지면서 편집 칸으로 돌아옴. 예전 통짜 형식
+                {shiftNames, offset, weekdays}(묶음 1개짜리와 동일)도 계속 읽힘 —
+                별도 마이그레이션 없이 computeIndicesForRule/describeRepeatRule이
+                groups 없으면 그 자리에서 묶음 1개로 감싸서 처리)
               {type:'weekday', weekdays:[...]}
               {type:'interval', years, months, days, anchorDate}  (기간으로 고르기.
                근무 주기와 무관하게 실제 달력 날짜로 계산)
