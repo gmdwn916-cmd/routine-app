@@ -1726,6 +1726,12 @@
       border-color: #007aff;
     }
 
+    .promote-lunar-toggle-btn {
+      width: auto;
+      padding: 6px 14px;
+      font-size: 13px;
+    }
+
     .promote-weekday-picker {
       display: flex;
       gap: 6px;
@@ -2280,9 +2286,8 @@
     </div>
 
     <div id="promote-interval-section" style="display:none">
-      <div class="btn-row">
-        <button class="btn btn-secondary" id="btn-promote-interval-sub-days">기간</button>
-        <button class="btn btn-secondary" id="btn-promote-interval-sub-lunar">음력</button>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:6px;">
+        <button type="button" class="btn btn-secondary promote-lunar-toggle-btn" id="btn-promote-lunar-toggle">음력</button>
       </div>
 
       <div id="promote-interval-days-block">
@@ -5017,8 +5022,7 @@
     promoteIntervalSubMode = subMode;
     document.getElementById('promote-interval-days-block').style.display = subMode === 'interval' ? '' : 'none';
     document.getElementById('promote-lunar-section').style.display = subMode === 'lunar' ? '' : 'none';
-    document.getElementById('btn-promote-interval-sub-days').classList.toggle('active', subMode === 'interval');
-    document.getElementById('btn-promote-interval-sub-lunar').classList.toggle('active', subMode === 'lunar');
+    document.getElementById('btn-promote-lunar-toggle').classList.toggle('active', subMode === 'lunar');
   }
 
   function openRepeatEditor(opts) {
@@ -5123,10 +5127,22 @@
     repeatEditorSourceEvent = null;
   }
 
-  document.getElementById('btn-promote-mode-interval').addEventListener('click', function () { setPromoteMode('interval'); setPromoteIntervalSubMode('interval'); });
+  document.getElementById('btn-promote-mode-interval').addEventListener('click', function () {
+    setPromoteMode('interval');
+    promoteIntervalValues = { years: 0, months: 0, days: 0 };
+    renderIntervalSpinner();
+    setPromoteIntervalSubMode('interval');
+  });
   document.getElementById('btn-promote-mode-shift').addEventListener('click', function () { setPromoteMode('shift'); });
-  document.getElementById('btn-promote-interval-sub-days').addEventListener('click', function () { setPromoteIntervalSubMode('interval'); });
-  document.getElementById('btn-promote-interval-sub-lunar').addEventListener('click', function () { setPromoteIntervalSubMode('lunar'); });
+  document.getElementById('btn-promote-lunar-toggle').addEventListener('click', function () {
+    if (promoteIntervalSubMode === 'lunar') {
+      promoteIntervalValues = { years: 0, months: 0, days: 0 };
+      renderIntervalSpinner();
+      setPromoteIntervalSubMode('interval');
+    } else {
+      setPromoteIntervalSubMode('lunar');
+    }
+  });
   setupIntervalSpinner(document.getElementById('pi-years'), 'years');
   setupIntervalSpinner(document.getElementById('pi-months'), 'months');
   setupIntervalSpinner(document.getElementById('pi-days'), 'days');
