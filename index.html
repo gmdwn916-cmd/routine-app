@@ -5200,6 +5200,23 @@
   function shiftCellKey(name, wd) { return name + '|' + wd; }
 
   // 근무×요일 표를 그림(세로: 근무 순서대로, 가로: 월~일). 칸을 누르면 바로 켜고 끔.
+  // 켜짐/꺼짐 상태에 맞게 칸을 그 근무색으로 칠함(달력 근무 배지와 같은 방식:
+  // 꺼짐=옅은 15% 톤, 켜짐=꽉 찬 색). 근무색이 없으면 기본 회색/파랑으로.
+  function applyShiftCellColor(cell, shiftColor, isSelected) {
+    if (!shiftColor) {
+      cell.style.background = isSelected ? '#007aff' : '';
+      cell.style.borderColor = isSelected ? '#007aff' : '';
+      return;
+    }
+    if (isSelected) {
+      cell.style.background = shiftColor;
+      cell.style.borderColor = shiftColor;
+    } else {
+      cell.style.background = 'rgba(' + hexToRgb(shiftColor) + ',0.15)';
+      cell.style.borderColor = 'rgba(' + hexToRgb(shiftColor) + ',0.4)';
+    }
+  }
+
   function renderShiftMatrix() {
     const el = document.getElementById('promote-shift-matrix');
     el.innerHTML = '';
@@ -5215,25 +5232,33 @@
       const h = document.createElement('div');
       h.className = 'promote-shift-matrix-header';
       h.textContent = DOW_KR[wd];
+      // 달력 탭과 같은 주말 표시(토=파랑, 일=빨강)
+      if (wd === 6) h.style.color = '#007aff';
+      else if (wd === 0) h.style.color = '#ff3b30';
       el.appendChild(h);
     });
 
     promoteShiftAllNames.forEach(function (name) {
+      const shiftColor = getShiftColor(name);
       const label = document.createElement('div');
       label.className = 'promote-shift-matrix-label';
       label.textContent = name;
+      if (shiftColor) label.style.color = shiftColor;
       el.appendChild(label);
 
       WEEKDAY_ORDER.forEach(function (wd) {
         const key = shiftCellKey(name, wd);
+        const isSelected = promoteShiftGridSelected.has(key);
         const cell = document.createElement('button');
         cell.type = 'button';
-        cell.className = 'promote-shift-cell' + (promoteShiftGridSelected.has(key) ? ' selected' : '');
+        cell.className = 'promote-shift-cell' + (isSelected ? ' selected' : '');
         cell.setAttribute('aria-label', name + ' ' + DOW_KR[wd] + '요일');
+        applyShiftCellColor(cell, shiftColor, isSelected);
         cell.addEventListener('click', function () {
-          if (promoteShiftGridSelected.has(key)) promoteShiftGridSelected.delete(key);
-          else promoteShiftGridSelected.add(key);
-          cell.classList.toggle('selected');
+          const nowSelected = !cell.classList.contains('selected');
+          if (nowSelected) promoteShiftGridSelected.add(key); else promoteShiftGridSelected.delete(key);
+          cell.classList.toggle('selected', nowSelected);
+          applyShiftCellColor(cell, shiftColor, nowSelected);
         });
         el.appendChild(cell);
       });
