@@ -2154,6 +2154,13 @@
         <p class="shift-color-hint">색은 배경에 옅게(약 15%) 적용됩니다. 너무 어두운 색은 글씨와 구분이 어려울 수 있어요.</p>
       </div>
 
+      <!-- 카테고리 관리 -->
+      <div id="sd-categories" style="display:none">
+        <div class="card" id="category-settings-card"></div>
+        <button type="button" class="btn btn-secondary" id="btn-category-add" style="width:100%;margin-top:10px;">+ 새 카테고리 추가</button>
+        <p class="shift-color-hint">카테고리를 지우면 그걸 쓰던 할 일은 회색 "기타" 모양으로 보여요. 적어도 1개는 남아 있어야 해요.</p>
+      </div>
+
       <!-- 주 시작 요일 -->
       <div id="sd-weekstart" style="display:none">
         <div class="card">
@@ -2507,7 +2514,9 @@
 </div>
 
 <script>
-  const CATEGORIES = [
+  // 카테고리 기본값 — 사용자가 설정 탭에서 직접 추가·수정·삭제 가능(state.categories).
+  // 이 상수는 처음 실행 시 씨앗 데이터로만 쓰임.
+  const CATEGORIES_DEFAULT = [
     { id: 'exercise',    name: '운동', color: '#34c759', icon: '🥋' },
     { id: 'diet',        name: '식단', color: '#ff9500', icon: '🍚' },
     { id: 'clean',       name: '청소', color: '#007aff', icon: '🧹' },
@@ -2517,8 +2526,12 @@
     { id: 'family',      name: '가족', color: '#ff2d55', icon: '👪' },
     { id: 'etc',         name: '기타', color: '#8e8e93', icon: ''   },
   ];
+  const CAT_FALLBACK = { id: 'etc', name: '기타', color: '#8e8e93', icon: '' };
+  function getCategories() {
+    return (state && Array.isArray(state.categories) && state.categories.length) ? state.categories : CATEGORIES_DEFAULT;
+  }
   function getCat(id) {
-    return CATEGORIES.find(c => c.id === id) ?? CATEGORIES[CATEGORIES.length - 1];
+    return getCategories().find(function (c) { return c.id === id; }) || CAT_FALLBACK;
   }
   const THEME_LABELS = { system: '시스템 설정', light: '라이트 모드', dark: '다크 모드' };
   function hexToRgb(hex) {
@@ -2691,6 +2704,10 @@
     }
     if (!Array.isArray(s.done_log)) {
       s.done_log = [];
+      changed = true;
+    }
+    if (!Array.isArray(s.categories)) {
+      s.categories = CATEGORIES_DEFAULT.map(function (c) { return Object.assign({}, c); });
       changed = true;
     }
     if (!Array.isArray(s.teams)) {
@@ -4088,6 +4105,9 @@
         });
         return names.length ? names.join(' · ') : '근무유형 없음';
       }},
+      { key: 'categories', icon: '🏷️', label: '카테고리', getValue: function() {
+        return getCategories().length + '개';
+      }},
       { key: 'weekstart', icon: '📆', label: '주 시작 요일', getValue: function() {
         return (!state || !state.weekStart) ? '월요일' : '일요일';
       }},
@@ -4138,10 +4158,10 @@
     document.getElementById('settings-list-view').style.display = 'none';
     document.getElementById('settings-detail-view').style.display = '';
 
-    var titles = { cycle: '교대 주기', colors: '근무유형 색', weekstart: '주 시작 요일', theme: '테마', teams: '팀 근무' };
+    var titles = { cycle: '교대 주기', colors: '근무유형 색', categories: '카테고리', weekstart: '주 시작 요일', theme: '테마', teams: '팀 근무' };
     document.getElementById('settings-detail-title').textContent = titles[key] || '';
 
-    ['sd-cycle','sd-colors','sd-weekstart','sd-theme','sd-teams'].forEach(function(id) {
+    ['sd-cycle','sd-colors','sd-categories','sd-weekstart','sd-theme','sd-teams'].forEach(function(id) {
       document.getElementById(id).style.display = 'none';
     });
     document.getElementById('sd-' + key).style.display = '';
@@ -4160,6 +4180,8 @@
       document.getElementById('warn-settings').textContent = '';
     } else if (key === 'colors') {
       renderShiftColorSettings();
+    } else if (key === 'categories') {
+      renderCategorySettings();
     } else if (key === 'weekstart') {
       document.getElementById('input-week-start').value = (state && state.weekStart !== undefined) ? String(state.weekStart) : '0';
     } else if (key === 'theme') {
@@ -4270,6 +4292,120 @@
       card.appendChild(row);
     });
   }
+
+  // ── 카테고리 관리 (사용자가 직접 추가·수정·삭제) ──────────────
+  function renderCategorySettings() {
+    const card = document.getElementById('category-settings-card');
+    card.innerHTML = '';
+    const cats = getCategories();
+
+    cats.forEach(function (cat, idx) {
+      const row = document.createElement('div');
+      row.className = 'shift-color-row';
+
+      const rowTop = document.createElement('div');
+      rowTop.className = 'shift-color-row-top';
+
+      const iconInput = document.createElement('input');
+      iconInput.type = 'text';
+      iconInput.value = cat.icon || '';
+      iconInput.maxLength = 4;
+      iconInput.placeholder = '아이콘';
+      iconInput.style.cssText = 'width:38px;text-align:center;padding:8px 4px;border:1.5px solid var(--line);border-radius:8px;font-size:15px;background:var(--surface-2);color:var(--text-1);font-family:inherit;';
+
+      const nameInput = document.createElement('input');
+      nameInput.type = 'text';
+      nameInput.value = cat.name;
+      nameInput.maxLength = 10;
+      nameInput.className = 'shift-color-name';
+      nameInput.style.cssText = 'border:1.5px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--surface-2);font-family:inherit;';
+
+      const preview = document.createElement('div');
+      preview.className = 'shift-color-preview';
+      function applyPreview() {
+        preview.textContent = (iconInput.value || '') + ' ' + nameInput.value;
+        preview.style.background = 'rgba(' + hexToRgb(cat.color) + ',0.15)';
+        preview.style.borderColor = cat.color;
+        preview.style.color = cat.color;
+      }
+      applyPreview();
+
+      iconInput.addEventListener('input', function () {
+        cat.icon = iconInput.value;
+        applyPreview();
+        saveState();
+      });
+      nameInput.addEventListener('input', function () {
+        cat.name = nameInput.value;
+        applyPreview();
+        saveState();
+      });
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'inbox-item-del';
+      delBtn.textContent = '×';
+      delBtn.setAttribute('aria-label', '카테고리 삭제');
+      delBtn.style.flexShrink = '0';
+      if (cats.length <= 1) delBtn.style.visibility = 'hidden';
+      delBtn.addEventListener('click', function () {
+        if (getCategories().length <= 1) return;
+        state.categories.splice(idx, 1);
+        saveState();
+        renderCategorySettings();
+      });
+
+      rowTop.appendChild(iconInput);
+      rowTop.appendChild(nameInput);
+      rowTop.appendChild(preview);
+      rowTop.appendChild(delBtn);
+      row.appendChild(rowTop);
+
+      const rowBottom = document.createElement('div');
+      rowBottom.className = 'shift-color-row-bottom';
+      const swatchWrap = document.createElement('div');
+      swatchWrap.className = 'shift-color-swatches';
+      const colorInput = document.createElement('input');
+      colorInput.type = 'color';
+      colorInput.value = cat.color;
+      colorInput.className = 'shift-color-input';
+      colorInput.title = '직접 선택';
+
+      function selectColor(color) {
+        cat.color = color;
+        applyPreview();
+        colorInput.value = color;
+        swatchWrap.querySelectorAll('.shift-color-swatch').forEach(function (s) {
+          s.classList.toggle('active', s.dataset.color === color);
+        });
+        saveState();
+      }
+
+      SHIFT_COLOR_PRESETS.forEach(function (preset) {
+        const swatch = document.createElement('button');
+        swatch.className = 'shift-color-swatch' + (preset === cat.color ? ' active' : '');
+        swatch.dataset.color = preset;
+        swatch.style.background = preset;
+        swatch.title = preset;
+        swatch.addEventListener('click', function () { selectColor(preset); });
+        swatchWrap.appendChild(swatch);
+      });
+
+      colorInput.addEventListener('input', function () { cat.color = colorInput.value; applyPreview(); });
+      colorInput.addEventListener('change', function () { selectColor(colorInput.value); });
+
+      rowBottom.appendChild(swatchWrap);
+      rowBottom.appendChild(colorInput);
+      row.appendChild(rowBottom);
+      card.appendChild(row);
+    });
+  }
+
+  document.getElementById('btn-category-add').addEventListener('click', function () {
+    if (!Array.isArray(state.categories)) state.categories = [];
+    state.categories.push({ id: genId('cat'), name: '새 카테고리', color: '#8e8e93', icon: '' });
+    saveState();
+    renderCategorySettings();
+  });
 
   document.getElementById('btn-settings-back').addEventListener('click', closeSettingsDetail);
 
@@ -5190,7 +5326,7 @@
 
     const catSel = document.getElementById('promote-cat-select');
     catSel.innerHTML = '';
-    CATEGORIES.forEach(function (c) {
+    getCategories().forEach(function (c) {
       const opt = document.createElement('option');
       opt.value = c.id;
       opt.textContent = (c.icon ? c.icon + ' ' : '') + c.name;
