@@ -2276,8 +2276,7 @@
     </div>
     <div class="btn-row" id="promote-mode-row">
       <button class="btn btn-secondary" id="btn-promote-mode-interval">기간</button>
-      <button class="btn btn-secondary" id="btn-promote-mode-shift">근무로 고르기</button>
-      <button class="btn btn-secondary" id="btn-promote-mode-weekday">요일로 고르기</button>
+      <button class="btn btn-secondary" id="btn-promote-mode-shift">근무·요일</button>
     </div>
 
     <div id="promote-interval-section" style="display:none">
@@ -2309,23 +2308,19 @@
     <div id="promote-shift-section" style="display:none">
       <div id="promote-shift-group-list" class="promote-weekday-picker"></div>
       <div class="form-group">
-        <label>근무 조건 (여러 개 선택 가능)</label>
+        <label>근무 (여러 개 선택 가능)</label>
         <div id="promote-shift-name-picker" class="promote-weekday-picker"></div>
+      </div>
+      <div class="form-group">
+        <label>요일 (여러 개 선택 가능)</label>
+        <div id="promote-shift-weekday-picker" class="promote-weekday-picker"></div>
       </div>
       <div class="btn-row">
         <button class="btn btn-secondary" id="btn-promote-offset-0">이 날마다</button>
         <button class="btn btn-secondary" id="btn-promote-offset-1">다음날마다</button>
       </div>
-      <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-2);margin-top:10px;">
-        <input type="checkbox" id="promote-shift-weekday-toggle"> 요일 조건 추가
-      </label>
-      <div id="promote-shift-weekday-picker" class="promote-weekday-picker" style="display:none"></div>
       <button type="button" class="btn btn-secondary" id="btn-promote-shift-add-group" style="margin-top:10px;width:100%;">+ 조건 추가</button>
-      <div class="promote-interval-hint">조건을 만든 뒤 "+ 조건 추가"를 누르면 위 목록에 쌓여요. 쌓인 조건을 다시 누르면 지워지고 편집 칸으로 돌아와요. 쌓인 조건 중 하나라도 맞으면 반복돼요.</div>
-    </div>
-
-    <div id="promote-weekday-section" style="display:none">
-      <div class="promote-weekday-picker" id="promote-weekday-picker"></div>
+      <div class="promote-interval-hint">근무나 요일 중 하나 이상 고르고 "+ 조건 추가"를 누르면 위 목록에 쌓여요. 쌓인 조건을 다시 누르면 지워지고 편집 칸으로 돌아와요. 쌓인 조건 중 하나라도 맞으면 반복돼요.</div>
     </div>
 
     <div class="onboard-warn" id="promote-warn"></div>
@@ -3532,9 +3527,11 @@
         const offset = g.offset || 0;
         const wds = g.weekdays && g.weekdays.length ? new Set(g.weekdays) : null;
         for (let i = 0; i < n; i++) {
-          const srcIdx = ((i - offset) % n + n) % n;
-          const srcName = state.days[srcIdx] && state.days[srcIdx].shiftType.name;
-          if (!names.has(srcName)) continue;
+          if (names.size > 0) {
+            const srcIdx = ((i - offset) % n + n) % n;
+            const srcName = state.days[srcIdx] && state.days[srcIdx].shiftType.name;
+            if (!names.has(srcName)) continue;
+          }
           if (wds && !wds.has(weekdayForDayIndex(i))) continue;
           resultSet.add(i);
         }
@@ -4881,19 +4878,18 @@
   function describeShiftGroup(g) {
     const DOW = ['일', '월', '화', '수', '목', '금', '토'];
     const names = (g.shiftNames || []).join('·');
+    const hasNames = !!names;
     if (g.weekdays && g.weekdays.length) {
       const wds = g.weekdays.slice().sort().map(function (w) { return DOW[w] + '요일'; }).join('·');
-      return names + '인 ' + wds + '마다';
+      return hasNames ? (names + '인 ' + wds + '마다') : ('매주 ' + wds + '마다');
     }
     return g.offset === 1 ? (names + ' 다음날마다') : (names + '날마다');
   }
 
-  // 지금 편집 칸(근무 선택/요일 조건)을 비워서 다음 조건을 새로 고를 수 있게 함
+  // 지금 편집 칸(근무 선택/요일 선택)을 비워서 다음 조건을 새로 고를 수 있게 함
   function resetPromoteShiftCurrentInputs() {
     renderNamePicker(document.getElementById('promote-shift-name-picker'), promoteShiftAllNames, new Set());
     setPromoteOffset(0);
-    document.getElementById('promote-shift-weekday-toggle').checked = false;
-    document.getElementById('promote-shift-weekday-picker').style.display = 'none';
     renderWeekdayPicker(document.getElementById('promote-shift-weekday-picker'), new Set());
   }
 
@@ -4910,10 +4906,7 @@
         promoteShiftGroups.splice(i, 1);
         renderNamePicker(document.getElementById('promote-shift-name-picker'), promoteShiftAllNames, new Set(g.shiftNames || []));
         setPromoteOffset(g.offset || 0);
-        const hasWd = !!(g.weekdays && g.weekdays.length);
-        document.getElementById('promote-shift-weekday-toggle').checked = hasWd;
-        document.getElementById('promote-shift-weekday-picker').style.display = hasWd ? '' : 'none';
-        renderWeekdayPicker(document.getElementById('promote-shift-weekday-picker'), new Set(hasWd ? g.weekdays : []));
+        renderWeekdayPicker(document.getElementById('promote-shift-weekday-picker'), new Set(g.weekdays || []));
         renderPromoteShiftGroupList();
       });
       el.appendChild(chip);
@@ -5013,12 +5006,10 @@
     promoteMode = mode;
     document.getElementById('promote-interval-section').style.display = mode === 'interval' ? '' : 'none';
     document.getElementById('promote-shift-section').style.display = mode === 'shift' ? '' : 'none';
-    document.getElementById('promote-weekday-section').style.display = mode === 'weekday' ? '' : 'none';
     document.getElementById('btn-promote-confirm').style.display = '';
     document.getElementById('promote-warn').textContent = '';
     document.getElementById('btn-promote-mode-interval').classList.toggle('active', mode === 'interval');
     document.getElementById('btn-promote-mode-shift').classList.toggle('active', mode === 'shift');
-    document.getElementById('btn-promote-mode-weekday').classList.toggle('active', mode === 'weekday');
   }
 
   // '기간' 안의 하위 선택(기간 간격 / 음력) 전환
@@ -5068,7 +5059,6 @@
     document.getElementById('promote-warn').textContent = '';
     document.getElementById('promote-interval-section').style.display = 'none';
     document.getElementById('promote-shift-section').style.display = 'none';
-    document.getElementById('promote-weekday-section').style.display = 'none';
     document.getElementById('promote-lunar-section').style.display = 'none';
     document.getElementById('btn-promote-confirm').style.display = 'none';
     document.querySelectorAll('#promote-mode-row .btn').forEach(function (b) { b.classList.remove('active'); });
@@ -5092,10 +5082,6 @@
     resetPromoteShiftCurrentInputs();
     renderPromoteShiftGroupList();
 
-    const now = new Date();
-    let initialWeekday = now.getDay();
-    if (repeatEditorSourceEvent) initialWeekday = parseLocalDate(repeatEditorSourceEvent.date).getDay();
-
     if (initialRule && initialRule.type === 'shift') {
       const legacyGroups = (initialRule.groups && initialRule.groups.length)
         ? initialRule.groups
@@ -5104,15 +5090,12 @@
         return { shiftNames: (g.shiftNames || []).slice(), offset: g.offset || 0, weekdays: g.weekdays ? g.weekdays.slice() : undefined };
       });
       renderPromoteShiftGroupList();
-      renderWeekdayPicker(document.getElementById('promote-weekday-picker'), new Set([initialWeekday]));
       setPromoteMode('shift');
     } else if (initialRule && initialRule.type === 'weekday') {
-      setPromoteOffset(0);
-      document.getElementById('promote-shift-weekday-toggle').checked = false;
-      document.getElementById('promote-shift-weekday-picker').style.display = 'none';
-      renderWeekdayPicker(document.getElementById('promote-shift-weekday-picker'), new Set([initialWeekday]));
-      renderWeekdayPicker(document.getElementById('promote-weekday-picker'), new Set(initialRule.weekdays || []));
-      setPromoteMode('weekday');
+      // 예전 "요일로 고르기"(별도 모드) 데이터 — 근무 없이 요일만 있는 조건 묶음 하나로 변환
+      promoteShiftGroups = [{ shiftNames: [], offset: 0, weekdays: (initialRule.weekdays || []).slice() }];
+      renderPromoteShiftGroupList();
+      setPromoteMode('shift');
     } else if (initialRule && initialRule.type === 'interval') {
       promoteIntervalValues = {
         years: initialRule.years || 0,
@@ -5125,12 +5108,6 @@
       promoteLunarValues = { month: initialRule.lunarMonth, day: initialRule.lunarDay };
       setPromoteMode('interval');
       setPromoteIntervalSubMode('lunar');
-    } else {
-      setPromoteOffset(0);
-      document.getElementById('promote-shift-weekday-toggle').checked = false;
-      document.getElementById('promote-shift-weekday-picker').style.display = 'none';
-      renderWeekdayPicker(document.getElementById('promote-shift-weekday-picker'), new Set([initialWeekday]));
-      renderWeekdayPicker(document.getElementById('promote-weekday-picker'), new Set([initialWeekday]));
     }
 
     renderIntervalSpinner();
@@ -5148,7 +5125,6 @@
 
   document.getElementById('btn-promote-mode-interval').addEventListener('click', function () { setPromoteMode('interval'); setPromoteIntervalSubMode('interval'); });
   document.getElementById('btn-promote-mode-shift').addEventListener('click', function () { setPromoteMode('shift'); });
-  document.getElementById('btn-promote-mode-weekday').addEventListener('click', function () { setPromoteMode('weekday'); });
   document.getElementById('btn-promote-interval-sub-days').addEventListener('click', function () { setPromoteIntervalSubMode('interval'); });
   document.getElementById('btn-promote-interval-sub-lunar').addEventListener('click', function () { setPromoteIntervalSubMode('lunar'); });
   setupIntervalSpinner(document.getElementById('pi-years'), 'years');
@@ -5161,17 +5137,12 @@
   document.getElementById('btn-promote-shift-add-group').addEventListener('click', function () {
     const warn = document.getElementById('promote-warn');
     const names = selectedNamesFrom(document.getElementById('promote-shift-name-picker'));
-    if (names.length === 0) { warn.textContent = '근무를 선택해 주세요.'; return; }
-    const useWeekday = document.getElementById('promote-shift-weekday-toggle').checked;
-    const weekdays = useWeekday ? selectedWeekdaysFrom(document.getElementById('promote-shift-weekday-picker')) : null;
-    if (useWeekday && (!weekdays || weekdays.length === 0)) { warn.textContent = '요일을 선택해 주세요.'; return; }
+    const weekdays = selectedWeekdaysFrom(document.getElementById('promote-shift-weekday-picker'));
+    if (names.length === 0 && weekdays.length === 0) { warn.textContent = '근무나 요일을 하나 이상 선택해 주세요.'; return; }
     warn.textContent = '';
-    promoteShiftGroups.push({ shiftNames: names, offset: promoteOffset, weekdays: (weekdays && weekdays.length) ? weekdays : undefined });
+    promoteShiftGroups.push({ shiftNames: names, offset: promoteOffset, weekdays: weekdays.length ? weekdays : undefined });
     renderPromoteShiftGroupList();
     resetPromoteShiftCurrentInputs();
-  });
-  document.getElementById('promote-shift-weekday-toggle').addEventListener('change', function () {
-    document.getElementById('promote-shift-weekday-picker').style.display = this.checked ? '' : 'none';
   });
   document.getElementById('btn-promote-cancel').addEventListener('click', closeRepeatEditor);
   document.getElementById('promote-overlay').addEventListener('click', function (e) {
@@ -5204,19 +5175,12 @@
       // 지금 편집 칸에 남아 있는(아직 "+ 조건 추가"를 안 누른) 조건이 있으면 그것도 자동으로 포함
       const groups = promoteShiftGroups.slice();
       const currentNames = selectedNamesFrom(document.getElementById('promote-shift-name-picker'));
-      if (currentNames.length) {
-        const useWeekday = document.getElementById('promote-shift-weekday-toggle').checked;
-        const weekdays = useWeekday ? selectedWeekdaysFrom(document.getElementById('promote-shift-weekday-picker')) : null;
-        if (useWeekday && (!weekdays || weekdays.length === 0)) { warn.textContent = '요일을 선택해 주세요.'; return; }
-        groups.push({ shiftNames: currentNames, offset: promoteOffset, weekdays: (weekdays && weekdays.length) ? weekdays : undefined });
+      const currentWeekdays = selectedWeekdaysFrom(document.getElementById('promote-shift-weekday-picker'));
+      if (currentNames.length || currentWeekdays.length) {
+        groups.push({ shiftNames: currentNames, offset: promoteOffset, weekdays: currentWeekdays.length ? currentWeekdays : undefined });
       }
-      if (groups.length === 0) { warn.textContent = '근무를 선택해 주세요.'; return; }
+      if (groups.length === 0) { warn.textContent = '근무나 요일을 하나 이상 선택해 주세요.'; return; }
       rule = { type: 'shift', groups: groups };
-      indices = computeIndicesForRule(rule);
-    } else if (promoteMode === 'weekday') {
-      const weekdays = selectedWeekdaysFrom(document.getElementById('promote-weekday-picker'));
-      if (weekdays.length === 0) { warn.textContent = '요일을 선택해 주세요.'; return; }
-      rule = { type: 'weekday', weekdays: weekdays };
       indices = computeIndicesForRule(rule);
     } else if (promoteMode === 'interval' && promoteIntervalSubMode === 'lunar') {
       rule = { type: 'lunar', lunarMonth: promoteLunarValues.month, lunarDay: promoteLunarValues.day };
