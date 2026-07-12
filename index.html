@@ -4348,12 +4348,7 @@
       nameInput.maxLength = 14;
       nameInput.placeholder = '예: 🥋 운동';
       nameInput.className = 'shift-color-name';
-      nameInput.style.cssText = 'flex:1;min-width:0;width:0;border:1.5px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--surface-2);font-family:inherit;';
-
-      function applyPreview() {
-        nameInput.style.color = cat.color;
-      }
-      applyPreview();
+      nameInput.style.cssText = 'flex:1;min-width:0;width:0;border:1.5px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--surface-2);color:var(--text-1);font-family:inherit;';
 
       nameInput.addEventListener('input', function () {
         const parsed = splitCategoryInput(nameInput.value);
@@ -4391,7 +4386,6 @@
 
       function selectColor(color) {
         cat.color = color;
-        applyPreview();
         colorInput.value = color;
         swatchWrap.querySelectorAll('.shift-color-swatch').forEach(function (s) {
           s.classList.toggle('active', s.dataset.color === color);
@@ -4409,7 +4403,7 @@
         swatchWrap.appendChild(swatch);
       });
 
-      colorInput.addEventListener('input', function () { cat.color = colorInput.value; applyPreview(); });
+      colorInput.addEventListener('input', function () { cat.color = colorInput.value; });
       colorInput.addEventListener('change', function () { selectColor(colorInput.value); });
 
       rowBottom.appendChild(swatchWrap);
