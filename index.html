@@ -3734,7 +3734,9 @@
     const DOW_KR = ['일','월','화','수','목','금','토'];
     document.getElementById('td-date').textContent =
       (tdMid.getMonth() + 1) + '월 ' + tdMid.getDate() + '일 ' + DOW_KR[tdMid.getDay()] + '요일';
-    document.getElementById('td-dnum').textContent = 'D' + day.dayIndex;
+
+    const { name: todayShiftName } = getEffectiveShiftName(formatDateStr(tdMid), idx);
+    document.getElementById('td-dnum').textContent = todayShiftName || '근무 미설정';
 
     const todayHoliday = getKoreanHoliday(todayDateStr);
     const holidayNameEl = document.getElementById('td-holiday-name');
@@ -3742,7 +3744,6 @@
     holidayNameEl.classList.toggle('show', !!todayHoliday);
 
     const shiftEl = document.getElementById('td-shift');
-    const { name: todayShiftName } = getEffectiveShiftName(formatDateStr(tdMid), idx);
     const todayShiftColor = getShiftColor(todayShiftName);
     if (todayShiftName) {
       shiftEl.textContent = todayShiftName;
