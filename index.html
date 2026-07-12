@@ -5987,15 +5987,14 @@
   function repeatGroupKey(rule) {
     if (!rule) return 'other';
     if (rule.type === 'shift' || rule.type === 'weekday') return 'shift';
-    if (rule.type === 'interval') return 'interval';
-    if (rule.type === 'lunar') return 'lunar';
+    // 음력도 "기간"의 하위 선택일 뿐이라 반복 탭 정리에서는 같이 묶음
+    if (rule.type === 'interval' || rule.type === 'lunar') return 'interval';
     return 'other';
   }
 
   const ROUTINE_GROUPS = [
     { key: 'shift', label: '근무·요일' },
     { key: 'interval', label: '기간' },
-    { key: 'lunar', label: '음력' },
     { key: 'other', label: '기타' },
   ];
 
