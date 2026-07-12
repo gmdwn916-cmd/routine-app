@@ -5146,12 +5146,13 @@
   function renderWeekdayPicker(containerEl, selectedSet) {
     containerEl.innerHTML = '';
     const DOW_KR = ['일','월','화','수','목','금','토'];
-    DOW_KR.forEach(function (label, i) {
+    const WEEKDAY_DISPLAY_ORDER = [1, 2, 3, 4, 5, 6, 0]; // 월~일 순서로 보여줌(요일 번호 자체는 그대로 0=일~6=토)
+    WEEKDAY_DISPLAY_ORDER.forEach(function (wd) {
       const chip = document.createElement('button');
       chip.type = 'button';
-      chip.className = 'promote-weekday-chip' + (selectedSet.has(i) ? ' selected' : '');
-      chip.textContent = label;
-      chip.dataset.wd = i;
+      chip.className = 'promote-weekday-chip' + (selectedSet.has(wd) ? ' selected' : '');
+      chip.textContent = DOW_KR[wd];
+      chip.dataset.wd = wd;
       chip.addEventListener('click', function () { chip.classList.toggle('selected'); });
       containerEl.appendChild(chip);
     });
