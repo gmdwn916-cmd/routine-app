@@ -4311,33 +4311,26 @@
       iconInput.value = cat.icon || '';
       iconInput.maxLength = 4;
       iconInput.placeholder = '아이콘';
-      iconInput.style.cssText = 'width:38px;text-align:center;padding:8px 4px;border:1.5px solid var(--line);border-radius:8px;font-size:15px;background:var(--surface-2);color:var(--text-1);font-family:inherit;';
+      iconInput.style.cssText = 'flex-shrink:0;width:38px;text-align:center;padding:8px 4px;border:1.5px solid var(--line);border-radius:8px;font-size:15px;background:var(--surface-2);color:var(--text-1);font-family:inherit;';
 
       const nameInput = document.createElement('input');
       nameInput.type = 'text';
       nameInput.value = cat.name;
       nameInput.maxLength = 10;
       nameInput.className = 'shift-color-name';
-      nameInput.style.cssText = 'border:1.5px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--surface-2);font-family:inherit;';
+      nameInput.style.cssText = 'flex:1;min-width:0;width:0;border:1.5px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--surface-2);font-family:inherit;';
 
-      const preview = document.createElement('div');
-      preview.className = 'shift-color-preview';
       function applyPreview() {
-        preview.textContent = (iconInput.value || '') + ' ' + nameInput.value;
-        preview.style.background = 'rgba(' + hexToRgb(cat.color) + ',0.15)';
-        preview.style.borderColor = cat.color;
-        preview.style.color = cat.color;
+        nameInput.style.color = cat.color;
       }
       applyPreview();
 
       iconInput.addEventListener('input', function () {
         cat.icon = iconInput.value;
-        applyPreview();
         saveState();
       });
       nameInput.addEventListener('input', function () {
         cat.name = nameInput.value;
-        applyPreview();
         saveState();
       });
 
@@ -4356,7 +4349,6 @@
 
       rowTop.appendChild(iconInput);
       rowTop.appendChild(nameInput);
-      rowTop.appendChild(preview);
       rowTop.appendChild(delBtn);
       row.appendChild(rowTop);
 
