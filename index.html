@@ -2278,26 +2278,32 @@
       <button class="btn btn-secondary" id="btn-promote-mode-interval">기간</button>
       <button class="btn btn-secondary" id="btn-promote-mode-shift">근무로 고르기</button>
       <button class="btn btn-secondary" id="btn-promote-mode-weekday">요일로 고르기</button>
-      <button class="btn btn-secondary" id="btn-promote-mode-lunar">음력으로 고르기</button>
     </div>
 
     <div id="promote-interval-section" style="display:none">
-      <div class="promote-interval-row">
-        <div class="promote-interval-field" id="pi-years" data-unit="years">0</div><span class="promote-interval-unit">년</span>
-        <div class="promote-interval-field" id="pi-months" data-unit="months">0</div><span class="promote-interval-unit">개월</span>
-        <div class="promote-interval-field" id="pi-days" data-unit="days">0</div><span class="promote-interval-unit">일</span>
-        <span class="promote-interval-suffix">마다 반복</span>
+      <div class="btn-row">
+        <button class="btn btn-secondary" id="btn-promote-interval-sub-days">기간</button>
+        <button class="btn btn-secondary" id="btn-promote-interval-sub-lunar">음력</button>
       </div>
-      <div class="promote-interval-hint">숫자 칸을 위아래로 밀면 값이 바뀌어요</div>
-    </div>
 
-    <div id="promote-lunar-section" style="display:none">
-      <div class="promote-interval-row">
-        <div class="promote-interval-field" id="pl-month" data-unit="month">1</div><span class="promote-interval-unit">월</span>
-        <div class="promote-interval-field" id="pl-day" data-unit="day">1</div><span class="promote-interval-unit">일</span>
-        <span class="promote-interval-suffix">마다 반복(음력)</span>
+      <div id="promote-interval-days-block">
+        <div class="promote-interval-row">
+          <div class="promote-interval-field" id="pi-years" data-unit="years">0</div><span class="promote-interval-unit">년</span>
+          <div class="promote-interval-field" id="pi-months" data-unit="months">0</div><span class="promote-interval-unit">개월</span>
+          <div class="promote-interval-field" id="pi-days" data-unit="days">0</div><span class="promote-interval-unit">일</span>
+          <span class="promote-interval-suffix">마다 반복</span>
+        </div>
+        <div class="promote-interval-hint">숫자 칸을 위아래로 밀면 값이 바뀌어요</div>
       </div>
-      <div class="promote-interval-hint">숫자 칸을 위아래로 밀면 값이 바뀌어요. 매년 그 음력 날짜에 맞는 양력 날짜에 나타나요(그 달이 그 해에 29일까지밖에 없으면 그 해는 건너뜀).</div>
+
+      <div id="promote-lunar-section" style="display:none">
+        <div class="promote-interval-row">
+          <div class="promote-interval-field" id="pl-month" data-unit="month">1</div><span class="promote-interval-unit">월</span>
+          <div class="promote-interval-field" id="pl-day" data-unit="day">1</div><span class="promote-interval-unit">일</span>
+          <span class="promote-interval-suffix">마다 반복(음력)</span>
+        </div>
+        <div class="promote-interval-hint">매년 그 음력 날짜에 맞는 양력 날짜에 나타나요. 원래 날짜의 음력이 자동으로 채워지니 마음에 안 들면 숫자만 밀어서 고치고, 그대로면 바로 확인을 눌러도 돼요(그 달이 그 해에 29일까지밖에 없으면 그 해는 건너뜀).</div>
+      </div>
     </div>
 
     <div id="promote-shift-section" style="display:none">
@@ -4827,6 +4833,7 @@
   let repeatEditorTargetEvent = null; // 편집 중인 기존 반복 할일 (없으면 새로 만들기/전환)
   let repeatEditorSourceEvent = null; // 반복으로 전환 중인 원래 한 번짜리 할 일 (확정 시 삭제됨)
   let promoteMode = null;
+  let promoteIntervalSubMode = 'interval'; // '기간' 안의 하위 선택: 'interval'(기간) | 'lunar'(음력)
   let promoteOffset = 0;
   let promoteIntervalValues = { years: 0, months: 0, days: 0 };
   let promoteLunarValues = { month: 1, day: 1 };
@@ -5007,13 +5014,20 @@
     document.getElementById('promote-interval-section').style.display = mode === 'interval' ? '' : 'none';
     document.getElementById('promote-shift-section').style.display = mode === 'shift' ? '' : 'none';
     document.getElementById('promote-weekday-section').style.display = mode === 'weekday' ? '' : 'none';
-    document.getElementById('promote-lunar-section').style.display = mode === 'lunar' ? '' : 'none';
     document.getElementById('btn-promote-confirm').style.display = '';
     document.getElementById('promote-warn').textContent = '';
     document.getElementById('btn-promote-mode-interval').classList.toggle('active', mode === 'interval');
     document.getElementById('btn-promote-mode-shift').classList.toggle('active', mode === 'shift');
     document.getElementById('btn-promote-mode-weekday').classList.toggle('active', mode === 'weekday');
-    document.getElementById('btn-promote-mode-lunar').classList.toggle('active', mode === 'lunar');
+  }
+
+  // '기간' 안의 하위 선택(기간 간격 / 음력) 전환
+  function setPromoteIntervalSubMode(subMode) {
+    promoteIntervalSubMode = subMode;
+    document.getElementById('promote-interval-days-block').style.display = subMode === 'interval' ? '' : 'none';
+    document.getElementById('promote-lunar-section').style.display = subMode === 'lunar' ? '' : 'none';
+    document.getElementById('btn-promote-interval-sub-days').classList.toggle('active', subMode === 'interval');
+    document.getElementById('btn-promote-interval-sub-lunar').classList.toggle('active', subMode === 'lunar');
   }
 
   function openRepeatEditor(opts) {
@@ -5021,6 +5035,7 @@
     repeatEditorTargetEvent = opts.editEvent || null;
     repeatEditorSourceEvent = opts.sourceEvent || null;
     promoteMode = null;
+    promoteIntervalSubMode = 'interval';
     promoteOffset = 0;
     promoteIntervalValues = { years: 0, months: 0, days: 0 };
     const originDateStr = repeatEditorSourceEvent ? repeatEditorSourceEvent.date : formatDateStr(todayMidnight());
@@ -5105,9 +5120,11 @@
         days: initialRule.days || 0,
       };
       setPromoteMode('interval');
+      setPromoteIntervalSubMode('interval');
     } else if (initialRule && initialRule.type === 'lunar') {
       promoteLunarValues = { month: initialRule.lunarMonth, day: initialRule.lunarDay };
-      setPromoteMode('lunar');
+      setPromoteMode('interval');
+      setPromoteIntervalSubMode('lunar');
     } else {
       setPromoteOffset(0);
       document.getElementById('promote-shift-weekday-toggle').checked = false;
@@ -5129,10 +5146,11 @@
     repeatEditorSourceEvent = null;
   }
 
-  document.getElementById('btn-promote-mode-interval').addEventListener('click', function () { setPromoteMode('interval'); });
+  document.getElementById('btn-promote-mode-interval').addEventListener('click', function () { setPromoteMode('interval'); setPromoteIntervalSubMode('interval'); });
   document.getElementById('btn-promote-mode-shift').addEventListener('click', function () { setPromoteMode('shift'); });
   document.getElementById('btn-promote-mode-weekday').addEventListener('click', function () { setPromoteMode('weekday'); });
-  document.getElementById('btn-promote-mode-lunar').addEventListener('click', function () { setPromoteMode('lunar'); });
+  document.getElementById('btn-promote-interval-sub-days').addEventListener('click', function () { setPromoteIntervalSubMode('interval'); });
+  document.getElementById('btn-promote-interval-sub-lunar').addEventListener('click', function () { setPromoteIntervalSubMode('lunar'); });
   setupIntervalSpinner(document.getElementById('pi-years'), 'years');
   setupIntervalSpinner(document.getElementById('pi-months'), 'months');
   setupIntervalSpinner(document.getElementById('pi-days'), 'days');
@@ -5200,6 +5218,8 @@
       if (weekdays.length === 0) { warn.textContent = '요일을 선택해 주세요.'; return; }
       rule = { type: 'weekday', weekdays: weekdays };
       indices = computeIndicesForRule(rule);
+    } else if (promoteMode === 'interval' && promoteIntervalSubMode === 'lunar') {
+      rule = { type: 'lunar', lunarMonth: promoteLunarValues.month, lunarDay: promoteLunarValues.day };
     } else if (promoteMode === 'interval') {
       const years = promoteIntervalValues.years, months = promoteIntervalValues.months, days = promoteIntervalValues.days;
       if (years === 0 && months === 0 && days === 0) { warn.textContent = '기간을 하나 이상 입력해 주세요.'; return; }
@@ -5207,8 +5227,6 @@
         ? repeatEditorTargetEvent.repeat.anchorDate
         : (repeatEditorSourceEvent ? repeatEditorSourceEvent.date : formatDateStr(todayMidnight()));
       rule = { type: 'interval', years: years, months: months, days: days, anchorDate: anchorDate };
-    } else if (promoteMode === 'lunar') {
-      rule = { type: 'lunar', lunarMonth: promoteLunarValues.month, lunarDay: promoteLunarValues.day };
     } else {
       warn.textContent = '반복 방법을 선택해 주세요.';
       return;
