@@ -993,6 +993,11 @@
 
     .year-month-box:active { background: var(--surface-2); }
 
+    .year-month-box.inbox-drop-hover, .grid-cell.inbox-drop-hover {
+      box-shadow: inset 0 0 0 2px #007aff;
+      background: rgba(0,122,255,0.14);
+    }
+
     .year-month-label {
       font-size: 14px;
       font-weight: 700;
@@ -3823,6 +3828,7 @@
     for (let m = 0; m < 12; m++) {
       const box = document.createElement('div');
       box.className = 'year-month-box';
+      box.dataset.month = m;
 
       const label = document.createElement('div');
       label.className = 'year-month-label';
@@ -4331,6 +4337,8 @@
   // 그 날짜에 해당하는 반복 할일 + 한 번짜리 할 일을 하나의 목록으로 합쳐 보여줌.
   // 완료된 항목은 기본적으로 숨기고, "완료 보기" 토글을 눌러야 보임.
   function renderDDTodos() {
+    if (detailDateStr === null) return; // 날짜 상세 패널이 열려 있지 않으면 갱신할 대상이 없음
+
     const el = document.getElementById('dd-events-list');
     el.innerHTML = '';
 
@@ -4666,36 +4674,139 @@
     if (e.key === 'Enter') submitQuickAdd();
   });
 
+  function formatYearMonth(year, month0) {
+    return year + '-' + String(month0 + 1).padStart(2, '0');
+  }
+
+  function buildInboxRow(item) {
+    const row = document.createElement('div');
+    row.className = 'inbox-item-row';
+    const text = document.createElement('span');
+    text.className = 'inbox-item-text';
+    text.textContent = item.text;
+    const del = document.createElement('button');
+    del.className = 'inbox-item-del';
+    del.textContent = '×';
+    del.setAttribute('aria-label', '삭제');
+    del.addEventListener('click', function (e) {
+      e.stopPropagation();
+      state.inbox = state.inbox.filter(function (it) { return it.id !== item.id; });
+      saveState();
+      renderInboxList();
+      renderInboxBadge();
+    });
+    row.appendChild(text);
+    row.appendChild(del);
+    row.addEventListener('click', function () { openPlace(item.id); });
+    setupInboxItemDrag(row, item);
+    return row;
+  }
+
+  // 미배치 항목을 꾹 눌러서 드래그: 창이 사라지고 뒤의 연간/달력 화면이 드러남.
+  // 연간 탭 월 박스에 놓으면 그 달로 태그(대략 배치), 달력 탭 날짜 칸에 놓으면 그 날로 확정 배치.
+  function setupInboxItemDrag(row, item) {
+    let timer = null;
+    let activated = false;
+    let startX = 0, startY = 0;
+    let hoverEl = null;
+
+    function clearHover() {
+      if (hoverEl) { hoverEl.classList.remove('inbox-drop-hover'); hoverEl = null; }
+    }
+
+    function onMove(e) {
+      const t = e.touches[0];
+      if (!activated) {
+        if (Math.abs(t.clientX - startX) > 8 || Math.abs(t.clientY - startY) > 8) clearTimeout(timer);
+        return;
+      }
+      e.preventDefault();
+      const el = document.elementFromPoint(t.clientX, t.clientY);
+      const target = el ? (el.closest('.year-month-box[data-month]') || el.closest('.grid-cell[data-date-str]')) : null;
+      if (target !== hoverEl) {
+        clearHover();
+        if (target) { target.classList.add('inbox-drop-hover'); hoverEl = target; }
+      }
+    }
+
+    function onEnd() {
+      clearTimeout(timer);
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('touchend', onEnd);
+      document.removeEventListener('touchcancel', onEnd);
+      if (!activated) return;
+      activated = false;
+      const target = hoverEl;
+      clearHover();
+
+      if (target && target.classList.contains('year-month-box')) {
+        item.targetMonth = formatYearMonth(yearViewYear, parseInt(target.dataset.month, 10));
+        saveState();
+        renderInboxBadge();
+      } else if (target && target.classList.contains('grid-cell')) {
+        placeInboxItem(item.id, target.dataset.dateStr);
+        return; // placeInboxItem이 자체적으로 다시 그림
+      } else {
+        // 놓을 곳이 없으면 취소 — 미배치 창을 다시 연다
+        openInbox();
+        return;
+      }
+      renderInboxList();
+    }
+
+    row.addEventListener('touchstart', function (e) {
+      const t = e.touches[0];
+      startX = t.clientX;
+      startY = t.clientY;
+      activated = false;
+      timer = setTimeout(function () {
+        activated = true;
+        closeInbox();
+        if (navigator.vibrate) navigator.vibrate(40);
+      }, 500);
+      document.addEventListener('touchmove', onMove, { passive: false });
+      document.addEventListener('touchend', onEnd, { passive: true });
+      document.addEventListener('touchcancel', onEnd, { passive: true });
+    }, { passive: true });
+  }
+
   function renderInboxList() {
     const el = document.getElementById('inbox-list');
     el.innerHTML = '';
     const inbox = state.inbox || [];
-    if (inbox.length === 0) {
+
+    const onMonthTab = document.getElementById('tab-month').classList.contains('active');
+    const viewMonthStr = onMonthTab ? formatYearMonth(calYear, calMonth) : null;
+    const thisMonthItems = viewMonthStr ? inbox.filter(function (it) { return it.targetMonth === viewMonthStr; }) : [];
+    const generalItems = inbox.filter(function (it) { return !it.targetMonth; });
+
+    if (thisMonthItems.length === 0 && generalItems.length === 0) {
       el.innerHTML = '<div class="inbox-empty">미배치 항목이 없어요.</div>';
       return;
     }
-    inbox.forEach(function (item) {
-      const row = document.createElement('div');
-      row.className = 'inbox-item-row';
-      const text = document.createElement('span');
-      text.className = 'inbox-item-text';
-      text.textContent = item.text;
-      const del = document.createElement('button');
-      del.className = 'inbox-item-del';
-      del.textContent = '×';
-      del.setAttribute('aria-label', '삭제');
-      del.addEventListener('click', function (e) {
-        e.stopPropagation();
-        state.inbox = state.inbox.filter(function (it) { return it.id !== item.id; });
-        saveState();
-        renderInboxList();
-        renderInboxBadge();
-      });
-      row.appendChild(text);
-      row.appendChild(del);
-      row.addEventListener('click', function () { openPlace(item.id); });
-      el.appendChild(row);
-    });
+
+    if (thisMonthItems.length) {
+      const label = document.createElement('div');
+      label.className = 'section-label';
+      label.textContent = (calMonth + 1) + '월로 넣어둔 항목';
+      el.appendChild(label);
+      thisMonthItems.forEach(function (item) { el.appendChild(buildInboxRow(item)); });
+
+      const label2 = document.createElement('div');
+      label2.className = 'section-label';
+      label2.style.marginTop = '14px';
+      label2.textContent = '미배치';
+      el.appendChild(label2);
+    }
+
+    if (generalItems.length === 0 && thisMonthItems.length) {
+      const empty = document.createElement('div');
+      empty.className = 'inbox-empty';
+      empty.textContent = '그 밖의 미배치 항목이 없어요.';
+      el.appendChild(empty);
+    } else {
+      generalItems.forEach(function (item) { el.appendChild(buildInboxRow(item)); });
+    }
   }
 
   function openInbox() {
