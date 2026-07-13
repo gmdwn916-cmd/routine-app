@@ -5118,12 +5118,28 @@
   // 방식은 일부 환경(특히 홈 화면에 추가한 PWA)에서 조용히 씹혀서 아무 반응이
   // 없는 문제가 있었음). navigator.share는 일부러 안 씀 — 실패해도 비동기라
   // 이미 지나간 클릭 이벤트로는 다운로드로 이어갈 수 없어서 "한 번 더 눌러야"
-  // 하는 불편한 경험이 됐었음. 다운로드 한 가지 경로만 항상 확실하게 동작하게 함.
+  // 하는 불편한 경험이 됐었음.
+  // 네이티브 앱(Capacitor 웹뷰)은 애초에 blob 링크 다운로드 자체를 처리하는
+  // 기능이 없어서(일반 브라우저와 다름) 위 방식이 통하지 않음 — 대신 WidgetBridge
+  // 플러그인의 saveBackupFile()로 안드로이드가 다운로드 폴더에 직접 파일을 쓰게 함.
   document.getElementById('btn-data-export').addEventListener('click', function (e) {
     const msg = document.getElementById('data-io-msg');
+    const raw = localStorage.getItem(STORAGE_KEY) || '{}';
+    const filename = '루틴백업_' + formatDateStr(todayMidnight()) + '.json';
+
+    if (isNativeApp()) {
+      e.preventDefault();
+      const bridge = getWidgetBridge();
+      if (!bridge) { msg.textContent = '내보내기 중 문제가 생겼어요: 연결 실패'; return; }
+      bridge.saveBackupFile({ filename: filename, content: raw }).then(function () {
+        msg.textContent = '파일을 저장했어요. (다운로드 폴더에서 확인)';
+      }).catch(function (err) {
+        msg.textContent = '내보내기 중 문제가 생겼어요: ' + ((err && err.message) || err);
+      });
+      return;
+    }
+
     try {
-      const raw = localStorage.getItem(STORAGE_KEY) || '{}';
-      const filename = '루틴백업_' + formatDateStr(todayMidnight()) + '.json';
       const blob = new Blob([raw], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       this.href = url;

@@ -105,4 +105,54 @@ public class WidgetBridgePlugin extends Plugin {
         while (it.hasNext()) list.add(it.next());
         return list;
     }
+
+    // 데이터 내보내기(백업)용 — 네이티브 앱 안의 웹뷰는 일반 브라우저와 달리
+    // "파일 다운로드"를 자체적으로 처리하는 기능이 없어서, blob 링크를 눌러도
+    // 아무 일도 안 일어남. 그래서 네이티브에서는 이 경로 대신 안드로이드가
+    // 다운로드 폴더에 직접 파일을 써주는 표준 방식(MediaStore)을 씀. 웹(브라우저)
+    // 쪽은 그대로 기존 blob 다운로드 방식을 계속 씀 — 거긴 문제없이 잘 됨.
+    @PluginMethod
+    public void saveBackupFile(PluginCall call) {
+        String filename = call.getString("filename");
+        String content = call.getString("content");
+        if (filename == null || content == null) {
+            call.reject("filename/content missing");
+            return;
+        }
+        try {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                android.content.ContentValues values = new android.content.ContentValues();
+                values.put(android.provider.MediaStore.Downloads.DISPLAY_NAME, filename);
+                values.put(android.provider.MediaStore.Downloads.MIME_TYPE, "application/json");
+                values.put(android.provider.MediaStore.Downloads.IS_PENDING, 1);
+                android.content.ContentResolver resolver = getContext().getContentResolver();
+                android.net.Uri uri = resolver.insert(android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
+                if (uri == null) {
+                    call.reject("insert failed");
+                    return;
+                }
+                java.io.OutputStream os = resolver.openOutputStream(uri);
+                try {
+                    os.write(content.getBytes("UTF-8"));
+                } finally {
+                    os.close();
+                }
+                values.clear();
+                values.put(android.provider.MediaStore.Downloads.IS_PENDING, 0);
+                resolver.update(uri, values, null, null);
+            } else {
+                java.io.File downloadsDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS);
+                java.io.File file = new java.io.File(downloadsDir, filename);
+                java.io.FileOutputStream fos = new java.io.FileOutputStream(file);
+                try {
+                    fos.write(content.getBytes("UTF-8"));
+                } finally {
+                    fos.close();
+                }
+            }
+            call.resolve();
+        } catch (Exception e) {
+            call.reject("save failed: " + e.getMessage(), e);
+        }
+    }
 }
