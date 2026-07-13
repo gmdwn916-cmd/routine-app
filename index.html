@@ -4459,7 +4459,7 @@
     saveState();
     closeBulkShiftSheet();
     renderToday();
-    pushMonthCalendarToWidget();
+    pushAllWidgets();
   });
 
   // ── 설정 탭 ──────────────────────────────────────────────
@@ -4659,7 +4659,7 @@
         saveState();
         renderGrid();
         renderToday();
-        pushMonthCalendarToWidget();
+        pushAllWidgets();
       }
 
       SHIFT_COLOR_PRESETS.forEach(function (preset) {
@@ -4841,6 +4841,74 @@
     // 어긋날 수 있어서, 문자열로 미리 뭉쳐서 딱 하나만 넘김 — 네이티브는 그
     // 문자열을 그대로 저장했다가 파싱만 함(이미 하던 방식).
     try { await bridge.setMonthCalendarData({ json: JSON.stringify(payload) }); } catch (e) {}
+  }
+
+  // ── N주 스케줄 위젯 ──
+  // 위젯 2와 같은 원칙: 근무 계산도, 그날 할 일 목록도 전부 여기서(JS) 끝내고
+  // 결과만 넘김 — 네이티브는 근무·할일 판단 로직을 전혀 모름. 오늘이 포함된
+  // 주의 시작일(월요일 또는 일요일, weekStart 설정 따름)부터 14일치를 계산해서
+  // 넘기고, 실제로 몇 줄을 보여줄지(1주=7줄 / 2주=14줄)는 위젯 크기에 맞춰
+  // 네이티브가 정함(칸 수를 다 만들어두고 필요한 만큼만 보여주는 방식).
+  function buildSchedulePayload() {
+    if (!state || !state.cycleDays || !state.baseDate) return null;
+
+    const todayMid = todayMidnight();
+    const todayStr = formatDateStr(todayMid);
+    const baseMid = parseLocalDate(state.baseDate);
+    const weekStart = (state.weekStart === 1) ? 1 : 0;
+    const DOW = weekStart === 1
+      ? ['일', '월', '화', '수', '목', '금', '토']
+      : ['월', '화', '수', '목', '금', '토', '일'];
+
+    // 오늘이 포함된 주의 시작일 계산(달력 위젯의 요일 배치 규칙과 동일)
+    const todayWdIdx = weekStart === 1 ? todayMid.getDay() : (todayMid.getDay() + 6) % 7;
+    const weekStartDate = new Date(todayMid.getFullYear(), todayMid.getMonth(), todayMid.getDate() - todayWdIdx);
+
+    const days = [];
+    for (let i = 0; i < 14; i++) {
+      const d = new Date(weekStartDate.getFullYear(), weekStartDate.getMonth(), weekStartDate.getDate() + i);
+      const dateStr = formatDateStr(d);
+      const diff = Math.round((d - baseMid) / 86400000);
+      const dayIdx0 = ((diff % state.cycleDays) + state.cycleDays) % state.cycleDays;
+      const { name: shiftName } = getEffectiveShiftName(dateStr, dayIdx0);
+
+      const undoneRepeat = getRepeatTodosForDate(dateStr).filter(function (ev) { return !isRepeatDoneOn(ev.id, dateStr); });
+      const undoneOneTime = getEventsForDate(dateStr).filter(function (ev) { return !ev.done; });
+      const todoTexts = undoneRepeat.concat(undoneOneTime).map(function (ev) { return ev.text; });
+      let todoSummary = '';
+      if (todoTexts.length > 0) {
+        todoSummary = todoTexts[0];
+        if (todoTexts.length > 1) todoSummary += ' +' + (todoTexts.length - 1);
+      }
+
+      const wdIdx = weekStart === 1 ? d.getDay() : (d.getDay() + 6) % 7;
+      days.push({
+        date: dateStr,
+        label: (d.getMonth() + 1) + '/' + d.getDate() + ' (' + DOW[wdIdx] + ')',
+        isToday: dateStr === todayStr,
+        shiftName: shiftName || '',
+        color: getShiftColor(shiftName) || '',
+        todoSummary: todoSummary,
+      });
+    }
+
+    return { days: days };
+  }
+
+  async function pushScheduleToWidget() {
+    const bridge = getWidgetBridge();
+    if (!bridge) return;
+    const payload = buildSchedulePayload();
+    if (!payload) return;
+    try { await bridge.setScheduleData({ json: JSON.stringify(payload) }); } catch (e) {}
+  }
+
+  // 위젯이 하나 더 늘 때마다 아래 각 저장 시점에서 일일이 또 호출을 추가하지
+  // 않도록, 위젯 관련 push는 전부 이 함수 하나로 모음(호출부는 pushAllWidgets()
+  // 하나만 부르면 됨).
+  function pushAllWidgets() {
+    pushMonthCalendarToWidget();
+    pushScheduleToWidget();
   }
 
   function renderShiftAlarmSettings() {
@@ -5202,7 +5270,7 @@
     saveState();
     renderToday();
     renderGrid();
-    pushMonthCalendarToWidget();
+    pushAllWidgets();
     switchTab('today');
   });
 
@@ -5211,7 +5279,7 @@
     state.weekStart = parseInt(this.value, 10);
     saveState();
     renderGrid();
-    pushMonthCalendarToWidget();
+    pushAllWidgets();
   });
 
   document.getElementById('input-theme').addEventListener('change', function () {
@@ -5343,7 +5411,7 @@
     renderDDShift(newName, newIsOverride, newOverrideType);
     renderGrid();
     renderToday();
-    pushMonthCalendarToWidget();
+    pushAllWidgets();
   });
 
   document.getElementById('btn-dd-shift-pattern').addEventListener('click', function () {
@@ -5361,7 +5429,7 @@
     renderDDShift(newName, newIsOverride, newOverrideType);
     renderGrid();
     renderToday();
-    pushMonthCalendarToWidget();
+    pushAllWidgets();
   });
 
   document.getElementById('btn-dd-add-event').addEventListener('click', function () {
@@ -6925,7 +6993,7 @@
     openOnboarding();
   }
   syncWidgetInboxItems();
-  pushMonthCalendarToWidget();
+  pushAllWidgets();
   // 위젯으로 넣은 항목은 "앱을 아예 새로 켤 때"만 반영되던 걸 보완 — 백그라운드에
   // 있던 앱을 다시 포그라운드로 불러올 때(예: 위젯 입력 후 앱 아이콘 탭)도 웹뷰의
   // visibilitychange 이벤트가 뜨므로, 그때마다 다시 동기화. 네이티브 플러그인을
@@ -6935,7 +7003,7 @@
     document.addEventListener('visibilitychange', function () {
       if (!document.hidden) {
         syncWidgetInboxItems();
-        pushMonthCalendarToWidget();
+        pushAllWidgets();
         if (document.getElementById('inbox-overlay').classList.contains('open')) {
           renderInboxList();
         }

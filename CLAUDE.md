@@ -247,10 +247,35 @@
   - **갱신 시점**: 앱 시작/포그라운드 복귀 시(위젯 1과 동일한 지점) +
     교대 주기 저장, 주 시작 요일 변경, 근무유형 색 변경, 날짜별/D번호 근무 수정,
     여러 날짜 한번에 근무 수정(bulk) — 이 값들이 바뀌는 모든 저장 시점에서
-    pushMonthCalendarToWidget() 호출.
+    pushAllWidgets() 호출(달력 위젯 2 + 스케줄 위젯 3을 한 번에 갱신 — 아래 참고).
     **한계(1차 버전)**: 이 시점들 외에는 안 밀어줌 — 예를 들어 달이 넘어가는
     순간(예: 이번 달 말일 근처) 앱을 며칠간 안 열면 위젯이 지난달 그리드를
     계속 보여줄 수 있음. 앱을 한 번이라도 열면 바로 갱신됨.
+
+## N주 스케줄 위젯 (네이티브 전용, 읽기 전용, 2026-07-14)
+- 오늘이 포함된 주의 시작일(월요일 또는 일요일, weekStart 설정 따름)부터 14일치를
+  세로 목록으로 보여줌(달력 위젯처럼 "이번 달 그리드"가 아니라 그냥 연속된 날짜
+  목록). 한 줄 = [날짜+요일 / 근무이름 / 그날 할 일 미리보기(완료 안 한 것 중
+  첫 번째, 넘치면 자동 말줄임 + "+N")]. 목적이 "빈 시간 확인"이라 오늘부터가
+  아니라 이번 주 시작부터 보여줌(위젯 2와 같은 주 정렬 기준 사용).
+- 근무 계산·할 일 판단은 위젯 2와 완전히 같은 원칙으로 전부 JS가 끝냄
+  (getEffectiveShiftName/getShiftColor + getRepeatTodosForDate/getEventsForDate를
+  그대로 재사용 — 새 규칙 없음). buildSchedulePayload()가 계산하고
+  pushScheduleToWidget()이 같은 WidgetBridge 플러그인의 setScheduleData()로 넘김
+  (새 플러그인 안 만듦). "오늘" 여부(isToday)까지 JS가 미리 계산해서 넘김 —
+  네이티브는 그 값을 그대로 읽어서 강조색만 입힘.
+- **위젯 크기로 1주/2주 결정**: 위젯 1x1처럼 고정 크기가 아니라 세로 리사이즈
+  가능(4x3 기본, minHeight 180dp) — 작게 두면 7줄(1주)만 보이고, 세로로 늘리면
+  최대 14줄(2주)까지 자동으로 늘어남. 최대 14줄을 다 만들어두고(row_container_0
+  ~13) 위젯 실제 높이(AppWidgetManager.getAppWidgetOptions의
+  OPTION_APPWIDGET_MIN_HEIGHT)에 맞춰 몇 줄까지 보여줄지(View.GONE 처리)만
+  ScheduleWidgetProvider가 정함 — 이것도 근무 로직이 아니라 순수 화면 크기
+  계산이라 중복 구현 아님. onAppWidgetOptionsChanged()에서 리사이즈될 때마다
+  다시 그림. 한 줄당 높이는 26dp로 추정해서 계산(실기기 보고 다르면 조정 필요).
+- 위젯 1·2·3이 늘어나면서, 여러 저장 시점마다 위젯마다 따로 push 호출을 추가하는
+  게 번거로워져서 pushAllWidgets() 함수 하나로 묶음(pushMonthCalendarToWidget()
+  + pushScheduleToWidget() 순서로 호출) — 앞으로 위젯이 더 늘어도 이 함수 안에만
+  추가하면 됨, 각 저장 시점 코드는 안 건드려도 됨.
 
 ## 용어 (통일 — 혼동 금지)
 - 할 일 = state.events[] 전체. 반복이 꺼져 있으면 한 번짜리(특정 날짜),

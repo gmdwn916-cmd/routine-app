@@ -106,6 +106,22 @@ public class WidgetBridgePlugin extends Plugin {
         return list;
     }
 
+    // N주 스케줄 위젯용 — 위젯 2와 같은 원칙(JS가 근무·할일 계산을 전부 마친
+    // 결과만 저장하고 그리기만 함, 네이티브에 로직 없음).
+    @PluginMethod
+    public void setScheduleData(PluginCall call) {
+        String json = call.getString("json");
+        if (json == null) {
+            call.reject("json missing");
+            return;
+        }
+        SharedPreferences prefs = getContext().getSharedPreferences(
+            ScheduleWidgetProvider.PREFS_NAME, Context.MODE_PRIVATE);
+        prefs.edit().putString(ScheduleWidgetProvider.KEY_SCHEDULE_DATA, json).apply();
+        ScheduleWidgetProvider.refreshAll(getContext());
+        call.resolve();
+    }
+
     // 데이터 내보내기(백업)용 — 네이티브 앱 안의 웹뷰는 일반 브라우저와 달리
     // "파일 다운로드"를 자체적으로 처리하는 기능이 없어서, blob 링크를 눌러도
     // 아무 일도 안 일어남. 그래서 네이티브에서는 이 경로 대신 안드로이드가
