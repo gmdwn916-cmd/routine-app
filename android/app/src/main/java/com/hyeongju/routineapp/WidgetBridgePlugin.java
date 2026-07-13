@@ -54,7 +54,13 @@ public class WidgetBridgePlugin extends Plugin {
     public void setMonthCalendarData(PluginCall call) {
         SharedPreferences prefs = getContext().getSharedPreferences(
             MonthCalendarWidgetProvider.PREFS_NAME, Context.MODE_PRIVATE);
-        prefs.edit().putString(MonthCalendarWidgetProvider.KEY_MONTH_DATA, call.getData().toString()).apply();
+        // 앱이 새 자료를 보낼 때마다 위젯이 보던 달을 "이번달"(배열 인덱스 1)로
+        // 되돌림 — 위젯에서 이전/다음 달로 넘겨봤어도, 앱을 열면 항상 오늘 기준으로
+        // 다시 시작하는 게 자연스러움.
+        prefs.edit()
+            .putString(MonthCalendarWidgetProvider.KEY_MONTH_DATA, call.getData().toString())
+            .putInt(MonthCalendarWidgetProvider.KEY_DISPLAY_INDEX, 1)
+            .apply();
         MonthCalendarWidgetProvider.refreshAll(getContext());
         call.resolve();
     }

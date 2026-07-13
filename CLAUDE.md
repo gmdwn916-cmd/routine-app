@@ -177,35 +177,49 @@
     코드에서 명시적 showSoftInput 호출로 입력창 뜨자마자 키보드도 자동으로 뜸.
 
 ## 이번 달 달력 위젯 (네이티브 전용, 읽기 전용, 2026-07-14)
-- 홈 화면에서 이번 달 전체를 날짜별 근무색으로 보여주는 위젯(4x4 크기,
-  리사이즈 가능). 수정 기능 없음 — 탭하면 앱만 실행됨. 이전/다음 달 넘기기 없이
-  항상 "지금이 몇 월인지" 기준으로만 보여줌.
+- 홈 화면에서 달을 날짜별 근무색으로 보여주는 위젯(4x4 크기, 리사이즈 가능).
+  수정 기능 없음 — 탭하면 앱만 실행됨(단, 하단 좌우 ‹/› 는 위젯 안에서 달만
+  넘김, 앱은 안 열림). 목적이 "그날 근무가 뭔지 한눈에 파악"이라 글씨가 큼
+  (여백은 그대로 두고 글씨만 키움), 할 일은 안 보여줌.
 - **근무 계산은 전부 JS(index.html)가 하고, 네이티브는 그 결과를 그대로
   그리기만 함** — 위젯 1(빠른 할일 추가)과 반대 방향의 데이터 흐름(이번엔 앱→위젯).
   이렇게 나눈 이유: 근무 계산 규칙(로컬 자정 기준, cycleDays/baseDate, 날짜예외>
   D번호예외>기본패턴 우선순위, 요일 시작 설정)이 네이티브에도 따로 있으면 나중에
   둘 중 하나만 고쳐서 어긋날 위험이 있음 — 절대 안드로이드 쪽에 근무 계산 로직을
   새로 만들지 말 것.
-  - JS: buildMonthCalendarPayload()가 renderGrid()와 완전히 같은 규칙(요일 시작
-    설정 반영한 42칸 그리드, getEffectiveShiftName/getShiftColor 그대로 재사용)으로
-    이번 달 데이터를 만들고, pushMonthCalendarToWidget()이 WidgetBridge 플러그인의
-    setMonthCalendarData()로 통째로 넘김. payload 형태: { monthLabel, headers(7개,
-    요일 시작 반영된 순서), days(42개, 그 달에 안 속하면 null, 속하면
-    {date, dayNum, shiftName, color}) }.
-  - 네이티브(WidgetBridgePlugin.setMonthCalendarData)는 그 JSON을 SharedPreferences
-    ("widget_bridge", 키 "month_calendar_data")에 그대로 저장하고
-    MonthCalendarWidgetProvider.refreshAll()을 호출해 위젯을 즉시 다시 그림.
-    "오늘" 강조만 유일하게 네이티브에서 직접 계산(오늘 날짜 문자열과 각 칸의
-    날짜 문자열을 비교하는 단순 비교라 근무 로직이 아님 — 중복 구현 아님).
-  - 위젯 레이아웃(widget_month_calendar.xml)은 헤더 1줄 + 6줄×7칸, 칸마다
-    [날짜 숫자(cell_date_N) / 근무이름 작은 배지(cell_shift_N)] 세로 2줄 — 앱의
-    달력 탭 칸(cell-date + cell-shift-badge)과 같은 모양을 그대로 따라감(칸
-    배경은 안 칠하고 중립 유지, 근무 배지만 그 근무색으로 옅게 칠하고 글자도
-    근무색). id는 리소스 이름으로 동적 조회(Resources.getIdentifier),
-    RemoteViewsService 같은 복잡한 컬렉션 위젯 아님.
+  - JS: buildOneMonthGrid(year, month, weekStart)가 renderGrid()와 완전히 같은
+    규칙(getEffectiveShiftName/getShiftColor 그대로 재사용)으로 한 달치 42칸
+    그리드를 만들고, buildMonthCalendarPayload()가 **[지난달, 이번달, 다음달]
+    3개월치를 항상 이 순서·이 개수로** 계산해서 pushMonthCalendarToWidget()이
+    WidgetBridge 플러그인의 setMonthCalendarData()로 한 번에 넘김. payload 형태:
+    { headers(7개, 요일 시작 반영), satCol/sunCol(토/일이 몇 번째 칸인지 —
+    이것도 네이티브가 안 헷갈리게 JS가 알려줌), months: [ {monthLabel, days(42개,
+    그 달에 안 속하면 null, 속하면 {date, dayNum, shiftName, color})} × 3 ] }.
+  - 네이티브(WidgetBridgePlugin.setMonthCalendarData)는 그 JSON을
+    SharedPreferences("widget_bridge", 키 "month_calendar_data")에 그대로 저장하고,
+    보여줄 달 위치(키 "month_calendar_display_index")를 항상 1(=배열의 "이번달")로
+    되돌린 뒤 MonthCalendarWidgetProvider.refreshAll()로 위젯을 즉시 다시 그림 —
+    위젯에서 지난달/다음달로 넘겨봤어도 앱을 열면 오늘 기준으로 리셋됨.
+    "오늘" 강조와 토/일 헤더 색칠만 유일하게 네이티브에서 직접 처리(오늘 강조는
+    날짜 문자열 비교, 토/일은 JS가 알려준 열 번호를 그대로 씀 — 둘 다 근무
+    로직이 아니라 중복 구현 아님). 토=#007AFF(파랑), 일=#FF3B30(빨강), 앱의
+    .grid-header-cell.sat/.sun과 같은 색.
+  - **이전/다음 달 넘기기**: 하단 좌우 ‹(nav_prev)/›(nav_next) 텍스트뷰를 눌렀을 때
+    앱을 열지 않고 위젯 안에서만 달을 넘김 — MonthCalendarWidgetProvider가 자기
+    자신에게 보내는 커스텀 브로드캐스트(ACTION_PREV/ACTION_NEXT, PendingIntent.
+    getBroadcast, onReceive에서 가로챔)로 표시 인덱스(0/1/2)만 바꾸고 다시 그림.
+    딱 3개월치만 미리 계산해 넘겨받은 상태라 그 범위(지난달~다음달)를 못
+    벗어남 — 더 이전/이후 달을 보려면 앱을 열어야 함(이 범위 밖은 근무 계산
+    자체가 없어서 위젯 혼자서는 절대 못 만듦).
+  - 위젯 레이아웃(widget_month_calendar.xml)은 헤더 1줄 + 6줄×7칸(칸마다
+    [날짜 숫자(cell_date_N) / 근무이름 작은 배지(cell_shift_N)] 세로 2줄, 앱의
+    달력 탭 칸(cell-date + cell-shift-badge)과 같은 모양 — 칸 배경은 중립,
+    배지만 근무색으로 옅게 칠하고 글자도 근무색) + 맨 아래 ‹/› 줄. id는 리소스
+    이름으로 동적 조회(Resources.getIdentifier), RemoteViewsService 같은
+    복잡한 컬렉션 위젯 아님.
   - 위젯 배경/글자색은 res/values/colors.xml + res/values-night/colors.xml로
     시스템 라이트/다크 모드에 맞춰 자동 전환(widget_bg/widget_text_primary/
-    widget_text_secondary). "오늘" 강조(파란 글씨)만 항상 고정색.
+    widget_text_secondary). "오늘"/토/일 강조색만 항상 고정색.
   - **갱신 시점**: 앱 시작/포그라운드 복귀 시(위젯 1과 동일한 지점) +
     교대 주기 저장, 주 시작 요일 변경, 근무유형 색 변경, 날짜별/D번호 근무 수정,
     여러 날짜 한번에 근무 수정(bulk) — 이 값들이 바뀌는 모든 저장 시점에서

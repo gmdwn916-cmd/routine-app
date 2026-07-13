@@ -4777,19 +4777,12 @@
   // 근무 계산은 여기(앱)에서 renderGrid()와 완전히 같은 규칙으로 전부 끝내고,
   // 이미 정리된 결과(요일 순서·달에 속하는지 여부까지 반영)만 위젯으로 넘김 —
   // 위젯(네이티브)은 이 값을 그대로 그리기만 하고 근무 계산은 전혀 모름.
-  function buildMonthCalendarPayload() {
-    if (!state || !state.cycleDays || !state.baseDate) return null;
-
-    const todayMid = todayMidnight();
-    const year = todayMid.getFullYear();
-    const month = todayMid.getMonth();
+  // 위젯에서 이전/다음 달로 넘기는 기능을 지원하기 위해, 지금 달 하나가 아니라
+  // [지난달, 이번달, 다음달] 3개월치를 한 번에 계산해서 넘김 — 위젯은 이 3개
+  // 중 하나를 골라 보여주기만 하고(항상 배열 인덱스 1이 "이번달"), 그 범위를
+  // 벗어나면 더 못 넘어감(그 이상은 앱을 열어야 최신으로 갱신됨).
+  function buildOneMonthGrid(year, month, weekStart) {
     const baseMid = parseLocalDate(state.baseDate);
-    const weekStart = (state.weekStart === 1) ? 1 : 0;
-
-    const headers = weekStart === 1
-      ? ['일', '월', '화', '수', '목', '금', '토']
-      : ['월', '화', '수', '목', '금', '토', '일'];
-
     const firstOfMonth = new Date(year, month, 1);
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const startWd = weekStart === 1 ? firstOfMonth.getDay() : (firstOfMonth.getDay() + 6) % 7;
@@ -4812,7 +4805,30 @@
     while (days.length % 7 !== 0) days.push(null);
     while (days.length < 42) days.push(null);
 
-    return { monthLabel: (month + 1) + '월', headers: headers, days: days };
+    return { monthLabel: (month + 1) + '월', days: days };
+  }
+
+  function buildMonthCalendarPayload() {
+    if (!state || !state.cycleDays || !state.baseDate) return null;
+
+    const todayMid = todayMidnight();
+    const weekStart = (state.weekStart === 1) ? 1 : 0;
+
+    const headers = weekStart === 1
+      ? ['일', '월', '화', '수', '목', '금', '토']
+      : ['월', '화', '수', '목', '금', '토', '일'];
+    // 헤더뿐 아니라 실제 날짜 칸에서도 토/일 몇 번째 칸인지 위젯이 스스로
+    // 계산하지 않도록(요일 배치 규칙도 전부 여기서 끝내는 원칙) 열 번호를 알려줌.
+    const satCol = weekStart === 1 ? 6 : 5;
+    const sunCol = weekStart === 1 ? 0 : 6;
+
+    const months = [];
+    for (let off = -1; off <= 1; off++) {
+      const d = new Date(todayMid.getFullYear(), todayMid.getMonth() + off, 1);
+      months.push(buildOneMonthGrid(d.getFullYear(), d.getMonth(), weekStart));
+    }
+
+    return { headers: headers, satCol: satCol, sunCol: sunCol, months: months };
   }
 
   async function pushMonthCalendarToWidget() {

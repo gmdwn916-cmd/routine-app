@@ -20,15 +20,33 @@ import java.util.Calendar;
 import java.util.Locale;
 
 // 이번 달 달력을 앱의 달력 탭과 같은 모양(날짜 숫자 + 근무이름 작은 배지)으로
-// 보여주는 읽기 전용 위젯. 근무 계산은 전혀 모름 — 웹(JS)이 이미 계산해서
-// WidgetBridgePlugin.setMonthCalendarData()로 넘겨준 데이터(SharedPreferences에
-// JSON으로 저장됨)를 그대로 그리기만 함. 요일 순서(월~일/일~월)와 각 칸이 그
-// 달에 속하는지도 전부 JS가 이미 정리해서 넘겨줌 — 여기서 새로 계산하는 건
-// "오늘" 강조뿐(오늘 날짜 문자열과 각 칸의 날짜 문자열을 비교하는 단순 비교라
-// 근무 로직이 아님 — 중복 구현 문제 없음).
+// 보여주는 읽기 전용 위젯 + 이전/다음 달 넘기기. 근무 계산은 전혀 모름 —
+// 웹(JS)이 이미 계산해서 WidgetBridgePlugin.setMonthCalendarData()로 넘겨준
+// [지난달,이번달,다음달] 3개월치 데이터(SharedPreferences에 JSON으로 저장됨)를
+// 그대로 그리기만 함. 요일 순서·토/일 열 번호도 전부 JS가 알려줌 — 여기서 새로
+// 계산하는 건 "오늘" 강조뿐(날짜 문자열 비교라 근무 로직 아님 — 중복 구현 아님).
 public class MonthCalendarWidgetProvider extends AppWidgetProvider {
     public static final String PREFS_NAME = "widget_bridge";
     public static final String KEY_MONTH_DATA = "month_calendar_data";
+    public static final String KEY_DISPLAY_INDEX = "month_calendar_display_index";
+    private static final int CENTER_INDEX = 1; // months 배열은 항상 [지난달, 이번달, 다음달] 고정 순서
+
+    private static final String ACTION_PREV = "com.hyeongju.routineapp.WIDGET_MONTH_PREV";
+    private static final String ACTION_NEXT = "com.hyeongju.routineapp.WIDGET_MONTH_NEXT";
+
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        String action = intent.getAction();
+        if (ACTION_PREV.equals(action) || ACTION_NEXT.equals(action)) {
+            SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            int idx = prefs.getInt(KEY_DISPLAY_INDEX, CENTER_INDEX);
+            idx = ACTION_PREV.equals(action) ? Math.max(0, idx - 1) : Math.min(2, idx + 1);
+            prefs.edit().putInt(KEY_DISPLAY_INDEX, idx).apply();
+            refreshAll(context);
+            return;
+        }
+        super.onReceive(context, intent);
+    }
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
@@ -37,7 +55,8 @@ public class MonthCalendarWidgetProvider extends AppWidgetProvider {
         }
     }
 
-    // WidgetBridgePlugin이 새 데이터를 받았을 때 즉시 다시 그리기 위해 호출.
+    // WidgetBridgePlugin이 새 데이터를 받았을 때, 또는 이전/다음 달 버튼을
+    // 눌렀을 때 즉시 다시 그리기 위해 호출.
     public static void refreshAll(Context context) {
         AppWidgetManager mgr = AppWidgetManager.getInstance(context);
         int[] ids = mgr.getAppWidgetIds(new ComponentName(context, MonthCalendarWidgetProvider.class));
@@ -50,6 +69,15 @@ public class MonthCalendarWidgetProvider extends AppWidgetProvider {
         return context.getResources().getIdentifier(name, "id", context.getPackageName());
     }
 
+    private static PendingIntent navPendingIntent(Context context, String action, int requestCode) {
+        Intent intent = new Intent(context, MonthCalendarWidgetProvider.class);
+        intent.setAction(action);
+        return PendingIntent.getBroadcast(
+            context, requestCode, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+    }
+
     private static void updateOne(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_month_calendar);
 
@@ -59,12 +87,16 @@ public class MonthCalendarWidgetProvider extends AppWidgetProvider {
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
         views.setOnClickPendingIntent(idFor(context, "widget_month_root"), openPending);
+        views.setOnClickPendingIntent(idFor(context, "nav_prev"), navPendingIntent(context, ACTION_PREV, 1));
+        views.setOnClickPendingIntent(idFor(context, "nav_next"), navPendingIntent(context, ACTION_NEXT, 2));
 
         int primaryText = ContextCompat.getColor(context, R.color.widget_text_primary);
+        int secondaryText = ContextCompat.getColor(context, R.color.widget_text_secondary);
 
         // 자료가 없거나 깨져 있어도 안전하게 빈 칸으로 시작
         for (int i = 0; i < 7; i++) {
             views.setTextViewText(idFor(context, "header_" + i), "");
+            views.setTextColor(idFor(context, "header_" + i), secondaryText);
         }
         for (int i = 0; i < 42; i++) {
             views.setTextViewText(idFor(context, "cell_date_" + i), "");
@@ -80,51 +112,67 @@ public class MonthCalendarWidgetProvider extends AppWidgetProvider {
         if (raw != null) {
             try {
                 JSONObject obj = new JSONObject(raw);
-                views.setTextViewText(idFor(context, "widget_month_label"), obj.optString("monthLabel", ""));
 
                 JSONArray headers = obj.optJSONArray("headers");
+                int satCol = obj.optInt("satCol", -1);
+                int sunCol = obj.optInt("sunCol", -1);
                 if (headers != null) {
                     for (int i = 0; i < headers.length() && i < 7; i++) {
-                        views.setTextViewText(idFor(context, "header_" + i), headers.optString(i, ""));
+                        int hid = idFor(context, "header_" + i);
+                        views.setTextViewText(hid, headers.optString(i, ""));
+                        if (i == satCol) views.setTextColor(hid, 0xFF007AFF);
+                        else if (i == sunCol) views.setTextColor(hid, 0xFFFF3B30);
                     }
                 }
 
-                String todayStr = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Calendar.getInstance().getTime());
+                JSONArray months = obj.optJSONArray("months");
+                if (months != null && months.length() > 0) {
+                    int idx = prefs.getInt(KEY_DISPLAY_INDEX, CENTER_INDEX);
+                    if (idx < 0) idx = 0;
+                    if (idx > months.length() - 1) idx = months.length() - 1;
 
-                JSONArray days = obj.optJSONArray("days");
-                if (days != null) {
-                    for (int i = 0; i < days.length() && i < 42; i++) {
-                        Object dayObj = days.opt(i);
-                        if (!(dayObj instanceof JSONObject)) continue; // 그 달에 속하지 않는 빈 칸
-                        JSONObject day = (JSONObject) dayObj;
-                        String dateStr = day.optString("date", "");
-                        int dayNum = day.optInt("dayNum", 0);
-                        String shiftName = day.optString("shiftName", "");
-                        String color = day.optString("color", "");
+                    JSONObject monthObj = months.optJSONObject(idx);
+                    if (monthObj != null) {
+                        views.setTextViewText(idFor(context, "widget_month_label"), monthObj.optString("monthLabel", ""));
 
-                        int dateId = idFor(context, "cell_date_" + i);
-                        int shiftId = idFor(context, "cell_shift_" + i);
+                        String todayStr = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Calendar.getInstance().getTime());
 
-                        views.setTextViewText(dateId, String.valueOf(dayNum));
+                        JSONArray days = monthObj.optJSONArray("days");
+                        if (days != null) {
+                            for (int i = 0; i < days.length() && i < 42; i++) {
+                                Object dayObj = days.opt(i);
+                                if (!(dayObj instanceof JSONObject)) continue; // 그 달에 속하지 않는 빈 칸
+                                JSONObject day = (JSONObject) dayObj;
+                                String dateStr = day.optString("date", "");
+                                int dayNum = day.optInt("dayNum", 0);
+                                String shiftName = day.optString("shiftName", "");
+                                String color = day.optString("color", "");
 
-                        if (!shiftName.isEmpty()) {
-                            views.setTextViewText(shiftId, shiftName);
-                            if (!color.isEmpty()) {
-                                try {
-                                    int base = Color.parseColor(color);
-                                    // 앱의 근무 배지(applyShiftBadgeColor)와 같은 느낌:
-                                    // 배경은 옅게(약 15% 불투명도), 글자는 근무색 그대로.
-                                    int tintedBg = (base & 0x00FFFFFF) | 0x26000000;
-                                    views.setInt(shiftId, "setBackgroundColor", tintedBg);
-                                    views.setTextColor(shiftId, base | 0xFF000000);
-                                } catch (IllegalArgumentException e) {
-                                    // 색상 파싱 실패 시 배경 없이 글자만 표시
+                                int dateId = idFor(context, "cell_date_" + i);
+                                int shiftId = idFor(context, "cell_shift_" + i);
+
+                                views.setTextViewText(dateId, String.valueOf(dayNum));
+
+                                if (!shiftName.isEmpty()) {
+                                    views.setTextViewText(shiftId, shiftName);
+                                    if (!color.isEmpty()) {
+                                        try {
+                                            int base = Color.parseColor(color);
+                                            // 앱의 근무 배지(applyShiftBadgeColor)와 같은 느낌:
+                                            // 배경은 옅게(약 15% 불투명도), 글자는 근무색 그대로.
+                                            int tintedBg = (base & 0x00FFFFFF) | 0x26000000;
+                                            views.setInt(shiftId, "setBackgroundColor", tintedBg);
+                                            views.setTextColor(shiftId, base | 0xFF000000);
+                                        } catch (IllegalArgumentException e) {
+                                            // 색상 파싱 실패 시 배경 없이 글자만 표시
+                                        }
+                                    }
+                                }
+
+                                if (dateStr.equals(todayStr)) {
+                                    views.setTextColor(dateId, 0xFF007AFF);
                                 }
                             }
-                        }
-
-                        if (dateStr.equals(todayStr)) {
-                            views.setTextColor(dateId, 0xFF007AFF);
                         }
                     }
                 }
