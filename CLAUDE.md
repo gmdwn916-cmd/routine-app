@@ -165,10 +165,48 @@
     시점)마다 이 플러그인으로 우편함 내용을 가져와 state.inbox에 옮기고 우편함을
     비움. 위젯은 "글자 목록"만 넘길 뿐 inbox 데이터 형식(id/createdAt 등)을 전혀
     모름 — 실제 inbox 항목으로 바꾸는 건 JS쪽에서만 함.
-    **한계(1차 버전)**: "앱을 새로 켤 때"만 반영됨 — 이미 열려서 백그라운드에 있는
-    앱을 다시 포그라운드로 불러올 때는 아직 반영 안 함(실사용해보고 불편하면
-    Capacitor App 플러그인의 resume 이벤트에 걸어서 넓힐 것).
+    앱을 새로 켤 때뿐 아니라, document의 visibilitychange 이벤트(백그라운드에서
+    포그라운드로 돌아올 때도 웹뷰가 발생시킴)에도 다시 동기화하도록 돼 있어서,
+    "앱을 아예 껐다 켜야만 반영되는" 문제 없음 — 새 네이티브 플러그인 없이 표준
+    웹 API만으로 해결됨(App 플러그인 안 씀).
   - 위젯 크기는 1x1(가장 작음), 아이콘(+ 모양, ic_widget_add.xml)만 있고 글씨 없음.
+  - QuickAddActivity는 android:taskAffinity=""로 MainActivity와 완전히 다른
+    작업(task)으로 뜸(+ 위젯 쪽 Intent에 FLAG_ACTIVITY_NEW_TASK|MULTIPLE_TASK) —
+    안 하면 앱이 이미 켜져 있을 때 위젯을 눌렀을 때 입력창과 함께 앱 화면까지
+    같이 튀어나오는 문제가 있었음. windowSoftInputMode="stateAlwaysVisible" +
+    코드에서 명시적 showSoftInput 호출로 입력창 뜨자마자 키보드도 자동으로 뜸.
+
+## 이번 달 달력 위젯 (네이티브 전용, 읽기 전용, 2026-07-14)
+- 홈 화면에서 이번 달 전체를 날짜별 근무색으로 보여주는 위젯(4x4 크기,
+  리사이즈 가능). 수정 기능 없음 — 탭하면 앱만 실행됨. 이전/다음 달 넘기기 없이
+  항상 "지금이 몇 월인지" 기준으로만 보여줌.
+- **근무 계산은 전부 JS(index.html)가 하고, 네이티브는 그 결과를 그대로
+  그리기만 함** — 위젯 1(빠른 할일 추가)과 반대 방향의 데이터 흐름(이번엔 앱→위젯).
+  이렇게 나눈 이유: 근무 계산 규칙(로컬 자정 기준, cycleDays/baseDate, 날짜예외>
+  D번호예외>기본패턴 우선순위, 요일 시작 설정)이 네이티브에도 따로 있으면 나중에
+  둘 중 하나만 고쳐서 어긋날 위험이 있음 — 절대 안드로이드 쪽에 근무 계산 로직을
+  새로 만들지 말 것.
+  - JS: buildMonthCalendarPayload()가 renderGrid()와 완전히 같은 규칙(요일 시작
+    설정 반영한 42칸 그리드, getEffectiveShiftName/getShiftColor 그대로 재사용)으로
+    이번 달 데이터를 만들고, pushMonthCalendarToWidget()이 WidgetBridge 플러그인의
+    setMonthCalendarData()로 통째로 넘김. payload 형태: { monthLabel, headers(7개,
+    요일 시작 반영된 순서), days(42개, 그 달에 안 속하면 null, 속하면
+    {date, dayNum, shiftName, color}) }.
+  - 네이티브(WidgetBridgePlugin.setMonthCalendarData)는 그 JSON을 SharedPreferences
+    ("widget_bridge", 키 "month_calendar_data")에 그대로 저장하고
+    MonthCalendarWidgetProvider.refreshAll()을 호출해 위젯을 즉시 다시 그림.
+    "오늘" 강조만 유일하게 네이티브에서 직접 계산(오늘 날짜 문자열과 각 칸의
+    날짜 문자열을 비교하는 단순 비교라 근무 로직이 아님 — 중복 구현 아님).
+  - 위젯 레이아웃(widget_month_calendar.xml)은 헤더 1줄 + 6줄×7칸 = 42개의
+    고정 TextView(cell_0~cell_41, id는 리소스 이름으로 동적 조회 —
+    Resources.getIdentifier 사용, RemoteViewsService 같은 복잡한 컬렉션 위젯 아님).
+  - **갱신 시점**: 앱 시작/포그라운드 복귀 시(위젯 1과 동일한 지점) +
+    교대 주기 저장, 주 시작 요일 변경, 근무유형 색 변경, 날짜별/D번호 근무 수정,
+    여러 날짜 한번에 근무 수정(bulk) — 이 값들이 바뀌는 모든 저장 시점에서
+    pushMonthCalendarToWidget() 호출.
+    **한계(1차 버전)**: 이 시점들 외에는 안 밀어줌 — 예를 들어 달이 넘어가는
+    순간(예: 이번 달 말일 근처) 앱을 며칠간 안 열면 위젯이 지난달 그리드를
+    계속 보여줄 수 있음. 앱을 한 번이라도 열면 바로 갱신됨.
 
 ## 용어 (통일 — 혼동 금지)
 - 할 일 = state.events[] 전체. 반복이 꺼져 있으면 한 번짜리(특정 날짜),

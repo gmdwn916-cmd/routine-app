@@ -45,4 +45,17 @@ public class WidgetBridgePlugin extends Plugin {
         prefs.edit().putString(QuickAddActivity.KEY_PENDING_ITEMS, "[]").apply();
         call.resolve();
     }
+
+    // 이번 달 달력 위젯용 — JS가 근무 계산을 전부 마친 결과(월 라벨, 요일 헤더,
+    // 날짜별 근무색)를 그대로 저장해두고 위젯을 즉시 다시 그리게 함. 이 플러그인은
+    // 그 데이터가 무슨 뜻인지 전혀 모름(그냥 JSON 그대로 저장) — 근무 계산 로직은
+    // 절대 여기(네이티브)에 두지 않음(index.html과 두 곳에 있으면 나중에 어긋날 위험).
+    @PluginMethod
+    public void setMonthCalendarData(PluginCall call) {
+        SharedPreferences prefs = getContext().getSharedPreferences(
+            MonthCalendarWidgetProvider.PREFS_NAME, Context.MODE_PRIVATE);
+        prefs.edit().putString(MonthCalendarWidgetProvider.KEY_MONTH_DATA, call.getData().toString()).apply();
+        MonthCalendarWidgetProvider.refreshAll(getContext());
+        call.resolve();
+    }
 }

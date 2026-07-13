@@ -54,6 +54,18 @@
             android:noHistory="true"
             android:windowSoftInputMode="stateAlwaysVisible"
             android:exported="false" />
+
+        <!-- 이번 달 달력 위젯(읽기 전용) -->
+        <receiver
+            android:name=".MonthCalendarWidgetProvider"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_month_calendar_info" />
+        </receiver>
     </application>
 
     <!-- Permissions -->
