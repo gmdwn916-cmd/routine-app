@@ -34,7 +34,7 @@ public class ScheduleWidgetProvider extends AppWidgetProvider {
         String action = intent.getAction();
         if (ACTION_PREV.equals(action) || ACTION_NEXT.equals(action)) {
             SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-            int idx = prefs.getInt(KEY_PAGE_INDEX, 0);
+            int idx = prefs.getInt(KEY_PAGE_INDEX, 1);
             int maxIdx = getPageCount(context) - 1;
             idx = ACTION_PREV.equals(action) ? Math.max(0, idx - 1) : Math.min(Math.max(0, maxIdx), idx + 1);
             prefs.edit().putInt(KEY_PAGE_INDEX, idx).apply();
@@ -138,7 +138,7 @@ public class ScheduleWidgetProvider extends AppWidgetProvider {
 
                 JSONArray pages = obj.optJSONArray("pages");
                 if (pages != null && pages.length() > 0) {
-                    int idx = prefs.getInt(KEY_PAGE_INDEX, 0);
+                    int idx = prefs.getInt(KEY_PAGE_INDEX, 1);
                     if (idx < 0) idx = 0;
                     if (idx > pages.length() - 1) idx = pages.length() - 1;
 
