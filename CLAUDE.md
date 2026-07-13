@@ -134,8 +134,19 @@
     webDir: `www`.
   - www/index.html — 루트의 index.html 복사본. **여기를 직접 고치면 안 됨** —
     항상 루트 index.html을 고친 뒤 `cp index.html www/index.html`로 복사하고
-    `npx cap sync`로 android 프로젝트에 반영해야 함(안 하면 안드로이드 앱에
-    옛날 버전이 남아있게 됨).
+    **반드시 `npx cap sync android`까지 실행해야** android/app/src/main/assets/
+    public/index.html(= APK에 실제로 들어가는 파일)에 반영됨.
+    **실제로 겪은 실수(2026-07-14)**: `cp`만 하고 `npx cap sync`를 몇 차례
+    빼먹은 채로 `./gradlew assembleDebug`만 반복 실행 — Gradle은 www/index.html이
+    바뀌어도 assets/public/index.html을 알아서 다시 복사해주지 않아서, 계속 옛날
+    코드가 든 APK가 만들어짐. 겉으로 보이는 증상이 "안드로이드 웹뷰 캐시가 새
+    코드를 안 받아준다"처럼 보여서 캐시 문제로 오진단하고, 사용자에게 앱 캐시
+    삭제→완전 삭제 후 재설치까지 여러 번 헛되이 시켰음(둘 다 소용없었음 — 당연히
+    문제는 기기가 아니라 빌드 쪽에 있었으니까). **재발 방지**: 빌드 스크립트를
+    `cp index.html www/index.html && npx cap sync android`로 항상 같이 실행하고,
+    의심되면 `diff www/index.html android/app/src/main/assets/public/index.html`
+    (또는 `unzip -p app-debug.apk assets/public/index.html | grep <최근 고친 코드>`로
+    APK 안의 실제 내용)로 반영 여부를 먼저 확인한 뒤에 "캐시 문제"를 의심할 것.
   - android/ — Capacitor가 생성한 안드로이드 네이티브 프로젝트(Android Studio로 엶).
     android/gradle.properties에 `android.overridePathCheck=true` 추가돼 있음
     — 프로젝트 폴더 이름(루틴어플)에 한글이 섞여 있어서 나오는 경고를 끈 것,
@@ -157,10 +168,10 @@
     WRITE_EXTERNAL_STORAGE 권한). 이 구분을 다시 하나로 합치려 하지 말 것 —
     네이티브 웹뷰에서 blob 다운로드가 안 되는 건 플랫폼 자체 한계임.
   - MainActivity에서 웹뷰 캐시를 아예 안 쓰게(WebSettings.setCacheMode(LOAD_NO_CACHE))
-    설정해둠 — 예전에 새 APK를 설치해도 안드로이드가 앱 데이터/캐시를 그대로
-    유지해서 웹뷰가 예전 index.html을 계속 캐시해서 보여주는 문제가 있었음(설정
-    캐시 삭제로도 안 지워질 만큼 끈질겼음 — 완전 삭제 후 재설치로만 해결됨).
-    이 설정 덕분에 앞으로는 새 APK 설치하면 항상 최신 코드로 실행됨.
+    설정해둠(방어적 조치, 유지는 하되 없앨 필요 없음). 다만 **"위젯 갱신 실패"가
+    계속되던 진짜 원인은 웹뷰 캐시가 아니라 빌드 실수였음** — 위 www/index.html
+    항목의 2026-07-14 메모 참고. 뭔가 "고쳤는데도 안 바뀐다"는 증상이 보이면
+    캐시부터 의심하지 말고 먼저 APK 안의 실제 코드를 확인할 것.
 - 홈 화면 "빠른 할일 추가" 위젯 (네이티브 전용, 2026-07-13): 위젯을 탭하면 작은
   입력창(QuickAddActivity, 다이얼로그 테마 — 화면 전체 안 가리고 살짝 뜸)이
   뜨고, 글자를 넣으면 앱을 열지 않고도 그 자리에서 저장됨.
