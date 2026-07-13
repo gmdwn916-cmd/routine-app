@@ -578,17 +578,25 @@
       top: 0;
       right: 0;
       bottom: 0;
+      z-index: 0;
       width: 72px;
+      margin: 0;
       border: none;
+      border-radius: 0;
       background: #ff3b30;
       color: #fff;
       font-size: 13px;
       font-weight: 600;
+      -webkit-appearance: none;
+      appearance: none;
       -webkit-tap-highlight-color: transparent;
+      box-shadow: none;
+      outline: none;
     }
 
     .swipe-delete-content {
       position: relative;
+      z-index: 1;
       will-change: transform;
     }
 
@@ -619,21 +627,6 @@
       -webkit-tap-highlight-color: transparent;
     }
     .btn-important-toggle.is-on { color: #ff9500; }
-
-    .btn-dd-del-routine {
-      background: none;
-      border: none;
-      font-size: 16px;
-      color: var(--text-3);
-      cursor: pointer;
-      padding: 0 2px;
-      line-height: 1;
-      font-family: inherit;
-      margin-left: auto;
-      flex-shrink: 0;
-    }
-
-    .btn-dd-del-routine:active { color: #ff3b30; }
 
     .dd-add-row {
       display: flex;
