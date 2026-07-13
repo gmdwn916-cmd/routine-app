@@ -4845,10 +4845,12 @@
 
   // ── N주 스케줄 위젯 ──
   // 위젯 2와 같은 원칙: 근무 계산도, 그날 할 일 목록도 전부 여기서(JS) 끝내고
-  // 결과만 넘김 — 네이티브는 근무·할일 판단 로직을 전혀 모름. 오늘이 포함된
-  // 주의 시작일(월요일 또는 일요일, weekStart 설정 따름)부터 14일치를 계산해서
-  // 넘기고, 실제로 몇 줄을 보여줄지(1주=7줄 / 2주=14줄)는 위젯 크기에 맞춰
-  // 네이티브가 정함(칸 수를 다 만들어두고 필요한 만큼만 보여주는 방식).
+  // 결과만 넘김 — 네이티브는 근무·할일 판단 로직을 전혀 모름. 요일 그리드
+  // (2주=2줄×7칸)로 보여주고, 오늘이 포함된 주의 시작일(월요일 또는 일요일,
+  // weekStart 설정 따름)부터 시작. 위젯 2의 이전/다음 달처럼 여러 페이지(각
+  // 페이지 = 2주)를 미리 계산해서 넘기고, 그 범위 안에서만 좌우로 넘길 수 있음.
+  const SCHEDULE_PAGE_COUNT = 2; // 미리 계산해두는 페이지 수(2주씩 총 4주)
+
   function buildSchedulePayload() {
     if (!state || !state.cycleDays || !state.baseDate) return null;
 
@@ -4856,43 +4858,45 @@
     const todayStr = formatDateStr(todayMid);
     const baseMid = parseLocalDate(state.baseDate);
     const weekStart = (state.weekStart === 1) ? 1 : 0;
-    const DOW = weekStart === 1
+
+    const headers = weekStart === 1
       ? ['일', '월', '화', '수', '목', '금', '토']
       : ['월', '화', '수', '목', '금', '토', '일'];
+    const satCol = weekStart === 1 ? 6 : 5;
+    const sunCol = weekStart === 1 ? 0 : 6;
 
     // 오늘이 포함된 주의 시작일 계산(달력 위젯의 요일 배치 규칙과 동일)
     const todayWdIdx = weekStart === 1 ? todayMid.getDay() : (todayMid.getDay() + 6) % 7;
     const weekStartDate = new Date(todayMid.getFullYear(), todayMid.getMonth(), todayMid.getDate() - todayWdIdx);
 
-    const days = [];
-    for (let i = 0; i < 14; i++) {
-      const d = new Date(weekStartDate.getFullYear(), weekStartDate.getMonth(), weekStartDate.getDate() + i);
-      const dateStr = formatDateStr(d);
-      const diff = Math.round((d - baseMid) / 86400000);
-      const dayIdx0 = ((diff % state.cycleDays) + state.cycleDays) % state.cycleDays;
-      const { name: shiftName } = getEffectiveShiftName(dateStr, dayIdx0);
+    const pages = [];
+    for (let p = 0; p < SCHEDULE_PAGE_COUNT; p++) {
+      const days = [];
+      for (let i = 0; i < 14; i++) {
+        const offset = p * 14 + i;
+        const d = new Date(weekStartDate.getFullYear(), weekStartDate.getMonth(), weekStartDate.getDate() + offset);
+        const dateStr = formatDateStr(d);
+        const diff = Math.round((d - baseMid) / 86400000);
+        const dayIdx0 = ((diff % state.cycleDays) + state.cycleDays) % state.cycleDays;
+        const { name: shiftName } = getEffectiveShiftName(dateStr, dayIdx0);
 
-      const undoneRepeat = getRepeatTodosForDate(dateStr).filter(function (ev) { return !isRepeatDoneOn(ev.id, dateStr); });
-      const undoneOneTime = getEventsForDate(dateStr).filter(function (ev) { return !ev.done; });
-      const todoTexts = undoneRepeat.concat(undoneOneTime).map(function (ev) { return ev.text; });
-      let todoSummary = '';
-      if (todoTexts.length > 0) {
-        todoSummary = todoTexts[0];
-        if (todoTexts.length > 1) todoSummary += ' +' + (todoTexts.length - 1);
+        const undoneRepeat = getRepeatTodosForDate(dateStr).filter(function (ev) { return !isRepeatDoneOn(ev.id, dateStr); });
+        const undoneOneTime = getEventsForDate(dateStr).filter(function (ev) { return !ev.done; });
+        const todos = undoneRepeat.concat(undoneOneTime).slice(0, 3).map(function (ev) { return '• ' + ev.text; });
+
+        days.push({
+          date: dateStr,
+          dayNum: d.getDate(),
+          isToday: dateStr === todayStr,
+          shiftName: shiftName || '',
+          color: getShiftColor(shiftName) || '',
+          todos: todos,
+        });
       }
-
-      const wdIdx = weekStart === 1 ? d.getDay() : (d.getDay() + 6) % 7;
-      days.push({
-        date: dateStr,
-        label: (d.getMonth() + 1) + '/' + d.getDate() + ' (' + DOW[wdIdx] + ')',
-        isToday: dateStr === todayStr,
-        shiftName: shiftName || '',
-        color: getShiftColor(shiftName) || '',
-        todoSummary: todoSummary,
-      });
+      pages.push({ days: days });
     }
 
-    return { days: days };
+    return { headers: headers, satCol: satCol, sunCol: sunCol, pages: pages };
   }
 
   async function pushScheduleToWidget() {

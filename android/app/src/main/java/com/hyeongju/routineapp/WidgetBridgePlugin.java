@@ -117,7 +117,12 @@ public class WidgetBridgePlugin extends Plugin {
         }
         SharedPreferences prefs = getContext().getSharedPreferences(
             ScheduleWidgetProvider.PREFS_NAME, Context.MODE_PRIVATE);
-        prefs.edit().putString(ScheduleWidgetProvider.KEY_SCHEDULE_DATA, json).apply();
+        // 앱이 새 자료를 보낼 때마다 페이지 위치를 0(이번 주부터)으로 되돌림 —
+        // 위젯에서 다음 페이지로 넘겨봤어도 앱을 열면 오늘 기준으로 리셋됨.
+        prefs.edit()
+            .putString(ScheduleWidgetProvider.KEY_SCHEDULE_DATA, json)
+            .putInt(ScheduleWidgetProvider.KEY_PAGE_INDEX, 0)
+            .apply();
         ScheduleWidgetProvider.refreshAll(getContext());
         call.resolve();
     }
