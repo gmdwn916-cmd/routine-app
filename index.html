@@ -6127,14 +6127,19 @@
       items.forEach(function (ev) {
         const card = buildRoutineCard(ev);
         // 한 번짜리/오늘 탭 할 일과 같은 스와이프 삭제 — 여기서는 반복 할일 자체를 통째로 지움.
-        list.appendChild(wrapWithSwipeToDelete(card, 'var(--bg)', function () {
+        const wrap = wrapWithSwipeToDelete(card, 'var(--bg)', function () {
           state.events = state.events.filter(function (e) { return e.id !== ev.id; });
           saveState();
           renderRoutine();
           renderGrid();
           renderToday();
           if (detailDateStr !== null) { renderDDTodos(); }
-        }));
+        });
+        // .routine-card는 모서리가 둥근데(border-radius:12px) 감싸는 틀은 각져 있어서,
+        // 안 스와이프한 상태에서도 카드 모서리의 둥근 부분으로 뒤에 있는 빨간 삭제 버튼이
+        // 삐져나와 보이는 문제가 있었음 — 틀도 같은 반지름으로 둥글게 잘라서 해결.
+        wrap.style.borderRadius = '12px';
+        list.appendChild(wrap);
       });
     });
   }
