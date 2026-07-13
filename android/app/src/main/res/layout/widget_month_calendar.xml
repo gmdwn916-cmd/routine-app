@@ -12,10 +12,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:textSize="12sp"
+        android:textSize="14sp"
         android:textStyle="bold"
         android:textColor="@color/widget_text_primary"
-        android:paddingBottom="2dp" />
+        android:paddingBottom="3dp" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -29,7 +29,7 @@
             android:gravity="center"
             android:textStyle="bold"
             android:textColor="@color/widget_text_secondary"
-            android:textSize="9sp" />
+            android:textSize="11sp" />
         <TextView
             android:id="@+id/header_1"
             android:layout_width="0dp"
@@ -38,7 +38,7 @@
             android:gravity="center"
             android:textStyle="bold"
             android:textColor="@color/widget_text_secondary"
-            android:textSize="9sp" />
+            android:textSize="11sp" />
         <TextView
             android:id="@+id/header_2"
             android:layout_width="0dp"
@@ -47,7 +47,7 @@
             android:gravity="center"
             android:textStyle="bold"
             android:textColor="@color/widget_text_secondary"
-            android:textSize="9sp" />
+            android:textSize="11sp" />
         <TextView
             android:id="@+id/header_3"
             android:layout_width="0dp"
@@ -56,7 +56,7 @@
             android:gravity="center"
             android:textStyle="bold"
             android:textColor="@color/widget_text_secondary"
-            android:textSize="9sp" />
+            android:textSize="11sp" />
         <TextView
             android:id="@+id/header_4"
             android:layout_width="0dp"
@@ -65,7 +65,7 @@
             android:gravity="center"
             android:textStyle="bold"
             android:textColor="@color/widget_text_secondary"
-            android:textSize="9sp" />
+            android:textSize="11sp" />
         <TextView
             android:id="@+id/header_5"
             android:layout_width="0dp"
@@ -74,7 +74,7 @@
             android:gravity="center"
             android:textStyle="bold"
             android:textColor="@color/widget_text_secondary"
-            android:textSize="9sp" />
+            android:textSize="11sp" />
         <TextView
             android:id="@+id/header_6"
             android:layout_width="0dp"
@@ -83,7 +83,7 @@
             android:gravity="center"
             android:textStyle="bold"
             android:textColor="@color/widget_text_secondary"
-            android:textSize="9sp" />
+            android:textSize="11sp" />
     </LinearLayout>
 
     <LinearLayout
@@ -105,16 +105,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_0"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
@@ -130,16 +131,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
@@ -155,16 +157,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
@@ -180,16 +183,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_3"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
@@ -205,16 +209,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_4"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
@@ -230,16 +235,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_5"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
@@ -255,16 +261,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_6"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
     </LinearLayout>
 
@@ -287,16 +294,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_7"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
@@ -312,16 +320,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_8"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
@@ -337,16 +346,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_9"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
@@ -362,16 +372,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_10"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
@@ -387,16 +398,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_11"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
@@ -412,16 +424,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_12"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
@@ -437,16 +450,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_13"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
     </LinearLayout>
 
@@ -469,16 +483,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_14"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
@@ -494,16 +509,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_15"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
@@ -519,16 +535,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_16"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
@@ -544,16 +561,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_17"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
@@ -569,16 +587,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_18"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
@@ -594,16 +613,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_19"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
@@ -619,16 +639,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_20"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
     </LinearLayout>
 
@@ -651,16 +672,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_21"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
@@ -676,16 +698,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_22"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
@@ -701,16 +724,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_23"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
@@ -726,16 +750,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_24"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
@@ -751,16 +776,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_25"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
@@ -776,16 +802,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_26"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
@@ -801,16 +828,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_27"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
     </LinearLayout>
 
@@ -833,16 +861,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_28"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
@@ -858,16 +887,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_29"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
@@ -883,16 +913,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_30"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
@@ -908,16 +939,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_31"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
@@ -933,16 +965,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_32"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
@@ -958,16 +991,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_33"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
@@ -983,16 +1017,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_34"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
     </LinearLayout>
 
@@ -1015,16 +1050,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_35"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
@@ -1040,16 +1076,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_36"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
@@ -1065,16 +1102,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_37"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
@@ -1090,16 +1128,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_38"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
@@ -1115,16 +1154,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_39"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
@@ -1140,16 +1180,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_40"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"
@@ -1165,16 +1206,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="9sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_41"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingLeft="3dp"
-                android:paddingRight="3dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
                 android:maxLines="1"
-                android:textSize="6sp" />
+                android:textStyle="bold"
+                android:textSize="11sp" />
         </LinearLayout>
     </LinearLayout>
 
