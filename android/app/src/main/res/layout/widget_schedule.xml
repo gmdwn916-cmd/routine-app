@@ -16,11 +16,12 @@
             android:id="@+id/sch_nav_prev"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingLeft="2dp"
-            android:paddingRight="4dp"
+            android:minWidth="40dp"
+            android:minHeight="40dp"
+            android:gravity="center"
             android:textStyle="bold"
             android:textColor="@color/widget_text_secondary"
-            android:textSize="16sp"
+            android:textSize="20sp"
             android:text="‹" />
         <TextView
             android:id="@+id/sch_header_0"
@@ -89,11 +90,12 @@
             android:id="@+id/sch_nav_next"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingLeft="4dp"
-            android:paddingRight="2dp"
+            android:minWidth="40dp"
+            android:minHeight="40dp"
+            android:gravity="center"
             android:textStyle="bold"
             android:textColor="@color/widget_text_secondary"
-            android:textSize="16sp"
+            android:textSize="20sp"
             android:text="›" />
     </LinearLayout>
 
