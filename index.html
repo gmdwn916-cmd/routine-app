@@ -3044,6 +3044,9 @@
     delBtn.type = 'button';
     delBtn.className = 'swipe-delete-btn';
     delBtn.textContent = '삭제';
+    // 평소엔 아예 안 보이게 숨겨둠 — 스와이프로 열려 있을 때만 보여줘서, 화면 크기·
+    // 스크롤 중 서브픽셀 오차로 카드 뒤에서 살짝 비쳐 보이는 문제 자체를 원천 차단.
+    delBtn.style.visibility = 'hidden';
     wrap.appendChild(delBtn);
 
     rowEl.classList.add('swipe-delete-content');
@@ -3072,6 +3075,7 @@
         decided = true;
         horizontal = Math.abs(mdx) > Math.abs(mdy);
         if (!horizontal) { dragging = false; return; }
+        delBtn.style.visibility = 'visible';
       }
       if (!horizontal) return;
       e.preventDefault();
@@ -3092,6 +3096,7 @@
       } else {
         setX(0);
         open = false;
+        delBtn.style.visibility = 'hidden';
       }
     }
     wrap.addEventListener('touchend', endDrag, { passive: true });
@@ -3105,6 +3110,7 @@
         rowEl.style.transition = 'transform 0.18s ease';
         setX(0);
         open = false;
+        delBtn.style.visibility = 'hidden';
       }
     }, true);
 
