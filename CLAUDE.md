@@ -266,7 +266,10 @@
   그대로 재사용 — 새 규칙 없음). buildSchedulePayload()가 계산하고
   pushScheduleToWidget()이 같은 WidgetBridge 플러그인의 setScheduleData()로 넘김
   (새 플러그인 안 만듦). "오늘" 여부(isToday)도 JS가 미리 계산해서 넘김 —
-  네이티브는 그 값으로 오늘 칸에 원형 테두리(widget_today_circle.xml)만 입힘.
+  네이티브는 그 값으로 오늘 칸 전체(sch_cell_N 컨테이너, 날짜 숫자만이 아님)에
+  사각 테두리(widget_today_cell_border.xml)를 입힘 — 날짜만 감싸는 원형이었다가
+  "그 날짜 전체에 테두리"로 바뀐 것. 근무 배지(sch_shift_N)도 match_parent
+  너비로 칸 좌우 꽉 채움(달력 위젯의 "이어진 띠"와 같은 원리).
 - payload 형태: { headers(7개), satCol/sunCol(토/일 열 번호, 달력 위젯과 동일한
   이유로 JS가 알려줌), pages: [ {days(14개, 2주치)} × 2 ] } — 각 day는
   {date, dayNum, isToday, shiftName, color, todos(최대 3개, 이미 "• " 접두 붙은

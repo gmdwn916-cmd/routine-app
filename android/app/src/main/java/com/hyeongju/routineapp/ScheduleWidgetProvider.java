@@ -109,7 +109,7 @@ public class ScheduleWidgetProvider extends AppWidgetProvider {
             int dateId = idFor(context, "sch_date_" + i);
             views.setTextViewText(dateId, "");
             views.setTextColor(dateId, primaryText);
-            views.setInt(dateId, "setBackgroundColor", 0x00000000);
+            views.setInt(idFor(context, "sch_cell_" + i), "setBackgroundColor", 0x00000000);
             views.setTextViewText(idFor(context, "sch_shift_" + i), "");
             views.setInt(idFor(context, "sch_shift_" + i), "setBackgroundColor", 0x00000000);
             for (int t = 0; t < MAX_TODOS_PER_CELL; t++) {
@@ -158,11 +158,13 @@ public class ScheduleWidgetProvider extends AppWidgetProvider {
 
                                 int dateId = idFor(context, "sch_date_" + i);
                                 int shiftId = idFor(context, "sch_shift_" + i);
+                                int cellId = idFor(context, "sch_cell_" + i);
 
                                 views.setTextViewText(dateId, String.valueOf(dayNum));
                                 if (isToday) {
                                     views.setTextColor(dateId, 0xFF007AFF);
-                                    views.setInt(dateId, "setBackgroundResource", R.drawable.widget_today_circle);
+                                    // 오늘은 날짜 숫자만이 아니라 그 날 칸 전체에 테두리를 둘러서 표시.
+                                    views.setInt(cellId, "setBackgroundResource", R.drawable.widget_today_cell_border);
                                 }
 
                                 if (!shiftName.isEmpty()) {

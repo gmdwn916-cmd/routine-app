@@ -81,6 +81,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal">
         <LinearLayout
+            android:id="@+id/sch_cell_0"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -90,19 +91,17 @@
             android:paddingBottom="4dp">
             <TextView
                 android:id="@+id/sch_date_0"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
                 android:textSize="12sp" />
             <TextView
                 android:id="@+id/sch_shift_0"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:paddingLeft="4dp"
-                android:paddingRight="4dp"
                 android:gravity="center"
                 android:maxLines="1"
                 android:textStyle="bold"
@@ -139,6 +138,7 @@
                 android:textSize="8sp" />
         </LinearLayout>
         <LinearLayout
+            android:id="@+id/sch_cell_1"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -148,19 +148,17 @@
             android:paddingBottom="4dp">
             <TextView
                 android:id="@+id/sch_date_1"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
                 android:textSize="12sp" />
             <TextView
                 android:id="@+id/sch_shift_1"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:paddingLeft="4dp"
-                android:paddingRight="4dp"
                 android:gravity="center"
                 android:maxLines="1"
                 android:textStyle="bold"
@@ -197,6 +195,7 @@
                 android:textSize="8sp" />
         </LinearLayout>
         <LinearLayout
+            android:id="@+id/sch_cell_2"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -206,19 +205,17 @@
             android:paddingBottom="4dp">
             <TextView
                 android:id="@+id/sch_date_2"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
                 android:textSize="12sp" />
             <TextView
                 android:id="@+id/sch_shift_2"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:paddingLeft="4dp"
-                android:paddingRight="4dp"
                 android:gravity="center"
                 android:maxLines="1"
                 android:textStyle="bold"
@@ -255,6 +252,7 @@
                 android:textSize="8sp" />
         </LinearLayout>
         <LinearLayout
+            android:id="@+id/sch_cell_3"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -264,19 +262,17 @@
             android:paddingBottom="4dp">
             <TextView
                 android:id="@+id/sch_date_3"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
                 android:textSize="12sp" />
             <TextView
                 android:id="@+id/sch_shift_3"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:paddingLeft="4dp"
-                android:paddingRight="4dp"
                 android:gravity="center"
                 android:maxLines="1"
                 android:textStyle="bold"
@@ -313,6 +309,7 @@
                 android:textSize="8sp" />
         </LinearLayout>
         <LinearLayout
+            android:id="@+id/sch_cell_4"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -322,19 +319,17 @@
             android:paddingBottom="4dp">
             <TextView
                 android:id="@+id/sch_date_4"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
                 android:textSize="12sp" />
             <TextView
                 android:id="@+id/sch_shift_4"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:paddingLeft="4dp"
-                android:paddingRight="4dp"
                 android:gravity="center"
                 android:maxLines="1"
                 android:textStyle="bold"
@@ -371,6 +366,7 @@
                 android:textSize="8sp" />
         </LinearLayout>
         <LinearLayout
+            android:id="@+id/sch_cell_5"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -380,19 +376,17 @@
             android:paddingBottom="4dp">
             <TextView
                 android:id="@+id/sch_date_5"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
                 android:textSize="12sp" />
             <TextView
                 android:id="@+id/sch_shift_5"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:paddingLeft="4dp"
-                android:paddingRight="4dp"
                 android:gravity="center"
                 android:maxLines="1"
                 android:textStyle="bold"
@@ -429,6 +423,7 @@
                 android:textSize="8sp" />
         </LinearLayout>
         <LinearLayout
+            android:id="@+id/sch_cell_6"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -438,19 +433,17 @@
             android:paddingBottom="4dp">
             <TextView
                 android:id="@+id/sch_date_6"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
                 android:textSize="12sp" />
             <TextView
                 android:id="@+id/sch_shift_6"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:paddingLeft="4dp"
-                android:paddingRight="4dp"
                 android:gravity="center"
                 android:maxLines="1"
                 android:textStyle="bold"
@@ -493,6 +486,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal">
         <LinearLayout
+            android:id="@+id/sch_cell_7"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -502,19 +496,17 @@
             android:paddingBottom="4dp">
             <TextView
                 android:id="@+id/sch_date_7"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
                 android:textSize="12sp" />
             <TextView
                 android:id="@+id/sch_shift_7"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:paddingLeft="4dp"
-                android:paddingRight="4dp"
                 android:gravity="center"
                 android:maxLines="1"
                 android:textStyle="bold"
@@ -551,6 +543,7 @@
                 android:textSize="8sp" />
         </LinearLayout>
         <LinearLayout
+            android:id="@+id/sch_cell_8"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -560,19 +553,17 @@
             android:paddingBottom="4dp">
             <TextView
                 android:id="@+id/sch_date_8"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
                 android:textSize="12sp" />
             <TextView
                 android:id="@+id/sch_shift_8"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:paddingLeft="4dp"
-                android:paddingRight="4dp"
                 android:gravity="center"
                 android:maxLines="1"
                 android:textStyle="bold"
@@ -609,6 +600,7 @@
                 android:textSize="8sp" />
         </LinearLayout>
         <LinearLayout
+            android:id="@+id/sch_cell_9"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -618,19 +610,17 @@
             android:paddingBottom="4dp">
             <TextView
                 android:id="@+id/sch_date_9"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
                 android:textSize="12sp" />
             <TextView
                 android:id="@+id/sch_shift_9"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:paddingLeft="4dp"
-                android:paddingRight="4dp"
                 android:gravity="center"
                 android:maxLines="1"
                 android:textStyle="bold"
@@ -667,6 +657,7 @@
                 android:textSize="8sp" />
         </LinearLayout>
         <LinearLayout
+            android:id="@+id/sch_cell_10"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -676,19 +667,17 @@
             android:paddingBottom="4dp">
             <TextView
                 android:id="@+id/sch_date_10"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
                 android:textSize="12sp" />
             <TextView
                 android:id="@+id/sch_shift_10"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:paddingLeft="4dp"
-                android:paddingRight="4dp"
                 android:gravity="center"
                 android:maxLines="1"
                 android:textStyle="bold"
@@ -725,6 +714,7 @@
                 android:textSize="8sp" />
         </LinearLayout>
         <LinearLayout
+            android:id="@+id/sch_cell_11"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -734,19 +724,17 @@
             android:paddingBottom="4dp">
             <TextView
                 android:id="@+id/sch_date_11"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
                 android:textSize="12sp" />
             <TextView
                 android:id="@+id/sch_shift_11"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:paddingLeft="4dp"
-                android:paddingRight="4dp"
                 android:gravity="center"
                 android:maxLines="1"
                 android:textStyle="bold"
@@ -783,6 +771,7 @@
                 android:textSize="8sp" />
         </LinearLayout>
         <LinearLayout
+            android:id="@+id/sch_cell_12"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -792,19 +781,17 @@
             android:paddingBottom="4dp">
             <TextView
                 android:id="@+id/sch_date_12"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
                 android:textSize="12sp" />
             <TextView
                 android:id="@+id/sch_shift_12"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:paddingLeft="4dp"
-                android:paddingRight="4dp"
                 android:gravity="center"
                 android:maxLines="1"
                 android:textStyle="bold"
@@ -841,6 +828,7 @@
                 android:textSize="8sp" />
         </LinearLayout>
         <LinearLayout
+            android:id="@+id/sch_cell_13"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -850,19 +838,17 @@
             android:paddingBottom="4dp">
             <TextView
                 android:id="@+id/sch_date_13"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
                 android:textSize="12sp" />
             <TextView
                 android:id="@+id/sch_shift_13"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:paddingLeft="4dp"
-                android:paddingRight="4dp"
                 android:gravity="center"
                 android:maxLines="1"
                 android:textStyle="bold"
