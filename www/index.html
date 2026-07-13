@@ -1641,6 +1641,30 @@
       color: var(--text-2);
       padding: 4px 0;
     }
+    .shift-alarm-name { font-size: 15px; font-weight: 600; color: var(--text-1); }
+    .shift-alarm-time {
+      border: 1.5px solid var(--line);
+      border-radius: 8px;
+      padding: 6px 8px;
+      font-size: 14px;
+      font-family: inherit;
+      background: var(--surface);
+      color: var(--text-1);
+    }
+    .shift-alarm-time:disabled { opacity: 0.4; }
+    .shift-alarm-toggle {
+      border: 1.5px solid var(--line);
+      background: none;
+      color: var(--text-2);
+      font-size: 12px;
+      font-family: inherit;
+      padding: 5px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .shift-alarm-toggle.is-on { border-color: var(--accent); color: var(--accent); }
     .shift-color-hint {
       font-size: 11px;
       color: var(--text-2);
@@ -2343,6 +2367,11 @@
         <div id="team-settings-card" class="card"></div>
       </div>
 
+      <!-- 근무유형별 알람 -->
+      <div id="sd-alarms" style="display:none">
+        <div id="shift-alarm-card" class="card"></div>
+      </div>
+
       <!-- 데이터 백업(내보내기/가져오기) -->
       <div id="sd-data" style="display:none">
         <div class="card">
@@ -2661,6 +2690,12 @@
   </div>
 </div>
 
+<!-- Capacitor 다리 스크립트 — 빌드 도구 없이 쓰는 방식이라 이렇게 직접 포함함.
+     웹(깃허브 페이지)에서는 그냥 로드만 되고 아무 동작 안 함(Capacitor.isNativePlatform()
+     이 false), 설치된 안드로이드 앱 안에서만 실제 알람 예약이 동작함. -->
+<script src="capacitor.js"></script>
+<script src="local-notifications.js"></script>
+
 <script>
   // 카테고리 기본값 — 사용자가 설정 탭에서 직접 추가·수정·삭제 가능(state.categories).
   // 이 상수는 처음 실행 시 씨앗 데이터로만 쓰임.
@@ -2733,6 +2768,7 @@
     theme: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor" stroke="none"/></svg>',
     teams: '<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M4 20c0-3.3 2.2-6 5-6s5 2.7 5 6"/><circle cx="17" cy="9" r="2.3"/><path d="M15 20c.2-2.6 1.8-4.5 4-4.5"/></svg>',
     data: '<svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>',
+    alarm: '<svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>',
   };
 
   function getShiftColor(name) {
@@ -4457,6 +4493,11 @@
         return THEME_LABELS[mode] || THEME_LABELS.system;
       }},
       { key: 'teams', icon: SETTINGS_ICONS.teams, label: '팀 근무', getValue: function() { return ''; }},
+      { key: 'alarms', icon: SETTINGS_ICONS.alarm, label: '근무유형별 알람', getValue: function() {
+        if (!state || !state.shiftAlarms) return '';
+        var n = Object.keys(state.shiftAlarms).filter(function(k) { return state.shiftAlarms[k].enabled; }).length;
+        return n ? n + '개 켜짐' : '';
+      }},
       { key: 'data', icon: SETTINGS_ICONS.data, label: '데이터 백업', getValue: function() { return ''; }},
     ];
 
@@ -4500,10 +4541,10 @@
     document.getElementById('settings-list-view').style.display = 'none';
     document.getElementById('settings-detail-view').style.display = '';
 
-    var titles = { cycle: '교대 주기', colors: '근무유형 색', categories: '카테고리', weekstart: '주 시작 요일', theme: '테마', teams: '팀 근무', data: '데이터 백업' };
+    var titles = { cycle: '교대 주기', colors: '근무유형 색', categories: '카테고리', weekstart: '주 시작 요일', theme: '테마', teams: '팀 근무', alarms: '근무유형별 알람', data: '데이터 백업' };
     document.getElementById('settings-detail-title').textContent = titles[key] || '';
 
-    ['sd-cycle','sd-colors','sd-categories','sd-weekstart','sd-theme','sd-teams','sd-data'].forEach(function(id) {
+    ['sd-cycle','sd-colors','sd-categories','sd-weekstart','sd-theme','sd-teams','sd-alarms','sd-data'].forEach(function(id) {
       document.getElementById(id).style.display = 'none';
     });
     document.getElementById('sd-' + key).style.display = '';
@@ -4530,6 +4571,8 @@
       document.getElementById('input-theme').value = (state && state.themeMode) || 'system';
     } else if (key === 'teams') {
       renderTeamSettings();
+    } else if (key === 'alarms') {
+      renderShiftAlarmSettings();
     } else if (key === 'data') {
       document.getElementById('data-io-msg').textContent = '';
     }
@@ -4635,6 +4678,142 @@
       row.appendChild(rowBottom);
       card.appendChild(row);
     });
+  }
+
+  // ── 근무유형별 알람 (설치된 앱에서만 동작 — 웹은 안내만 보여줌) ──
+  function isNativeApp() {
+    return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+  }
+
+  function renderShiftAlarmSettings() {
+    const card = document.getElementById('shift-alarm-card');
+    card.innerHTML = '';
+    if (!state || !state.cycleDays) {
+      card.innerHTML = '<div class="shift-color-empty">주기 설정을 먼저 완료해 주세요.</div>';
+      return;
+    }
+    if (!isNativeApp()) {
+      card.innerHTML = '<div class="shift-color-empty">이 기능은 설치된 앱에서만 동작해요. 웹 브라우저에서는 알람이 울리지 않아요.</div>';
+      return;
+    }
+    const shiftNames = [];
+    state.days.forEach(function (d) {
+      if (d.shiftType.name && shiftNames.indexOf(d.shiftType.name) === -1) shiftNames.push(d.shiftType.name);
+    });
+    if (shiftNames.length === 0) {
+      card.innerHTML = '<div class="shift-color-empty">등록된 근무유형이 없습니다.</div>';
+      return;
+    }
+    if (!state.shiftAlarms) state.shiftAlarms = {};
+
+    shiftNames.forEach(function (name) {
+      if (!state.shiftAlarms[name]) state.shiftAlarms[name] = { enabled: false, time: '07:00' };
+      const rule = state.shiftAlarms[name];
+
+      const row = document.createElement('div');
+      row.className = 'shift-color-row';
+      const rowTop = document.createElement('div');
+      rowTop.className = 'shift-color-row-top';
+
+      const nameEl = document.createElement('span');
+      nameEl.className = 'shift-alarm-name';
+      nameEl.textContent = name;
+
+      const timeInput = document.createElement('input');
+      timeInput.type = 'time';
+      timeInput.className = 'shift-alarm-time';
+      timeInput.value = rule.time;
+      timeInput.disabled = !rule.enabled;
+      timeInput.addEventListener('change', function () {
+        rule.time = timeInput.value;
+        saveState();
+        scheduleShiftAlarms();
+      });
+
+      const toggleBtn = document.createElement('button');
+      toggleBtn.type = 'button';
+      toggleBtn.className = 'shift-alarm-toggle' + (rule.enabled ? ' is-on' : '');
+      toggleBtn.textContent = rule.enabled ? '켜짐' : '꺼짐';
+      toggleBtn.addEventListener('click', function () {
+        rule.enabled = !rule.enabled;
+        timeInput.disabled = !rule.enabled;
+        toggleBtn.classList.toggle('is-on', rule.enabled);
+        toggleBtn.textContent = rule.enabled ? '켜짐' : '꺼짐';
+        saveState();
+        scheduleShiftAlarms();
+      });
+
+      rowTop.appendChild(nameEl);
+      rowTop.appendChild(timeInput);
+      rowTop.appendChild(toggleBtn);
+      row.appendChild(rowTop);
+      card.appendChild(row);
+    });
+
+    const hint = document.createElement('p');
+    hint.className = 'shift-color-hint';
+    hint.textContent = '켜둔 근무유형인 날 그 시각에 소리·진동으로 알려줘요. 처음 켤 때 알림 허용 창이 뜨면 허용해줘야 울려요.';
+    card.appendChild(hint);
+  }
+
+  // 필요할 때(설정 저장 시점 등) 호출 — 최초 1회만 물어보고 이후엔 캐시된 결과로 판단.
+  async function ensureAlarmPermission() {
+    const LN = window.capacitorLocalNotifications && window.capacitorLocalNotifications.LocalNotifications;
+    if (!LN) return false;
+    const cur = await LN.checkPermissions();
+    if (cur.display === 'granted') return true;
+    const req = await LN.requestPermissions();
+    return req.display === 'granted';
+  }
+
+  // 오늘부터 앞으로 14일치 근무를 보고, 알람이 켜진 근무유형인 날마다 그 시각에
+  // 예약. 우리가 예약한 목록을 state._scheduledAlarmIds에 기록해뒀다가, 다시
+  // 예약할 때 그 id들만 먼저 취소하고 새로 까는 방식(플러그인이 돌려주는 예약
+  // 목록에 의존하지 않아서 더 확실함). id는 YYYYMMDD 숫자를 그대로 씀(하루에
+  // 알람 하나뿐이라 날짜 자체가 고유 id가 됨).
+  async function scheduleShiftAlarms() {
+    if (!isNativeApp()) return;
+    if (!state || !state.cycleDays || !state.baseDate) return;
+    const LN = window.capacitorLocalNotifications && window.capacitorLocalNotifications.LocalNotifications;
+    if (!LN) return;
+
+    const ok = await ensureAlarmPermission();
+    if (!ok) return;
+
+    const prevIds = Array.isArray(state._scheduledAlarmIds) ? state._scheduledAlarmIds : [];
+    if (prevIds.length) {
+      try { await LN.cancel({ notifications: prevIds.map(function (id) { return { id: id }; }) }); } catch (e) {}
+    }
+
+    const notifications = [];
+    const now = new Date();
+    const start = todayMidnight();
+    for (let i = 0; i < 14; i++) {
+      const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+      const dateStr = formatDateStr(d);
+      const idx0 = dayIndex0ForDate(dateStr);
+      if (idx0 === null) continue;
+      const eff = getEffectiveShiftName(dateStr, idx0);
+      const rule = state.shiftAlarms && state.shiftAlarms[eff.name];
+      if (!rule || !rule.enabled || !rule.time) continue;
+      const parts = rule.time.split(':');
+      const at = new Date(d.getFullYear(), d.getMonth(), d.getDate(), parseInt(parts[0], 10), parseInt(parts[1], 10), 0, 0);
+      if (at <= now) continue;
+      const id = parseInt(dateStr.split('-').join(''), 10);
+      notifications.push({
+        id: id,
+        title: '근무 알람',
+        body: eff.name + ' 근무일이에요',
+        schedule: { at: at },
+        channelId: 'shift-alarm',
+      });
+    }
+
+    if (notifications.length) {
+      try { await LN.schedule({ notifications: notifications }); } catch (e) {}
+    }
+    state._scheduledAlarmIds = notifications.map(function (n) { return n.id; });
+    saveState();
   }
 
   // ── 카테고리 관리 (사용자가 직접 추가·수정·삭제) ──────────────
@@ -6535,6 +6714,18 @@
   renderInboxBadge();
   if (!state || !state.cycleDays || !state.baseDate) {
     openOnboarding();
+  }
+  if (isNativeApp() && window.capacitorLocalNotifications) {
+    const LN = window.capacitorLocalNotifications.LocalNotifications;
+    LN.createChannel({
+      id: 'shift-alarm',
+      name: '근무 알람',
+      description: '근무유형별로 설정한 알람',
+      importance: 5,
+      visibility: 1,
+    }).catch(function () {}).then(function () {
+      scheduleShiftAlarms();
+    });
   }
 </script>
 </body>
