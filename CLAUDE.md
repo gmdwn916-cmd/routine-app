@@ -228,19 +228,30 @@
     날짜 문자열 비교, 토/일은 JS가 알려준 열 번호를 그대로 씀 — 둘 다 근무
     로직이 아니라 중복 구현 아님). 토=#007AFF(파랑), 일=#FF3B30(빨강), 앱의
     .grid-header-cell.sat/.sun과 같은 색.
-  - **이전/다음 달 넘기기**: 하단 좌우 ‹(nav_prev)/›(nav_next) 텍스트뷰를 눌렀을 때
+  - **이전/다음 달 넘기기(2026-07-14, 스케줄 위젯과 같은 방식으로 재변경)**:
+    처음엔 하단 좌우에 눈에 보이는 ‹(nav_prev)/›(nav_next) 텍스트뷰가 있었는데,
+    스케줄 위젯(N주) 쪽에서 먼저 "화살표를 없애고 월/일요일 칸 전체를 탭
+    영역으로" 바꾼 뒤 사용자가 "달력 위젯도 같은 방식으로"를 요청해서 동일하게
+    바꿈 — nav_prev/nav_next 뷰 자체를 레이아웃에서 제거하고, 대신 월요일 쪽
+    열(헤더 칸 + 6줄 그리드 전체, 즉 그 열의 header_N + cell_container_N×6개)
+    전부에 이전 달 PendingIntent를, 일요일 쪽 열 전부에 다음 달 PendingIntent를
+    걸어서 그 세로 줄 전체가 하나의 탭 영역처럼 동작하게 함 — 다시 작은 화살표
+    버튼을 만들지 말 것. 어느 열이 월/일요일인지는 스케줄 위젯과 똑같이
+    "일요일 바로 다음 칸이 항상 월요일"(mondayCol = (sunCol+1)%7, JS가 넘겨준
+    sunCol만 보고 계산)로 구함. 그 열을 탭하면 항상 페이지 이동만 하고 앱을
+    열지 않음(의도된 트레이드오프, 스케줄 위젯과 동일).
     앱을 열지 않고 위젯 안에서만 달을 넘김 — MonthCalendarWidgetProvider가 자기
     자신에게 보내는 커스텀 브로드캐스트(ACTION_PREV/ACTION_NEXT, PendingIntent.
     getBroadcast, onReceive에서 가로챔)로 표시 인덱스(0/1/2)만 바꾸고 다시 그림.
     딱 3개월치만 미리 계산해 넘겨받은 상태라 그 범위(지난달~다음달)를 못
     벗어남 — 더 이전/이후 달을 보려면 앱을 열어야 함(이 범위 밖은 근무 계산
     자체가 없어서 위젯 혼자서는 절대 못 만듦).
-  - 위젯 레이아웃(widget_month_calendar.xml)은 헤더 1줄 + 6줄×7칸(칸마다
-    [날짜 숫자(cell_date_N) / 근무이름 작은 배지(cell_shift_N)] 세로 2줄, 앱의
-    달력 탭 칸(cell-date + cell-shift-badge)과 같은 모양 — 칸 배경은 중립,
-    배지만 근무색으로 옅게 칠하고 글자도 근무색) + 맨 아래 ‹/› 줄. id는 리소스
-    이름으로 동적 조회(Resources.getIdentifier), RemoteViewsService 같은
-    복잡한 컬렉션 위젯 아님.
+  - 위젯 레이아웃(widget_month_calendar.xml)은 헤더 1줄 + 6줄×7칸(칸 컨테이너
+    id: cell_container_N, 안에 [날짜 숫자(cell_date_N) / 근무이름 작은 배지
+    (cell_shift_N)] 세로 2줄, 앱의 달력 탭 칸(cell-date + cell-shift-badge)과
+    같은 모양 — 칸 배경은 중립, 배지만 근무색으로 옅게 칠하고 글자도 근무색).
+    id는 리소스 이름으로 동적 조회(Resources.getIdentifier), RemoteViewsService
+    같은 복잡한 컬렉션 위젯 아님.
   - 위젯 배경/글자색은 res/values/colors.xml + res/values-night/colors.xml로
     시스템 라이트/다크 모드에 맞춰 자동 전환(widget_bg/widget_text_primary/
     widget_text_secondary). "오늘"/토/일 강조색만 항상 고정색.
