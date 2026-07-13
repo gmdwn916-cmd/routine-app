@@ -6128,9 +6128,14 @@
           renderToday();
           if (detailDateStr !== null) { renderDDTodos(); }
         });
-        // .routine-card는 모서리가 둥근데(border-radius:12px) 감싸는 틀은 각져 있어서,
-        // 안 스와이프한 상태에서도 카드 모서리의 둥근 부분으로 뒤에 있는 빨간 삭제 버튼이
-        // 삐져나와 보이는 문제가 있었음 — 틀도 같은 반지름으로 둥글게 잘라서 해결.
+        // .routine-card는 모서리가 둥글고(border-radius:12px) margin-bottom으로
+        // 카드 사이 간격을 만드는데, 그 margin이 스와이프 틀(overflow:hidden) 안쪽에
+        // 포함되면서 틀 높이가 카드 자체보다 커짐 — 뒤에 숨은 빨간 삭제 버튼은
+        // top:0/bottom:0로 그 틀 전체 높이를 채우다 보니, margin만큼의 빈 공간에
+        // 카드로 안 가려진 빨간 부분이 남아 보였음(틀에 준 반지름 때문에 둥글게).
+        // 간격을 카드 안쪽 margin이 아니라 틀 바깥쪽 margin으로 옮겨서 근본적으로 해결.
+        card.style.marginBottom = '0';
+        wrap.style.marginBottom = '8px';
         wrap.style.borderRadius = '12px';
         list.appendChild(wrap);
       });
