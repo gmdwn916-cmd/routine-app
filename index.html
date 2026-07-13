@@ -4836,7 +4836,11 @@
     if (!bridge) return;
     const payload = buildMonthCalendarPayload();
     if (!payload) return;
-    try { await bridge.setMonthCalendarData(payload); } catch (e) {}
+    // 중첩된 배열(그것도 군데군데 null이 섞인 42칸 그리드 × 3개월)을 그대로
+    // 플러그인 인자로 넘기면 JS→네이티브 브리지가 깊은 구조를 옮기다 조용히
+    // 어긋날 수 있어서, 문자열로 미리 뭉쳐서 딱 하나만 넘김 — 네이티브는 그
+    // 문자열을 그대로 저장했다가 파싱만 함(이미 하던 방식).
+    try { await bridge.setMonthCalendarData({ json: JSON.stringify(payload) }); } catch (e) {}
   }
 
   function renderShiftAlarmSettings() {
