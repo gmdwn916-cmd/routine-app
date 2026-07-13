@@ -424,16 +424,21 @@
 
     /* ── Category ── */
     .cat-select {
-      padding: 7px 4px 7px 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 40px;
+      box-sizing: border-box;
+      padding: 0 10px;
       border: 1.5px solid var(--line);
-      border-radius: 8px;
-      font-size: 12px;
+      border-radius: 10px;
+      font-size: 13px;
       font-family: inherit;
       background: var(--surface);
       color: var(--text-1);
       outline: none;
       cursor: pointer;
-      max-width: 80px;
+      max-width: 104px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -447,13 +452,13 @@
     .cat-picker-menu {
       display: none;
       position: absolute;
-      bottom: calc(100% + 4px);
+      bottom: calc(100% + 6px);
       right: 0;
-      min-width: 140px;
+      min-width: 150px;
       max-height: 240px;
       overflow-y: auto;
       background: var(--surface);
-      border: 1px solid var(--line);
+      border: 1.5px solid var(--line);
       border-radius: 10px;
       box-shadow: 0 4px 16px rgba(0,0,0,0.16);
       z-index: 20;
@@ -465,11 +470,11 @@
       align-items: center;
       gap: 6px;
       width: 100%;
-      padding: 8px 10px;
+      padding: 9px 10px;
       border: none;
       background: none;
       border-radius: 8px;
-      font-size: 13px;
+      font-size: 14px;
       font-family: inherit;
       color: var(--text-1);
       text-align: left;
@@ -674,6 +679,22 @@
     }
     .btn-important-toggle.is-on { color: #ff9500; }
 
+    /* 반복 할일 편집 시트 입력 줄에서만: 텍스트칸·카테고리 버튼과 높이·테두리를
+       맞춰서 하나의 컨트롤 묶음처럼 보이게 함(목록 줄의 별표 아이콘 스타일은 안 건드림). */
+    #promote-important-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      box-sizing: border-box;
+      padding: 0;
+      border: 1.5px solid var(--line);
+      border-radius: 10px;
+      font-size: 18px;
+    }
+    #promote-important-btn.is-on { border-color: #ff9500; }
+
     .dd-add-row {
       display: flex;
       gap: 8px;
@@ -815,13 +836,15 @@
     .bulk-input-row {
       display: flex;
       gap: 8px;
-      align-items: flex-end;
+      align-items: center;
       margin-bottom: 10px;
     }
 
     .bulk-input-row input {
       flex: 1;
-      padding: 10px 12px;
+      height: 40px;
+      box-sizing: border-box;
+      padding: 0 12px;
       border: 1.5px solid var(--line);
       border-radius: 10px;
       font-size: 14px;
