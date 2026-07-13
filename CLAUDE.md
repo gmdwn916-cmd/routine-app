@@ -148,6 +148,27 @@
   저장공간이라 자동으로 안 이어짐 — 설정 탭의 "데이터 백업" 화면에서 JSON 파일로
   내보내고 다른 실행 환경(웹/네이티브)에서 가져오기 하면 이어붙일 수 있음. 아래
   데이터 모델 항목 참고.
+- 홈 화면 "빠른 할일 추가" 위젯 (네이티브 전용, 2026-07-13): 위젯을 탭하면 작은
+  입력창(QuickAddActivity, 다이얼로그 테마 — 화면 전체 안 가리고 살짝 뜸)이
+  뜨고, 글자를 넣으면 앱을 열지 않고도 그 자리에서 저장됨.
+  - 네이티브 코드(QuickAddWidgetProvider/QuickAddActivity)는 android/app/src/main/
+    java/com/hyeongju/routineapp/ 안에 있음. 위젯은 이 웹뷰의 localStorage를
+    직접 못 읽고 못 쓰므로(따로인 저장공간이고, 안드로이드 쪽에서 웹뷰 localStorage를
+    직접 건드리는 건 공식 지원 방법이 아님), 입력한 글자는 일단 안드로이드
+    SharedPreferences("widget_bridge", 키 "pending_inbox_items", JSON 문자열 배열
+    — "임시 우편함")에 쌓임.
+  - 이 우편함을 읽고 비우는 다리 역할은 직접 작성한 전용 Capacitor 플러그인
+    WidgetBridgePlugin.java가 함(local-notifications처럼 npm으로 받아온 게 아니라
+    이 프로젝트 전용으로 새로 쓴 것 — getPendingItems/clearPendingItems 두 메서드뿐).
+    MainActivity.java의 onCreate에서 registerPlugin(WidgetBridgePlugin.class)로 등록.
+  - JS쪽(index.html)의 getWidgetBridge()/syncWidgetInboxItems()가 앱을 켤 때(초기화
+    시점)마다 이 플러그인으로 우편함 내용을 가져와 state.inbox에 옮기고 우편함을
+    비움. 위젯은 "글자 목록"만 넘길 뿐 inbox 데이터 형식(id/createdAt 등)을 전혀
+    모름 — 실제 inbox 항목으로 바꾸는 건 JS쪽에서만 함.
+    **한계(1차 버전)**: "앱을 새로 켤 때"만 반영됨 — 이미 열려서 백그라운드에 있는
+    앱을 다시 포그라운드로 불러올 때는 아직 반영 안 함(실사용해보고 불편하면
+    Capacitor App 플러그인의 resume 이벤트에 걸어서 넓힐 것).
+  - 위젯 크기는 1x1(가장 작음), 아이콘(+ 모양, ic_widget_add.xml)만 있고 글씨 없음.
 
 ## 용어 (통일 — 혼동 금지)
 - 할 일 = state.events[] 전체. 반복이 꺼져 있으면 한 번짜리(특정 날짜),

@@ -4733,6 +4733,44 @@
     return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
   }
 
+  // ── 홈 화면 "빠른 할일 추가" 위젯과의 연결 ──
+  // 위젯(순수 안드로이드 코드)은 이 웹뷰의 localStorage를 직접 못 읽고 못 씀 —
+  // 그래서 위젯에서 입력한 글자는 안드로이드 쪽 SharedPreferences("임시 우편함")에
+  // 먼저 쌓이고, 그 우편함을 읽고 비우는 다리 역할만 하는 아주 작은 전용 Capacitor
+  // 플러그인(WidgetBridge, 네이티브 코드에 직접 작성한 것 — local-notifications
+  // 처럼 npm 패키지로 받아온 게 아님)을 통해 앱을 켤 때 state.inbox로 옮겨온다.
+  // 위젯은 "글자 목록"만 넘겨줄 뿐 inbox 데이터 형식을 전혀 모름 — 실제 inbox
+  // 항목(id/createdAt 포함)으로 바꾸는 건 여기서만 함.
+  function getWidgetBridge() {
+    if (!isNativeApp() || !window.Capacitor || !window.Capacitor.registerPlugin) return null;
+    if (!window.__widgetBridgePlugin) {
+      window.__widgetBridgePlugin = window.Capacitor.registerPlugin('WidgetBridge', {});
+    }
+    return window.__widgetBridgePlugin;
+  }
+
+  // 한계(1차 버전): 앱을 "새로 켤 때"만 옮겨옴. 이미 열려 있는 앱을 포그라운드로
+  // 다시 불러올 때도 반영하려면 나중에 Capacitor App 플러그인의 resume 이벤트에
+  // 이 함수를 걸면 됨 — 실사용해보고 불편하면 추가.
+  async function syncWidgetInboxItems() {
+    const bridge = getWidgetBridge();
+    if (!bridge) return;
+    try {
+      const res = await bridge.getPendingItems();
+      const items = (res && res.items) || [];
+      if (!items.length) return;
+      if (!Array.isArray(state.inbox)) state.inbox = [];
+      items.forEach(function (text) {
+        const trimmed = (text || '').trim();
+        if (!trimmed) return;
+        state.inbox.push({ id: genId('i'), text: trimmed, createdAt: Date.now() });
+      });
+      saveState();
+      renderInboxBadge();
+      await bridge.clearPendingItems();
+    } catch (e) {}
+  }
+
   function renderShiftAlarmSettings() {
     const card = document.getElementById('shift-alarm-card');
     card.innerHTML = '';
@@ -6794,6 +6832,7 @@
   if (!state || !state.cycleDays || !state.baseDate) {
     openOnboarding();
   }
+  syncWidgetInboxItems();
   if (isNativeApp() && window.capacitorLocalNotifications) {
     const LN = window.capacitorLocalNotifications.LocalNotifications;
     LN.createChannel({
