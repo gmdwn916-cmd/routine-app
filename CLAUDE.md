@@ -197,9 +197,15 @@
     MonthCalendarWidgetProvider.refreshAll()을 호출해 위젯을 즉시 다시 그림.
     "오늘" 강조만 유일하게 네이티브에서 직접 계산(오늘 날짜 문자열과 각 칸의
     날짜 문자열을 비교하는 단순 비교라 근무 로직이 아님 — 중복 구현 아님).
-  - 위젯 레이아웃(widget_month_calendar.xml)은 헤더 1줄 + 6줄×7칸 = 42개의
-    고정 TextView(cell_0~cell_41, id는 리소스 이름으로 동적 조회 —
-    Resources.getIdentifier 사용, RemoteViewsService 같은 복잡한 컬렉션 위젯 아님).
+  - 위젯 레이아웃(widget_month_calendar.xml)은 헤더 1줄 + 6줄×7칸, 칸마다
+    [날짜 숫자(cell_date_N) / 근무이름 작은 배지(cell_shift_N)] 세로 2줄 — 앱의
+    달력 탭 칸(cell-date + cell-shift-badge)과 같은 모양을 그대로 따라감(칸
+    배경은 안 칠하고 중립 유지, 근무 배지만 그 근무색으로 옅게 칠하고 글자도
+    근무색). id는 리소스 이름으로 동적 조회(Resources.getIdentifier),
+    RemoteViewsService 같은 복잡한 컬렉션 위젯 아님.
+  - 위젯 배경/글자색은 res/values/colors.xml + res/values-night/colors.xml로
+    시스템 라이트/다크 모드에 맞춰 자동 전환(widget_bg/widget_text_primary/
+    widget_text_secondary). "오늘" 강조(파란 글씨)만 항상 고정색.
   - **갱신 시점**: 앱 시작/포그라운드 복귀 시(위젯 1과 동일한 지점) +
     교대 주기 저장, 주 시작 요일 변경, 근무유형 색 변경, 날짜별/D번호 근무 수정,
     여러 날짜 한번에 근무 수정(bulk) — 이 값들이 바뀌는 모든 저장 시점에서
