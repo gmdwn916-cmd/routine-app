@@ -358,10 +358,14 @@
       line-height: 1.55;
       color: var(--text-1);
       padding: 7px 0;
-      border-bottom: 1px solid var(--divider);
     }
 
-    .today-items > .swipe-delete-wrap:last-child li { border-bottom: none; }
+    /* 구분선은 li가 아니라 swipe-delete-wrap(overflow:hidden 컨테이너) 자신의 테두리로
+       그림 — li의 테두리는 wrap의 클리핑 경계와 서브픽셀 단위로 어긋날 수 있어
+       카드마다 아래 선이 있다 없다 하는 문제가 있었음(자기 자신의 border는
+       overflow:hidden에 안 잘리므로 이 방식이 항상 온전히 보임). */
+    .today-items > .swipe-delete-wrap { border-bottom: 1px solid var(--divider); }
+    .today-items > .swipe-delete-wrap:last-child { border-bottom: none; }
 
     .item-icon {
       font-size: 16px;
@@ -387,10 +391,10 @@
     #tab-today .today-items li {
       gap: 12px;
       padding: 10px 0;
-      border-bottom: 1px solid var(--divider);
       color: var(--text-1);
     }
-    #tab-today .today-items > .swipe-delete-wrap:last-child li { border-bottom: none; }
+    #tab-today .today-items > .swipe-delete-wrap { border-bottom: 1px solid var(--divider); }
+    #tab-today .today-items > .swipe-delete-wrap:last-child { border-bottom: none; }
     #tab-today .item-icon {
       width: 36px;
       height: 36px;
@@ -1583,7 +1587,6 @@
       align-items: center;
       gap: 12px;
       cursor: pointer;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.07);
       -webkit-tap-highlight-color: transparent;
       transition: background 0.12s;
     }
@@ -6143,6 +6146,10 @@
         card.style.marginBottom = '0';
         wrap.style.marginBottom = '8px';
         wrap.style.borderRadius = '12px';
+        // 그림자는 card(overflow:hidden인 wrap의 자식)가 아니라 wrap 자신에 줌 —
+        // 자식의 box-shadow는 부모의 overflow:hidden에 걸려 카드마다 서브픽셀
+        // 오차로 있다 없다 했음. 자기 자신의 그림자는 overflow에 안 잘림.
+        wrap.style.boxShadow = '0 1px 3px rgba(0,0,0,0.07)';
         list.appendChild(wrap);
       });
     });
