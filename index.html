@@ -1640,16 +1640,13 @@
       padding: 4px 0;
     }
     .shift-alarm-name { font-size: 15px; font-weight: 600; color: var(--text-1); }
-    .shift-alarm-time {
-      border: 1.5px solid var(--line);
-      border-radius: 8px;
-      padding: 6px 8px;
-      font-size: 14px;
-      font-family: inherit;
-      background: var(--surface);
-      color: var(--text-1);
+    .shift-alarm-time-spin {
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
-    .shift-alarm-time:disabled { opacity: 0.4; }
+    .shift-alarm-time-spin.disabled { opacity: 0.4; }
+    .shift-alarm-time-spin .promote-interval-field { min-width: 34px; padding: 6px 2px; font-size: 15px; }
     .shift-alarm-toggle {
       border: 1.5px solid var(--line);
       background: none;
@@ -4683,6 +4680,54 @@
     });
   }
 
+  // 위아래로 밀어서 숫자를 바꾸는 스피너(근무유형별 알람의 시/분에 씀) — 기간/음력
+  // 스피너(setupIntervalSpinner 등)와 같은 조작 방식이지만, 그것들과 달리 이
+  // 칸들은 설정 화면을 열 때마다(근무유형 개수만큼) 새로 만들어지므로, 매번
+  // document에 새 리스너를 또 붙이면 열었다 닫았다 할 때마다 계속 쌓임(끌기
+  // 속도가 열 때마다 배로 빨라지는 버그). 그래서 move/end 리스너는 딱 한 번만
+  // (아래 즉시실행함수) 등록해두고, 어떤 칸을 끌고 있는지는 공용 변수
+  // numberSpinnerDrag로 추적 — bindNumberSpinner 자체는 몇 번을 다시 불러도
+  // (각 칸의 touchstart/mousedown만 새로 붙는 것이라) 안전함.
+  let numberSpinnerDrag = null;
+  function bindNumberSpinner(el, getVal, setVal, min, max, onCommit) {
+    function start(y) {
+      numberSpinnerDrag = { getVal: getVal, setVal: setVal, min: min, max: max, lastY: y, accum: 0, onCommit: onCommit };
+    }
+    el.addEventListener('touchstart', function (e) { start(e.touches[0].clientY); }, { passive: true });
+    el.addEventListener('mousedown', function (e) { start(e.clientY); });
+  }
+  (function () {
+    const STEP_PX = 24;
+    function move(y) {
+      const d = numberSpinnerDrag;
+      if (!d) return;
+      d.accum += d.lastY - y;
+      d.lastY = y;
+      while (d.accum >= STEP_PX) {
+        let v = d.getVal() + 1;
+        if (v > d.max) v = d.min;
+        d.setVal(v);
+        d.accum -= STEP_PX;
+      }
+      while (d.accum <= -STEP_PX) {
+        let v = d.getVal() - 1;
+        if (v < d.min) v = d.max;
+        d.setVal(v);
+        d.accum += STEP_PX;
+      }
+    }
+    function end() {
+      if (!numberSpinnerDrag) return;
+      const commit = numberSpinnerDrag.onCommit;
+      numberSpinnerDrag = null;
+      if (commit) commit();
+    }
+    document.addEventListener('touchmove', function (e) { if (numberSpinnerDrag) { move(e.touches[0].clientY); e.preventDefault(); } }, { passive: false });
+    document.addEventListener('touchend', end, { passive: true });
+    document.addEventListener('mousemove', function (e) { move(e.clientY); });
+    document.addEventListener('mouseup', end);
+  })();
+
   // ── 근무유형별 알람 (설치된 앱에서만 동작 — 웹은 안내만 보여줌) ──
   function isNativeApp() {
     return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
@@ -4722,16 +4767,37 @@
       nameEl.className = 'shift-alarm-name';
       nameEl.textContent = name;
 
-      const timeInput = document.createElement('input');
-      timeInput.type = 'time';
-      timeInput.className = 'shift-alarm-time';
-      timeInput.value = rule.time;
-      timeInput.disabled = !rule.enabled;
-      timeInput.addEventListener('change', function () {
-        rule.time = timeInput.value;
+      const parts = rule.time.split(':');
+      let hh = parseInt(parts[0], 10) || 0;
+      let mm = parseInt(parts[1], 10) || 0;
+
+      const timeWrap = document.createElement('div');
+      timeWrap.className = 'shift-alarm-time-spin' + (rule.enabled ? '' : ' disabled');
+
+      const hourEl = document.createElement('div');
+      hourEl.className = 'promote-interval-field';
+      hourEl.textContent = String(hh).padStart(2, '0');
+
+      const sep = document.createElement('span');
+      sep.className = 'promote-interval-unit';
+      sep.textContent = ':';
+
+      const minEl = document.createElement('div');
+      minEl.className = 'promote-interval-field';
+      minEl.textContent = String(mm).padStart(2, '0');
+
+      function commitTime() {
+        rule.time = String(hh).padStart(2, '0') + ':' + String(mm).padStart(2, '0');
         saveState();
         scheduleShiftAlarms();
-      });
+      }
+
+      bindNumberSpinner(hourEl, function () { return hh; }, function (v) { hh = v; hourEl.textContent = String(hh).padStart(2, '0'); }, 0, 23, commitTime);
+      bindNumberSpinner(minEl, function () { return mm; }, function (v) { mm = v; minEl.textContent = String(mm).padStart(2, '0'); }, 0, 59, commitTime);
+
+      timeWrap.appendChild(hourEl);
+      timeWrap.appendChild(sep);
+      timeWrap.appendChild(minEl);
 
       const toggleBtn = document.createElement('button');
       toggleBtn.type = 'button';
@@ -4739,7 +4805,7 @@
       toggleBtn.textContent = rule.enabled ? '켜짐' : '꺼짐';
       toggleBtn.addEventListener('click', function () {
         rule.enabled = !rule.enabled;
-        timeInput.disabled = !rule.enabled;
+        timeWrap.classList.toggle('disabled', !rule.enabled);
         toggleBtn.classList.toggle('is-on', rule.enabled);
         toggleBtn.textContent = rule.enabled ? '켜짐' : '꺼짐';
         saveState();
@@ -4747,7 +4813,7 @@
       });
 
       rowTop.appendChild(nameEl);
-      rowTop.appendChild(timeInput);
+      rowTop.appendChild(timeWrap);
       rowTop.appendChild(toggleBtn);
       row.appendChild(rowTop);
       card.appendChild(row);
