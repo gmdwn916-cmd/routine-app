@@ -87,8 +87,32 @@ public class MonthCalendarWidgetProvider extends AppWidgetProvider {
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
         views.setOnClickPendingIntent(idFor(context, "widget_month_root"), openPending);
-        views.setOnClickPendingIntent(idFor(context, "nav_prev"), navPendingIntent(context, ACTION_PREV, 1));
-        views.setOnClickPendingIntent(idFor(context, "nav_next"), navPendingIntent(context, ACTION_NEXT, 2));
+
+        // 화살표 글자 대신, 월요일 쪽 세로 전체(헤더+6줄 그리드)를 누르면 이전
+        // 달, 일요일 쪽 세로 전체를 누르면 다음 달로 넘어가게 함(스케줄 위젯과
+        // 동일한 방식) — 어느 열이 월/일요일인지는 JS가 넘겨준 sunCol로 계산
+        // ("일요일 바로 다음 칸이 항상 월요일"이라는 항등식, weekStart 무관).
+        int sunColForNav = 6;
+        {
+            SharedPreferences navPrefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            String navRaw = navPrefs.getString(KEY_MONTH_DATA, null);
+            if (navRaw != null) {
+                try {
+                    sunColForNav = new JSONObject(navRaw).optInt("sunCol", 6);
+                } catch (Exception e) {
+                    // 무시 — 기본값 사용
+                }
+            }
+        }
+        int mondayCol = (sunColForNav + 1) % 7;
+        PendingIntent prevPending = navPendingIntent(context, ACTION_PREV, 1);
+        PendingIntent nextPending = navPendingIntent(context, ACTION_NEXT, 2);
+        views.setOnClickPendingIntent(idFor(context, "header_" + mondayCol), prevPending);
+        views.setOnClickPendingIntent(idFor(context, "header_" + sunColForNav), nextPending);
+        for (int row = 0; row < 6; row++) {
+            views.setOnClickPendingIntent(idFor(context, "cell_container_" + (row * 7 + mondayCol)), prevPending);
+            views.setOnClickPendingIntent(idFor(context, "cell_container_" + (row * 7 + sunColForNav)), nextPending);
+        }
 
         int primaryText = ContextCompat.getColor(context, R.color.widget_text_primary);
         int secondaryText = ContextCompat.getColor(context, R.color.widget_text_secondary);
