@@ -526,10 +526,18 @@
     .cat-picker-menu-item.active { background: var(--surface-2); font-weight: 600; }
 
     /* ── 일별 상세 패널 ── */
+    /* 하단 전역 빠른 추가 바 + 미배치 버튼(#bottom-fixed)이 있는 자리(156px,
+       .tab-content 바닥 여백과 같은 값)는 이 오버레이가 덮지 않게 남겨둠 —
+       날짜 상세를 보면서도 그 바가 계속 보이고 눌려야, 그 자리에 바로 입력해
+       이 날짜에 추가하거나 할 일을 꾹 눌러 드래그해서 미배치 버튼에 놓을 수
+       있음(둘 다 날짜 상세가 떠 있는 채로 하는 동작이라 바가 가려지면 안 됨). */
     #day-detail-overlay {
       display: none;
       position: fixed;
-      inset: 0;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 156px;
       background: rgba(0,0,0,0.4);
       z-index: 40;
       align-items: flex-end;
@@ -544,7 +552,7 @@
       max-width: 480px;
       border-radius: 20px 20px 0 0;
       padding: 20px 20px calc(36px + env(safe-area-inset-bottom, 0));
-      max-height: 80vh;
+      max-height: min(80vh, calc(100vh - 156px));
       overflow-y: auto;
     }
 
