@@ -436,9 +436,12 @@
     110dp(2칸 크기)까지 낮춤 — resizeMode="horizontal|vertical"은 이미 있었어서
     최소 크기만 낮추면 2x2까지 줄일 수 있음(위쪽 한계는 안 정해둬서 런처 grid가
     허용하는 한 계속 키울 수 있음). 기본 크기(처음 추가했을 때, targetCellWidth/
-    Height)는 보기 좋으라고 4x4로 둠 — 다시 최소 크기를 250dp 근처로 올리지
-    말 것(2x2로 못 줄어들게 됨). 좁은 너비에서도 안 깨지게 today_date에
-    maxLines="1"/ellipsize="end" 추가함(이전엔 없었음).
+    Height)는 한 번은 4x4였다가, "위젯 넣는 화면에서 기본이 4x4로 돼있다"는
+    피드백으로 같은 날 다시 2x2로 바꿈(targetCellWidth/Height=2) — 최소
+    크기와 기본 크기를 똑같이 2x2로 맞춘 것. 다시 최소 크기를 250dp 근처로
+    올리거나 기본 크기를 4x4 등으로 키우지 말 것(사용자가 명시적으로 2x2
+    기본을 원함, 크게 쓰고 싶으면 직접 리사이즈하면 됨). 좁은 너비에서도 안
+    깨지게 today_date에 maxLines="1"/ellipsize="end" 추가함(이전엔 없었음).
 
 ## 위젯 2·3·4 다크/라이트 모드 배경-글자색 어긋남 버그(2026-07-14 수정)
 - 증상: 시스템이 라이트 모드인데 위젯 안 날짜 글자가 흰색으로 나와서 흰
@@ -481,8 +484,11 @@
     `android:label`을 달아줌(안드로이드가 위젯 선택 화면에 보여주는 이름은 앱
     자체 라벨이 아니라 이 리시버의 label을 씀) — QuickAddWidgetProvider="할 일
     추가", MonthCalendarWidgetProvider="달력", ScheduleWidgetProvider="스케줄",
-    TodayWidgetProvider="오늘 할일", InboxWidgetProvider="미배치"(2026-07-14
-    추가). **ScheduleWidgetProvider는 사용자가 말한 "일정" 대신 "스케줄"로
+    TodayWidgetProvider="오늘 할일", InboxWidgetProvider="미배치 목록"(2026-07-14
+    추가, 처음엔 "미배치"였다가 같은 날 "미배치 목록"으로 다시 바뀜 — 위젯
+    안 제목(inbox_title)도 같이 맞춰서 "미배치 목록"으로 바꿔뒀음, 픽커
+    라벨과 위젯 안 제목이 다르면 헷갈리니 항상 같이 바꿀 것).
+    **ScheduleWidgetProvider는 사용자가 말한 "일정" 대신 "스케줄"로
     붙임** — 이 프로젝트는 "일정"이라는 표현 자체를 안 쓰기로 정해뒀어서(용어
     통일 규칙 참고) 위젯 이름에도 그 규칙을 그대로 지킴. "일정"이 아니라 다른
     표현이 필요하면 그때 다시 정할 것.
@@ -542,7 +548,9 @@
 - **크기(2026-07-14, 위젯 4와 함께 자유 리사이즈로 변경)**: minWidth/minHeight를
   110dp(2칸 크기)로 둬서 2x2까지 줄일 수 있고, 위쪽 한계는 안 정해서 런처
   grid가 허용하는 한 계속 키울 수 있음(resizeMode="horizontal|vertical").
-  기본 크기(처음 추가할 때)는 4x4.
+  기본 크기(처음 추가할 때, targetCellWidth/Height)는 2x2 — 최소 크기와 같게
+  맞춤(위젯 4와 같은 이유로 4x4였다가 2x2로 바뀜, 자세한 사정은 위젯 4 항목
+  참고).
 
 ## 용어 (통일 — 혼동 금지)
 - 할 일 = state.events[] 전체. 반복이 꺼져 있으면 한 번짜리(특정 날짜),

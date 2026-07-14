@@ -85,7 +85,7 @@ public class InboxWidgetProvider extends AppWidgetProvider {
 
         int primaryText = ContextCompat.getColor(context, R.color.widget_text_primary);
         int secondaryText = ContextCompat.getColor(context, R.color.widget_text_secondary);
-        views.setTextViewText(idFor(context, "inbox_title"), "미배치");
+        views.setTextViewText(idFor(context, "inbox_title"), "미배치 목록");
         views.setTextColor(idFor(context, "inbox_title"), primaryText);
         views.setTextViewText(idFor(context, "inbox_count"), "");
         views.setTextColor(idFor(context, "inbox_count"), secondaryText);

@@ -102,7 +102,7 @@
         <!-- 미배치 위젯(읽기 전용) -->
         <receiver
             android:name=".InboxWidgetProvider"
-            android:label="미배치"
+            android:label="미배치 목록"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
