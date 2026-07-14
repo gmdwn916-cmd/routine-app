@@ -7,6 +7,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.widget.RemoteViews;
 
@@ -94,6 +95,18 @@ public class ScheduleWidgetProvider extends AppWidgetProvider {
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
         views.setOnClickPendingIntent(idFor(context, "widget_schedule_root"), openPending);
+
+        // 배경을 XML의 @drawable/widget_background로 그냥 두면 홈 화면 런처가
+        // "그 순간 자신의" 다크/라이트 상태로 실시간 재해석해서 그리는데, 글자색은
+        // 우리 앱이 마지막으로 push한 순간의 다크/라이트 상태로 이미 확정돼 심어짐 —
+        // 그 사이 시스템 다크/라이트가 바뀌면 배경만 새 상태로 바뀌고 글자색은
+        // 예전 상태로 남아 어긋날 수 있음(예: 라이트로 바뀐 흰 배경 위에 다크 모드
+        // 때 심어둔 흰 글자가 그대로 남아 안 보이는 사고). 배경도 글자색과 완전히
+        // 같은 순간·같은 판단(isDark)으로 우리가 직접 골라 심어서 항상 맞게 함.
+        boolean isDark = (context.getResources().getConfiguration().uiMode
+            & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
+        views.setInt(idFor(context, "widget_schedule_root"), "setBackgroundResource",
+            isDark ? R.drawable.widget_background_dark : R.drawable.widget_background_light);
 
         int primaryText = ContextCompat.getColor(context, R.color.widget_text_primary);
         int secondaryText = ContextCompat.getColor(context, R.color.widget_text_secondary);

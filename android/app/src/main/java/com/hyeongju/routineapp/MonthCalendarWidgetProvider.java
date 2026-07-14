@@ -7,6 +7,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.widget.RemoteViews;
 
@@ -87,6 +88,21 @@ public class MonthCalendarWidgetProvider extends AppWidgetProvider {
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
         views.setOnClickPendingIntent(idFor(context, "widget_month_root"), openPending);
+
+        // 배경을 XML의 @drawable/widget_background(안에서 @color/widget_bg를 참조)로
+        // 그냥 두면, 그 색은 이 위젯을 그리는 홈 화면 런처가 "런처 자신의 그 순간
+        // 다크/라이트 상태"로 실시간으로 다시 해석해서 그림 — 반면 글자색(아래
+        // primaryText 등)은 우리 앱이 마지막으로 push했을 때의 다크/라이트 상태로
+        // 이미 확정된 값을 그대로 심어서 보냄. 그래서 마지막 push 이후에 시스템
+        // 다크/라이트가 바뀌면 배경은 새 상태로 바로 바뀌는데 글자색은 예전 상태
+        // 그대로 남아서(예: 라이트로 바뀐 배경 위에 다크 모드 때 심어둔 흰 글자가
+        // 그대로 남아 안 보이는 사고) 서로 어긋날 수 있음. 그래서 배경도 글자색과
+        // 완전히 같은 순간·같은 판단(isDark)으로 우리가 직접 골라서 심어버림 —
+        // 이러면 최소한 배경과 글자는 항상 같은 상태로 맞아 있음이 보장됨.
+        boolean isDark = (context.getResources().getConfiguration().uiMode
+            & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
+        views.setInt(idFor(context, "widget_month_root"), "setBackgroundResource",
+            isDark ? R.drawable.widget_background_dark : R.drawable.widget_background_light);
 
         // 화살표 글자 대신, 월요일 쪽 세로 전체(헤더+6줄 그리드)를 누르면 이전
         // 달, 일요일 쪽 세로 전체를 누르면 다음 달로 넘어가게 함(스케줄 위젯과
