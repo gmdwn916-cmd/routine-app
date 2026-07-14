@@ -1,16 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_quick_add_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/widget_background">
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
+    android:background="@drawable/widget_background"
+    android:paddingTop="4dp">
+
+    <TextView
+        android:id="@+id/quick_add_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:textColor="@color/widget_text_primary"
+        android:textSize="11sp"
+        android:text="할 일 추가" />
 
     <ImageButton
         android:id="@+id/widget_add_button"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:src="@drawable/ic_widget_add"
         android:background="@android:color/transparent"
         android:scaleType="centerInside"
         android:contentDescription="할 일 추가" />
 
-</FrameLayout>
+</LinearLayout>

@@ -37,6 +37,7 @@
         <!-- 빠른 할일 추가 위젯 -->
         <receiver
             android:name=".QuickAddWidgetProvider"
+            android:label="할 일 추가"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -58,6 +59,7 @@
         <!-- 이번 달 달력 위젯(읽기 전용) -->
         <receiver
             android:name=".MonthCalendarWidgetProvider"
+            android:label="달력"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -70,6 +72,7 @@
         <!-- N주 스케줄 위젯(읽기 전용) -->
         <receiver
             android:name=".ScheduleWidgetProvider"
+            android:label="스케줄"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -82,6 +85,7 @@
         <!-- 오늘 전체 관리 위젯(체크 가능) -->
         <receiver
             android:name=".TodayWidgetProvider"
+            android:label="오늘 할일"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
