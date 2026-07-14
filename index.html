@@ -7219,24 +7219,16 @@
       }
     });
   }
-  if (isNativeApp() && window.capacitorLocalNotifications) {
-    const LN = window.capacitorLocalNotifications.LocalNotifications;
-    // 2026-07-14 버그 수정: importance가 안드로이드에 정식으로 없는 값(5)이었고
-    // (정식 최댓값은 4=IMPORTANCE_HIGH), vibrate를 안 줘서 기본값(false)으로
-    // 진동이 꺼져 있었음 — 무음/진동 모드일 때 완전히 안 울리는 원인이 될 수
-    // 있어서 명시적으로 켬. "소리·진동으로 알려줘요"라고 안내 문구에 이미
-    // 써뒀던 것과 실제 동작을 맞춤.
-    LN.createChannel({
-      id: 'shift-alarm',
-      name: '근무 알람',
-      description: '근무유형별로 설정한 알람',
-      importance: 4,
-      visibility: 1,
-      vibrate: true,
-    }).catch(function () {}).then(function () {
-      scheduleShiftAlarms();
-    });
-  }
+  // 2026-07-14: 알림 채널("shift-alarm") 생성은 MainActivity.ensureAlarmChannel()로
+  // 옮김 — 무음/진동 모드에서도 항상 소리로 울리게 하려면 안드로이드의
+  // AudioAttributes.USAGE_ALARM(진짜 알람시계 앱들이 쓰는 방식)으로 채널을
+  // 만들어야 하는데, @capacitor/local-notifications 플러그인의 createChannel()은
+  // 이 값을 USAGE_NOTIFICATION으로 고정해서 만들도록 네이티브 코드에 하드코딩돼
+  // 있어 JS에서 바꿀 방법이 없음. 여기서 다시 LN.createChannel()을 부르지 말 것
+  // (같은 id라 무시되긴 하지만, 어느 쪽이 진짜 설정인지 헷갈리게 됨).
+  // scheduleShiftAlarms()가 isNativeApp() 아니면 스스로 조용히 빠져나가므로
+  // 여기서 따로 감싸지 않음.
+  scheduleShiftAlarms();
 </script>
 </body>
 </html>

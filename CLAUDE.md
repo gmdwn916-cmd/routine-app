@@ -141,33 +141,54 @@
   _scheduledAlarmIds(직전에 우리가 예약한 id 목록, state에 저장해둠)를 먼저
   취소하고 새로 깜 — 플러그인이 돌려주는 예약 목록에 의존하지 않고 우리가
   직접 추적하는 방식이라 더 확실함.
-  알림 채널은 앱 초기화 시 한 번 생성(id: 'shift-alarm').
   권한 요청(ensureAlarmPermission)은 예약 직전에 매번 확인 — 이미 허용돼
   있으면 다시 안 물어봄.
-- **"알람이 제대로 안 울림" 버그 수정(2026-07-14)**: 사용자 신고로 찾은 진짜
-  원인 세 가지, 전부 @capacitor/local-notifications 플러그인의 안드로이드
-  네이티브 코드(node_modules 안의 실제 구현)를 직접 열어서 확인함:
+- **알림 채널("shift-alarm") 생성 위치(2026-07-14 최종 확정)**: index.html의
+  JS가 아니라 MainActivity.ensureAlarmChannel()에서 안드로이드 API로 직접
+  만듦(@capacitor/local-notifications의 createChannel()은 더 이상 안 씀) —
+  이유는 아래 "항상 소리로 울리게" 항목 참고. 앱을 켤 때(onCreate)마다 기존
+  채널을 지우고 새로 만듦(안드로이드는 채널을 한 번 만들면 소리/중요도 같은
+  속성을 나중에 못 바꾸므로, 예전 버전이 만들어둔 잘못된 설정의 채널이 남아
+  있을 수 있어 매번 지우고 새로 만드는 것 — 가벼운 작업이라 매번 해도 문제없음).
+  JS 쪽에서 다시 LN.createChannel()을 부르지 말 것(같은 id라 무시되긴 하지만
+  어느 쪽이 진짜 설정인지 헷갈리게 됨) — index.html 초기화 코드는 이제
+  scheduleShiftAlarms()만 바로 부름(채널은 이미 웹뷰가 뜨기 전에 네이티브가
+  만들어둔 상태).
+- **"알람이 제대로 안 울림" 버그 수정(2026-07-14)**: 사용자 신고로 찾은 원인들,
+  @capacitor/local-notifications 플러그인의 안드로이드 네이티브 코드
+  (node_modules 안의 실제 구현)를 직접 열어서 확인함:
   1) 알림 채널 importance를 5로 줬었는데, 안드로이드 NotificationManager의
-     정식 중요도 값은 0~4뿐(4=IMPORTANCE_HIGH가 최댓값, 5는 정식으로 없는
-     값) — 기기/버전에 따라 다르게 처리될 수 있는 값이라 4로 고침.
+     정식 중요도 값은 0~4뿐(4=IMPORTANCE_HIGH가 최댓값, 5는 정식으로 없는 값).
   2) createChannel 호출에 vibrate를 안 줬었는데, 플러그인 기본값이 false라
-     진동이 꺼진 채로 채널이 만들어지고 있었음(안내 문구는 "소리·진동으로
-     알려줘요"라고 해놓고 실제로는 진동이 꺼져 있었음) — vibrate:true 추가.
-  3) **제일 결정적인 원인**: 각 알람의 schedule에 allowWhileIdle을 안 줬었는데,
-     플러그인 기본값이 false라 기기가 Doze(절전) 상태일 때 그냥 미뤄지는
-     기본 예약 방식(AlarmManager.set/setExact)으로만 잡히고 있었음 — 특히
-     정확한 알람 권한이 없는 안드로이드 12+ 기기에서는 이게 가장 약한 예약
-     방식이라 많이 늦거나 사실상 안 울리는 것처럼 느껴질 수 있었음.
-     schedule에 allowWhileIdle:true를 추가해서 Doze 중에도 깨우는 방식
-     (setExactAndAllowWhileIdle/setAndAllowWhileIdle)을 쓰게 함 — 정밀 알람
-     권한 없이도 훨씬 안정적으로 울림.
-  **한계(여전히 남음, 1차 버전)**: SCHEDULE_EXACT_ALARM 권한(안드로이드 12+
-  기기에서 "정확한 알람" 특별 권한)까지 요청하는 건 이번 수정 범위 밖 —
-  allowWhileIdle만으로도 대부분 상황에서 눈에 띄게 나아지지만, 정말 초 단위로
-  정확한 시각이 필요하면 나중에 이 권한 요청 흐름을 추가로 검토할 것. 화면을
-  깨우는 풀스크린 알람 스타일(진짜 알람시계처럼 잠금화면 위로 뜨는 것)도
-  아직 없음 — 지금은 일반 알림(소리+진동, 무음모드 무시 안 될 수 있음)까지만
-  구현.
+     진동이 꺼진 채로 채널이 만들어지고 있었음.
+  3) 각 알람의 schedule에 allowWhileIdle을 안 줬었는데, 플러그인 기본값이
+     false라 기기가 Doze(절전) 상태일 때 그냥 미뤄지는 기본 예약 방식
+     (AlarmManager.set/setExact)으로만 잡히고 있었음 — 특히 정확한 알람
+     권한이 없는 안드로이드 12+ 기기에서는 이게 가장 약한 예약 방식이라 많이
+     늦거나 사실상 안 울리는 것처럼 느껴질 수 있었음. schedule에
+     allowWhileIdle:true를 추가해서 Doze 중에도 깨우는 방식
+     (setExactAndAllowWhileIdle/setAndAllowWhileIdle)을 쓰게 함 — 지금도
+     scheduleShiftAlarms()에 이 설정이 남아있음.
+- **무음/진동 모드여도 항상 소리로 울리게(2026-07-14, 같은 날 후속 요청)**:
+  위 수정(1·2번)만으로는 여전히 부족했음 — @capacitor/local-notifications의
+  createChannel()이 채널 소리를 항상 AudioAttributes.USAGE_NOTIFICATION으로
+  고정해서 만들도록 네이티브 코드에 하드코딩돼 있어서(JS에서 바꿀 방법이
+  없음), 안드로이드가 무음/진동 모드일 때 이 알림을 그대로 존중해서 소리가
+  안 나거나 진동만 됨. 진짜 알람시계 앱들이 쓰는 방식(AudioAttributes.
+  USAGE_ALARM — 안드로이드가 무음/진동 모드와 별개로 취급하는 "알람" 전용
+  소리 스트림)으로 바꾸려면 플러그인을 거치지 않고 채널을 직접 만들어야 해서,
+  MainActivity.ensureAlarmChannel()로 채널 생성 자체를 옮김(위 항목 참고).
+  소리는 RingtoneManager로 시스템의 "기본 알람음"을 가져와 씀(전화벨/알림음이
+  아니라 알람음 — 사용자가 시스템 설정에서 알람음을 바꾸면 이 알람도 그
+  소리를 따라감). **한계**: 기기 자체의 "알람" 볼륨이 0으로 돼 있으면(무음/
+  진동 모드와는 별개의, 시스템 설정 안의 독립된 볼륨 슬라이더) 그때는 진짜
+  알람시계 앱도 마찬가지로 소리가 안 남 — 이건 사용자가 직접 그 볼륨을
+  올려야 하는, 앱이 어떻게 할 수 없는 부분.
+  **남은 한계(1차 버전)**: SCHEDULE_EXACT_ALARM 권한(안드로이드 12+ 기기에서
+  "정확한 알람" 특별 권한)까지 요청하는 건 아직 안 함 — allowWhileIdle만으로도
+  대부분 상황에서 눈에 띄게 나아지지만, 정말 초 단위로 정확한 시각이 필요하면
+  나중에 이 권한 요청 흐름을 추가로 검토할 것. 화면을 깨우는 풀스크린 알람
+  스타일(진짜 알람시계처럼 잠금화면 위로 뜨는 것)도 아직 없음.
 
 ## 배포
 - GitHub Pages. 저장소 routine-app.
