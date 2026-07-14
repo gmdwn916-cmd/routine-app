@@ -212,6 +212,16 @@
       border: 1.5px solid var(--line);
       background: var(--surface-2);
       color: var(--text-1);
+      transition: transform 0.15s ease;
+    }
+
+    /* 날짜 지정된 할 일을 꾹 눌러 드래그해서 이 버튼 위에 올리면(미배치로
+       되돌리기) 붙는 강조 표시. */
+    #btn-inbox-open.drop-hover {
+      background: rgba(0,122,255,0.15);
+      border-color: #007aff;
+      color: #007aff;
+      transform: scale(1.15);
     }
 
     #btn-inbox-open svg {
@@ -726,42 +736,6 @@
       flex-shrink: 0;
     }
     #promote-important-btn.is-on { border-color: #ff9500; }
-
-    .dd-add-row {
-      display: flex;
-      gap: 8px;
-      margin-top: 10px;
-      align-items: center;
-    }
-
-    .dd-add-row input {
-      flex: 1;
-      min-width: 0;
-      padding: 9px 12px;
-      border: 1.5px solid var(--line);
-      border-radius: 10px;
-      font-size: 14px;
-      font-family: inherit;
-      background: var(--surface-2);
-      color: var(--text-1);
-      outline: none;
-    }
-
-    .dd-add-row input:focus { border-color: #007aff; }
-
-    .btn-dd-add {
-      padding: 9px 14px;
-      background: #007aff;
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      font-size: 14px;
-      font-weight: 600;
-      font-family: inherit;
-      cursor: pointer;
-      flex-shrink: 0;
-      white-space: nowrap;
-    }
 
     /* 달력·오늘 탭의 일정 칩 */
     .cell-event-chip {
@@ -2593,11 +2567,6 @@
         <button type="button" class="today-events-toggle" id="dd-events-toggle"></button>
       </div>
       <div id="dd-events-list"></div>
-      <div class="dd-add-row">
-        <input type="text" id="dd-event-input" placeholder="할 일 추가…" maxlength="50">
-        <button class="btn-dd-add" id="btn-dd-add-event">추가</button>
-      </div>
-      <div class="onboard-warn" id="dd-warn"></div>
     </div>
     <div class="btn-row" style="padding-top:4px">
       <button class="btn btn-secondary" id="btn-dd-close">닫기</button>
@@ -3897,7 +3866,7 @@
       const handle = document.createElement('span');
       handle.className = 'item-drag-handle';
       handle.textContent = '≡';
-      handle.setAttribute('aria-label', '순서/시간대 변경');
+      handle.setAttribute('aria-label', opts.dragHandleLabel || '순서/시간대 변경');
       li.appendChild(handle);
     }
 
@@ -3925,15 +3894,86 @@
     });
 
     oneTimeItems.forEach(function (ev) {
-      const li = buildTodoRow('onetime', ev, dateStr, refreshFn);
-      ul.appendChild(wrapWithSwipeToDelete(li, bgVar, function () {
+      // 날짜 지정된(배치된) 할 일이라 손잡이를 꾹 눌러 드래그하면 하단 "미배치"
+      // 버튼 위에 놓아 날짜 지정을 없애고 미배치로 돌려보낼 수 있음 — 반복
+      // 할일은 애초에 특정 날짜에 배치된 게 아니라서 이 손잡이가 없음.
+      const li = buildTodoRow('onetime', ev, dateStr, refreshFn, { dragHandle: true, dragHandleLabel: '미배치로 보내기' });
+      const wrap = wrapWithSwipeToDelete(li, bgVar, function () {
         state.events = state.events.filter(function (e) { return e !== ev; });
         saveState();
         refreshFn();
-      }));
+      });
+      const handle = li.querySelector('.item-drag-handle');
+      setupUnplaceDrag(handle, wrap, ev, refreshFn);
+      ul.appendChild(wrap);
     });
 
     containerEl.appendChild(ul);
+  }
+
+  // 날짜 상세에서 한 번짜리(날짜 지정) 할 일의 손잡이를 꾹 눌러 드래그해서
+  // 하단 "미배치" 버튼 위에 놓으면 날짜 지정을 없애고 미배치로 돌려보냄 —
+  // 순서를 바꾸는 게 아니라 놓을 곳이 딱 하나(미배치 버튼)뿐이라 setupInboxItemDrag/
+  // setupTimelineDrag와는 별도의 단순한 드래그(같은 꾹 눌러 드래그 방식만 재사용).
+  function setupUnplaceDrag(handleEl, wrapEl, ev, refreshFn) {
+    handleEl.addEventListener('touchstart', function (e) {
+      e.stopPropagation();
+      const startY = e.touches[0].clientY;
+      const startX = e.touches[0].clientX;
+      let dragging = false;
+      let clone = null;
+      let cloneStartTop = 0, cloneStartLeft = 0;
+      let overInboxBtn = false;
+      const inboxBtn = document.getElementById('btn-inbox-open');
+
+      const timer = setTimeout(function () {
+        dragging = true;
+        const rect = wrapEl.getBoundingClientRect();
+        cloneStartTop = rect.top;
+        cloneStartLeft = rect.left;
+        clone = wrapEl.cloneNode(true);
+        clone.style.cssText += ';position:fixed;left:' + rect.left + 'px;top:' + rect.top + 'px;width:' + rect.width + 'px;z-index:999;box-shadow:0 6px 24px rgba(0,0,0,0.18);pointer-events:none;opacity:0.95;background:var(--surface);border-radius:10px;';
+        document.body.appendChild(clone);
+        wrapEl.style.opacity = '0.2';
+        if (navigator.vibrate) navigator.vibrate(40);
+      }, 500);
+
+      function onMove(e) {
+        const touch = e.touches[0];
+        if (!dragging) {
+          if (Math.abs(touch.clientY - startY) > 8 || Math.abs(touch.clientX - startX) > 8) clearTimeout(timer);
+          return;
+        }
+        e.preventDefault();
+        clone.style.top = (cloneStartTop + touch.clientY - startY) + 'px';
+        clone.style.left = cloneStartLeft + 'px';
+
+        const hovered = document.elementFromPoint(touch.clientX, touch.clientY);
+        overInboxBtn = !!(hovered && inboxBtn.contains(hovered));
+        inboxBtn.classList.toggle('drop-hover', overInboxBtn);
+      }
+
+      function onEnd() {
+        clearTimeout(timer);
+        document.removeEventListener('touchmove', onMove);
+        document.removeEventListener('touchend', onEnd);
+        document.removeEventListener('touchcancel', onEnd);
+        if (!dragging) return;
+        dragging = false;
+        wrapEl.style.opacity = '1';
+        if (clone && clone.parentNode) { document.body.removeChild(clone); clone = null; }
+        inboxBtn.classList.remove('drop-hover');
+
+        if (overInboxBtn) {
+          unplaceEventToInbox(ev.id);
+          refreshFn();
+        }
+      }
+
+      document.addEventListener('touchmove', onMove, { passive: false });
+      document.addEventListener('touchend', onEnd, { passive: true });
+      document.addEventListener('touchcancel', onEnd, { passive: true });
+    }, { passive: true });
   }
 
   // ── 오늘 탭 타임라인(미정/오전/오후/밤) ──────────────────────
@@ -3992,7 +4032,7 @@
         });
         wrap.dataset.eventId = t.item.id;
         const handle = li.querySelector('.item-drag-handle');
-        setupTimelineDrag(handle, wrap, containerEl, refreshFn);
+        setupTimelineDrag(handle, wrap, containerEl, refreshFn, t.kind);
         ul.appendChild(wrap);
       });
 
@@ -4006,7 +4046,7 @@
   // 시간대 구역들 사이를 드래그해서 넘나들거나, 같은 구역 안에서 순서를 바꾸는 드래그.
   // 팀 순서 변경(setupLongPressDrag)과 같은 꾹 눌러서 드래그하는 방식 — 손잡이(handleEl)에서
   // 시작한 터치만 반응하도록 stopPropagation으로 스와이프 삭제 제스처와 완전히 분리한다.
-  function setupTimelineDrag(handleEl, wrapEl, rootEl, refreshFn) {
+  function setupTimelineDrag(handleEl, wrapEl, rootEl, refreshFn, kind) {
     handleEl.addEventListener('touchstart', function (e) {
       e.stopPropagation();
       const startY = e.touches[0].clientY;
@@ -4014,6 +4054,11 @@
       let dragging = false;
       let clone = null;
       let cloneStartTop = 0, cloneStartLeft = 0;
+      let overInboxBtn = false;
+      // 반복 할일은 애초에 특정 날짜에 "배치"된 게 아니라서(매번 규칙으로
+      // 계산됨) 미배치 버튼 위에 놓아도 아무 반응 없음 — 한 번짜리(날짜 지정)
+      // 할일만 대상.
+      const inboxBtn = kind === 'onetime' ? document.getElementById('btn-inbox-open') : null;
 
       const timer = setTimeout(function () {
         dragging = true;
@@ -4038,6 +4083,12 @@
         clone.style.left = cloneStartLeft + 'px';
 
         const hovered = document.elementFromPoint(touch.clientX, touch.clientY);
+
+        if (inboxBtn) {
+          overInboxBtn = !!(hovered && inboxBtn.contains(hovered));
+          inboxBtn.classList.toggle('drop-hover', overInboxBtn);
+        }
+
         const list = hovered ? hovered.closest('.timeline-section-list') : null;
         if (!list || !rootEl.contains(list)) return;
 
@@ -4061,6 +4112,13 @@
         dragging = false;
         wrapEl.style.opacity = '1';
         if (clone && clone.parentNode) { document.body.removeChild(clone); clone = null; }
+        if (inboxBtn) inboxBtn.classList.remove('drop-hover');
+
+        if (overInboxBtn) {
+          unplaceEventToInbox(wrapEl.dataset.eventId);
+          refreshFn();
+          return;
+        }
 
         const finalList = wrapEl.parentNode;
         if (finalList && finalList.classList.contains('timeline-section-list')) {
@@ -5408,9 +5466,6 @@
     showDoneDDEvents = false;
     renderDDTodos();
 
-    document.getElementById('dd-event-input').value = '';
-    document.getElementById('dd-warn').textContent = '';
-
     document.getElementById('day-detail-overlay').classList.add('open');
   }
 
@@ -5523,26 +5578,6 @@
     renderGrid();
     renderToday();
     pushAllWidgets();
-  });
-
-  document.getElementById('btn-dd-add-event').addEventListener('click', function () {
-    const input = document.getElementById('dd-event-input');
-    const warn = document.getElementById('dd-warn');
-    const text = input.value.trim();
-    if (!text) { warn.textContent = '할 일을 입력해 주세요.'; return; }
-    warn.textContent = '';
-
-    if (!Array.isArray(state.events)) { state.events = []; }
-    state.events.push({ id: genId('e'), date: detailDateStr, endDate: detailDateStr, text: text });
-    input.value = '';
-    saveState();
-    renderDDTodos();
-    renderGrid();
-    renderToday();
-  });
-
-  document.getElementById('dd-event-input').addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') { document.getElementById('btn-dd-add-event').click(); }
   });
 
   // ── 달력 월 이동 ──────────────────────────────────────────
@@ -5731,16 +5766,20 @@
     const text = input.value.trim();
     if (!text) return;
 
-    // 오늘 탭은 날짜가 정해진 화면이므로 미배치를 거치지 않고 오늘 날짜에 바로 배치한다.
+    // 날짜 상세 화면이 열려있거나 오늘 탭을 보고 있으면, 이미 날짜가 정해진
+    // 화면이므로 미배치를 거치지 않고 그 날짜에 바로 배치한다("넣기=놓기 동시").
+    // 날짜 상세가 열려있으면 그 날짜를 우선함(오늘 탭 위에 겹쳐 뜨는 일은 없지만,
+    // 화면에 실제로 보이는 쪽을 우선한다는 의미에서).
     const onTodayTab = document.getElementById('tab-today').classList.contains('active');
-    if (onTodayTab) {
-      const todayStr = formatDateStr(todayMidnight());
+    const targetDateStr = detailDateStr !== null ? detailDateStr : (onTodayTab ? formatDateStr(todayMidnight()) : null);
+    if (targetDateStr) {
       if (!Array.isArray(state.events)) state.events = [];
-      state.events.push({ id: genId('e'), date: todayStr, endDate: todayStr, text: text });
+      state.events.push({ id: genId('e'), date: targetDateStr, endDate: targetDateStr, text: text });
       input.value = '';
       saveState();
       renderToday();
       renderGrid();
+      if (detailDateStr !== null) renderDDTodos();
       return;
     }
 
@@ -5755,6 +5794,21 @@
   document.getElementById('quick-add-input').addEventListener('keydown', function (e) {
     if (e.key === 'Enter') submitQuickAdd();
   });
+
+  // 날짜 지정된(배치된) 한 번짜리 할 일을 미배치로 되돌림 — 반복 할일은 애초에
+  // 특정 날짜에 "배치"된 게 아니라(매번 규칙으로 계산됨) 이 동작 대상이 아님
+  // (호출부에서 onetime일 때만 씀). 미배치 항목은 date/endDate/done 같은 필드가
+  // 없는 완전히 다른 모양이라, 기존 항목을 고치는 게 아니라 지우고 새로 만든다.
+  function unplaceEventToInbox(eventId) {
+    const idx = (state.events || []).findIndex(function (e) { return e.id === eventId; });
+    if (idx === -1) return;
+    const ev = state.events[idx];
+    state.events.splice(idx, 1);
+    if (!Array.isArray(state.inbox)) state.inbox = [];
+    state.inbox.push({ id: genId('i'), text: ev.text, createdAt: Date.now() });
+    saveState();
+    renderInboxBadge();
+  }
 
   function formatYearMonth(year, month0) {
     return year + '-' + String(month0 + 1).padStart(2, '0');
