@@ -455,16 +455,6 @@
     }
     .timeline-section-list.empty::before { content: '여기로 끌어다 놓기'; }
 
-    .item-drag-handle {
-      font-size: 16px;
-      color: var(--text-3);
-      padding: 2px 6px;
-      cursor: grab;
-      touch-action: none;
-      flex-shrink: 0;
-      -webkit-tap-highlight-color: transparent;
-    }
-
     /* ── Category ── */
     .cat-select {
       display: inline-flex;
@@ -700,21 +690,10 @@
       will-change: transform;
     }
 
-    .btn-dd-repeat-event {
-      background: none;
-      border: 1.5px solid var(--line);
-      border-radius: 7px;
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--text-2);
-      cursor: pointer;
-      padding: 3px 8px;
-      font-family: inherit;
-      flex-shrink: 0;
-    }
-
-    .btn-dd-repeat-event:active { color: #007aff; border-color: #007aff; }
-
+    /* 할 일 줄에서는 이 버튼을 더 안 쓰지만(반복/중요/드래그 없앰), 반복 할일
+       편집 시트의 중요(★) 토글(#promote-important-btn)이 이 클래스를 그대로
+       가져다 쓰고 있어서 base 스타일은 남겨둠 — 지우면 그 버튼이 브라우저
+       기본 버튼 모양으로 깨짐. */
     .btn-important-toggle {
       background: none;
       border: none;
@@ -2664,6 +2643,10 @@
      position:fixed로 화면 좌표 기준으로 띄우면 어떤 조상의 overflow에도 안 잘림. -->
 <div id="promote-cat-menu" class="cat-picker-menu"></div>
 
+<!-- 할 일 줄의 텍스트를 탭하면 뜨는 (반복/중요/수정) 메뉴 — 위 카테고리 팝업과
+     같은 이유로 body 바로 아래, position:fixed. -->
+<div id="todo-item-menu" class="cat-picker-menu"></div>
+
 <!-- Capacitor 다리 스크립트 — 빌드 도구 없이 쓰는 방식이라 이렇게 직접 포함함.
      웹(깃허브 페이지)에서는 그냥 로드만 되고 아무 동작 안 함(Capacitor.isNativePlatform()
      이 false), 설치된 안드로이드 앱 안에서만 실제 알람 예약이 동작함. -->
@@ -3118,41 +3101,53 @@
     return ev.text;
   }
 
-  // 할 일 글씨를 누르면 그 자리에서 바로 텍스트를 고칠 수 있게 함(하루짜리 할 일 전용).
-  function makeEventTextEditable(textEl, ev, afterSave) {
-    textEl.style.cursor = 'pointer';
-    textEl.addEventListener('click', function () {
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.className = 'inline-edit-input';
-      input.maxLength = 50;
-      input.value = ev.text;
-      textEl.replaceWith(input);
-      input.focus();
-      input.select();
+  // 할 일 글씨를 그 자리에서 바로 텍스트 입력칸으로 바꿔서 고칠 수 있게 함
+  // (하루짜리 할 일 전용). 예전엔 텍스트를 누르는 즉시 이게 실행됐는데, 지금은
+  // 텍스트를 누르면 먼저 (반복/중요/수정) 메뉴가 뜨고 그 중 "수정"을 눌러야
+  // 이 함수가 호출됨(openTodoItemMenu 참고).
+  function startInlineTextEdit(textEl, ev, afterSave) {
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'inline-edit-input';
+    input.maxLength = 50;
+    input.value = ev.text;
+    textEl.replaceWith(input);
+    input.focus();
+    input.select();
 
-      let done = false;
-      function commit() {
-        if (done) return;
-        done = true;
-        const newText = input.value.trim();
-        if (newText && newText !== ev.text) {
-          ev.text = newText;
-          saveState();
-        }
-        afterSave();
+    let done = false;
+    function commit() {
+      if (done) return;
+      done = true;
+      const newText = input.value.trim();
+      if (newText && newText !== ev.text) {
+        ev.text = newText;
+        saveState();
       }
-      input.addEventListener('blur', commit);
-      input.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') input.blur();
-        else if (e.key === 'Escape') { done = true; afterSave(); }
-      });
+      afterSave();
+    }
+    input.addEventListener('blur', commit);
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') input.blur();
+      else if (e.key === 'Escape') { done = true; afterSave(); }
     });
   }
 
   // 아이폰처럼 왼쪽으로 쓸면 삭제 버튼이 나타나는 줄을 만든다.
   // rowEl을 감싼 wrap을 만들어 반환하므로, 호출하는 쪽은 rowEl 대신 이 wrap을 목록에 붙여야 한다.
-  function wrapWithSwipeToDelete(rowEl, bgVar, onDelete) {
+  // dragConfig(선택)를 주면 이 카드 자체를 꾹 눌러서 드래그하는 것도 같이 처리함
+  // (예전엔 별도의 작은 손잡이(≡)에만 붙어있던 드래그를 카드 전체로 옮긴 것,
+  // 2026-07-14) — 빠르게 움직이면(스와이프) 삭제, 가만히 500ms 누르고 있으면
+  // (롱프레스) 드래그로 갈리고, 둘 다 같은 wrap 위에서 동시에 판정하므로 하나의
+  // 상태 기계로 합쳐서 서로 안 부딪히게 함.
+  //   dragConfig: {
+  //     eventId: 이 카드가 드래그될 때 쓸 id,
+  //     refreshFn: 드래그(순서 변경/미배치 이동) 끝난 뒤 다시 그릴 함수,
+  //     enableInboxDrop: true면 하단 미배치 버튼 위에 놓았을 때 배치 해제,
+  //     rootEl: 있으면(오늘 탭 타임라인) 그 안의 .timeline-section-list로도 놓을 수 있어
+  //             구역 이동/순서 변경까지 함께 처리(날짜 상세에는 이 자리 자체가 없음).
+  //   }
+  function wrapWithSwipeToDelete(rowEl, bgVar, onDelete, dragConfig) {
     const REVEAL = 72;
     const wrap = document.createElement('div');
     wrap.className = 'swipe-delete-wrap';
@@ -3171,53 +3166,127 @@
     wrap.appendChild(rowEl);
 
     let open = false;
-    let startX = 0, startY = 0, dx = 0, dragging = false, decided = false, horizontal = false;
+    let startX = 0, startY = 0, dx = 0;
+    let mode = null; // null(미정) | 'swipe' | 'drag' | 'none'
+    let longPressTimer = null;
+    let clone = null, cloneStartTop = 0, cloneStartLeft = 0;
+    let overInboxBtn = false;
+    const inboxBtn = (dragConfig && dragConfig.enableInboxDrop) ? document.getElementById('btn-inbox-open') : null;
 
     function setX(x) { rowEl.style.transform = 'translateX(' + x + 'px)'; }
 
     wrap.addEventListener('touchstart', function (e) {
       startX = e.touches[0].clientX;
       startY = e.touches[0].clientY;
-      dragging = true; decided = false; horizontal = false;
+      mode = null;
       rowEl.style.transition = 'none';
+
+      if (dragConfig) {
+        longPressTimer = setTimeout(function () {
+          mode = 'drag';
+          const rect = wrap.getBoundingClientRect();
+          cloneStartTop = rect.top;
+          cloneStartLeft = rect.left;
+          clone = wrap.cloneNode(true);
+          clone.style.cssText += ';position:fixed;left:' + rect.left + 'px;top:' + rect.top + 'px;width:' + rect.width + 'px;z-index:999;box-shadow:0 6px 24px rgba(0,0,0,0.18);pointer-events:none;opacity:0.95;background:var(--surface);border-radius:10px;';
+          document.body.appendChild(clone);
+          wrap.style.opacity = '0.2';
+          if (navigator.vibrate) navigator.vibrate(40);
+        }, 500);
+      }
     }, { passive: true });
 
     wrap.addEventListener('touchmove', function (e) {
-      if (!dragging) return;
       const t = e.touches[0];
       const mdx = t.clientX - startX;
       const mdy = t.clientY - startY;
-      if (!decided) {
-        if (Math.abs(mdx) < 6 && Math.abs(mdy) < 6) return;
-        decided = true;
-        horizontal = Math.abs(mdx) > Math.abs(mdy);
-        if (!horizontal) { dragging = false; return; }
-        delBtn.style.visibility = 'visible';
+
+      if (mode === null) {
+        if (Math.abs(mdx) < 6 && Math.abs(mdy) < 6) return; // 아직 판단 보류 — 롱프레스로 붙잡고 있는 중일 수 있음
+        clearTimeout(longPressTimer);
+        mode = Math.abs(mdx) > Math.abs(mdy) ? 'swipe' : 'none';
+        if (mode === 'swipe') delBtn.style.visibility = 'visible';
       }
-      if (!horizontal) return;
-      e.preventDefault();
-      let x = (open ? -REVEAL : 0) + mdx;
-      x = Math.max(-REVEAL, Math.min(0, x));
-      dx = x;
-      setX(x);
+
+      if (mode === 'swipe') {
+        e.preventDefault();
+        let x = (open ? -REVEAL : 0) + mdx;
+        x = Math.max(-REVEAL, Math.min(0, x));
+        dx = x;
+        setX(x);
+        return;
+      }
+
+      if (mode === 'drag') {
+        e.preventDefault();
+        clone.style.top = (cloneStartTop + t.clientY - startY) + 'px';
+        clone.style.left = cloneStartLeft + 'px';
+
+        const hovered = document.elementFromPoint(t.clientX, t.clientY);
+
+        if (inboxBtn) {
+          overInboxBtn = !!(hovered && inboxBtn.contains(hovered));
+          inboxBtn.classList.toggle('drop-hover', overInboxBtn);
+        }
+
+        if (dragConfig.rootEl) {
+          const list = hovered ? hovered.closest('.timeline-section-list') : null;
+          if (list && dragConfig.rootEl.contains(list)) {
+            const siblings = Array.from(list.children).filter(function (c) { return c !== wrap; });
+            let insertBefore = null;
+            for (let s = 0; s < siblings.length; s++) {
+              const sr = siblings[s].getBoundingClientRect();
+              if (t.clientY < sr.top + sr.height / 2) { insertBefore = siblings[s]; break; }
+            }
+            if (insertBefore) list.insertBefore(wrap, insertBefore);
+            else list.appendChild(wrap);
+            refreshTimelineEmptyStates(dragConfig.rootEl);
+          }
+        }
+      }
     }, { passive: false });
 
-    function endDrag() {
-      if (!dragging) return;
-      dragging = false;
-      if (!decided) return;
-      rowEl.style.transition = 'transform 0.18s ease';
-      if (dx < -REVEAL / 2) {
-        setX(-REVEAL);
-        open = true;
-      } else {
-        setX(0);
-        open = false;
-        delBtn.style.visibility = 'hidden';
+    function endGesture() {
+      clearTimeout(longPressTimer);
+
+      if (mode === 'swipe') {
+        rowEl.style.transition = 'transform 0.18s ease';
+        if (dx < -REVEAL / 2) {
+          setX(-REVEAL);
+          open = true;
+        } else {
+          setX(0);
+          open = false;
+          delBtn.style.visibility = 'hidden';
+        }
+      } else if (mode === 'drag') {
+        wrap.style.opacity = '1';
+        if (clone && clone.parentNode) { document.body.removeChild(clone); clone = null; }
+        if (inboxBtn) inboxBtn.classList.remove('drop-hover');
+
+        if (overInboxBtn) {
+          unplaceEventToInbox(dragConfig.eventId);
+          dragConfig.refreshFn();
+        } else if (dragConfig.rootEl) {
+          const finalList = wrap.parentNode;
+          if (finalList && finalList.classList.contains('timeline-section-list')) {
+            const slotKey = finalList.dataset.slotList;
+            Array.from(finalList.children).forEach(function (w, i) {
+              const ev = (state.events || []).find(function (e) { return e.id === w.dataset.eventId; });
+              if (!ev) return;
+              ev.timelineOrder = i * 10;
+              if (slotKey === 'unset') delete ev.timeSlot;
+              else ev.timeSlot = slotKey;
+            });
+            saveState();
+          }
+          dragConfig.refreshFn();
+        }
       }
+      mode = null;
     }
-    wrap.addEventListener('touchend', endDrag, { passive: true });
-    wrap.addEventListener('touchcancel', endDrag, { passive: true });
+    wrap.addEventListener('touchend', endGesture, { passive: true });
+    wrap.addEventListener('touchcancel', endGesture, { passive: true });
 
     // 열려 있을 때 그 줄을 탭하면 원래 동작 대신 닫히기만 함
     rowEl.addEventListener('click', function (e) {
@@ -3800,8 +3869,13 @@
   // items: 반복 할일(state.events, repeat 있는 것) 목록. id 기준으로 완료 기록.
   // kind: 'repeat'(반복 할일) | 'onetime'(한 번짜리 할 일). 반복이든 아니든 결국 같은
   // "할 일"이므로 완전히 같은 모양의 줄로 만든다. 다른 점은 각자에게만 있는 동작뿐
-  // (반복→ 완료는 done_log, 한번짜리→ ev.done / 기간이면 기간수정, 반복전환 버튼).
-  function buildTodoRow(kind, item, dateStr, refreshFn, opts) {
+  // (반복→ 완료는 done_log, 한번짜리→ ev.done / 기간이면 기간수정).
+  // 2026-07-14: 줄에 항상 붙어있던 반복 전환/중요 버튼과 드래그 손잡이를 없애고,
+  // 텍스트를 탭하면 (반복/중요/수정) 3개짜리 작은 메뉴가 뜨도록 바꿈 — 줄이
+  // 버튼들로 지저분해지지 않게. 텍스트를 눌러 바로 고치던 것도 이제 메뉴의
+  // "수정"을 거침. 드래그는 이제 줄(카드) 자체를 꾹 눌러서 하고, 이 함수 자체는
+  // 드래그를 다루지 않음(호출부에서 wrapWithSwipeToDelete에 dragConfig로 넘김).
+  function buildTodoRow(kind, item, dateStr, refreshFn) {
     const cat = getCat(item.category);
     const isMulti = kind === 'onetime' && isMultiDay(item);
     const isDone = kind === 'repeat' ? isRepeatDoneOn(item.id, dateStr) : !!item.done;
@@ -3819,34 +3893,12 @@
     const textEl = document.createElement('span');
     textEl.className = 'item-text';
     textEl.textContent = kind === 'onetime' ? eventDisplayText(item) : item.text;
-    if (isMulti) {
-      textEl.style.cursor = 'pointer';
-      textEl.style.textDecoration = 'underline dotted';
-      textEl.addEventListener('click', function () { openPeriodEdit(item); });
-    } else {
-      makeEventTextEditable(textEl, item, refreshFn);
-    }
-    li.appendChild(textEl);
-
-    if (kind === 'onetime' && !isMulti) {
-      const repeatBtn = document.createElement('button');
-      repeatBtn.className = 'btn-dd-repeat-event';
-      repeatBtn.textContent = '반복';
-      repeatBtn.setAttribute('aria-label', '반복으로 전환');
-      repeatBtn.addEventListener('click', function () { openRepeatEditor({ sourceEvent: item }); });
-      li.appendChild(repeatBtn);
-    }
-
-    const starBtn = document.createElement('button');
-    starBtn.className = 'btn-important-toggle' + (item.important ? ' is-on' : '');
-    starBtn.setAttribute('aria-label', item.important ? '중요 표시 해제' : '중요 표시');
-    starBtn.textContent = item.important ? '★' : '☆';
-    starBtn.addEventListener('click', function () {
-      item.important = !item.important;
-      saveState();
-      refreshFn();
+    textEl.style.cursor = 'pointer';
+    textEl.addEventListener('click', function (e) {
+      e.stopPropagation();
+      openTodoItemMenu(textEl, kind, item, isMulti, refreshFn);
     });
-    li.appendChild(starBtn);
+    li.appendChild(textEl);
 
     const checkBtn = document.createElement('button');
     checkBtn.className = 'item-check-btn';
@@ -3871,16 +3923,64 @@
     });
     li.appendChild(checkBtn);
 
-    if (opts && opts.dragHandle) {
-      const handle = document.createElement('span');
-      handle.className = 'item-drag-handle';
-      handle.textContent = '≡';
-      handle.setAttribute('aria-label', opts.dragHandleLabel || '순서/시간대 변경');
-      li.appendChild(handle);
-    }
-
     return li;
   }
+
+  // 할 일 줄의 텍스트를 탭하면 뜨는 작은 메뉴(반복/중요/수정) — 취소 버튼 없이
+  // 바깥을 탭하면 닫힘(카테고리 고르기 팝업(cat-picker-menu)과 같은 방식 재사용).
+  function openTodoItemMenu(anchorEl, kind, item, isMulti, refreshFn) {
+    const menu = document.getElementById('todo-item-menu');
+    menu.innerHTML = '';
+
+    if (kind === 'onetime' && !isMulti) {
+      const repeatItem = document.createElement('button');
+      repeatItem.type = 'button';
+      repeatItem.className = 'cat-picker-menu-item';
+      repeatItem.textContent = '반복';
+      repeatItem.addEventListener('click', function () {
+        menu.classList.remove('open');
+        openRepeatEditor({ sourceEvent: item });
+      });
+      menu.appendChild(repeatItem);
+    }
+
+    const impItem = document.createElement('button');
+    impItem.type = 'button';
+    impItem.className = 'cat-picker-menu-item';
+    impItem.textContent = item.important ? '★ 중요 해제' : '☆ 중요 표시';
+    impItem.addEventListener('click', function () {
+      item.important = !item.important;
+      saveState();
+      menu.classList.remove('open');
+      refreshFn();
+    });
+    menu.appendChild(impItem);
+
+    const editItem = document.createElement('button');
+    editItem.type = 'button';
+    editItem.className = 'cat-picker-menu-item';
+    editItem.textContent = '수정';
+    editItem.addEventListener('click', function () {
+      menu.classList.remove('open');
+      if (isMulti) openPeriodEdit(item);
+      else startInlineTextEdit(anchorEl, item, refreshFn);
+    });
+    menu.appendChild(editItem);
+
+    const rect = anchorEl.getBoundingClientRect();
+    menu.style.left = Math.min(rect.left, window.innerWidth - 160) + 'px';
+    menu.style.top = (rect.bottom + 6) + 'px';
+    menu.style.right = 'auto';
+    menu.style.bottom = 'auto';
+    menu.classList.add('open');
+  }
+
+  document.addEventListener('click', function (e) {
+    const menu = document.getElementById('todo-item-menu');
+    if (menu && menu.classList.contains('open') && !menu.contains(e.target)) {
+      menu.classList.remove('open');
+    }
+  });
 
   // 반복 할일 + 한 번짜리 할 일을 완전히 같은 모양으로 합쳐서 하나의 목록에 그린다.
   function renderTodoList(containerEl, repeatItems, oneTimeItems, dateStr, bgVar, refreshFn) {
@@ -3903,86 +4003,20 @@
     });
 
     oneTimeItems.forEach(function (ev) {
-      // 날짜 지정된(배치된) 할 일이라 손잡이를 꾹 눌러 드래그하면 하단 "미배치"
+      // 날짜 지정된(배치된) 할 일이라 카드를 꾹 눌러 드래그하면 하단 "미배치"
       // 버튼 위에 놓아 날짜 지정을 없애고 미배치로 돌려보낼 수 있음 — 반복
-      // 할일은 애초에 특정 날짜에 배치된 게 아니라서 이 손잡이가 없음.
-      const li = buildTodoRow('onetime', ev, dateStr, refreshFn, { dragHandle: true, dragHandleLabel: '미배치로 보내기' });
+      // 할일은 애초에 특정 날짜에 배치된 게 아니라서 이 드래그 대상이 아님
+      // (dragConfig 자체를 안 줌, 아래 repeatItems 쪽 참고).
+      const li = buildTodoRow('onetime', ev, dateStr, refreshFn);
       const wrap = wrapWithSwipeToDelete(li, bgVar, function () {
         state.events = state.events.filter(function (e) { return e !== ev; });
         saveState();
         refreshFn();
-      });
-      const handle = li.querySelector('.item-drag-handle');
-      setupUnplaceDrag(handle, wrap, ev, refreshFn);
+      }, { eventId: ev.id, refreshFn: refreshFn, enableInboxDrop: true });
       ul.appendChild(wrap);
     });
 
     containerEl.appendChild(ul);
-  }
-
-  // 날짜 상세에서 한 번짜리(날짜 지정) 할 일의 손잡이를 꾹 눌러 드래그해서
-  // 하단 "미배치" 버튼 위에 놓으면 날짜 지정을 없애고 미배치로 돌려보냄 —
-  // 순서를 바꾸는 게 아니라 놓을 곳이 딱 하나(미배치 버튼)뿐이라 setupInboxItemDrag/
-  // setupTimelineDrag와는 별도의 단순한 드래그(같은 꾹 눌러 드래그 방식만 재사용).
-  function setupUnplaceDrag(handleEl, wrapEl, ev, refreshFn) {
-    handleEl.addEventListener('touchstart', function (e) {
-      e.stopPropagation();
-      const startY = e.touches[0].clientY;
-      const startX = e.touches[0].clientX;
-      let dragging = false;
-      let clone = null;
-      let cloneStartTop = 0, cloneStartLeft = 0;
-      let overInboxBtn = false;
-      const inboxBtn = document.getElementById('btn-inbox-open');
-
-      const timer = setTimeout(function () {
-        dragging = true;
-        const rect = wrapEl.getBoundingClientRect();
-        cloneStartTop = rect.top;
-        cloneStartLeft = rect.left;
-        clone = wrapEl.cloneNode(true);
-        clone.style.cssText += ';position:fixed;left:' + rect.left + 'px;top:' + rect.top + 'px;width:' + rect.width + 'px;z-index:999;box-shadow:0 6px 24px rgba(0,0,0,0.18);pointer-events:none;opacity:0.95;background:var(--surface);border-radius:10px;';
-        document.body.appendChild(clone);
-        wrapEl.style.opacity = '0.2';
-        if (navigator.vibrate) navigator.vibrate(40);
-      }, 500);
-
-      function onMove(e) {
-        const touch = e.touches[0];
-        if (!dragging) {
-          if (Math.abs(touch.clientY - startY) > 8 || Math.abs(touch.clientX - startX) > 8) clearTimeout(timer);
-          return;
-        }
-        e.preventDefault();
-        clone.style.top = (cloneStartTop + touch.clientY - startY) + 'px';
-        clone.style.left = cloneStartLeft + 'px';
-
-        const hovered = document.elementFromPoint(touch.clientX, touch.clientY);
-        overInboxBtn = !!(hovered && inboxBtn.contains(hovered));
-        inboxBtn.classList.toggle('drop-hover', overInboxBtn);
-      }
-
-      function onEnd() {
-        clearTimeout(timer);
-        document.removeEventListener('touchmove', onMove);
-        document.removeEventListener('touchend', onEnd);
-        document.removeEventListener('touchcancel', onEnd);
-        if (!dragging) return;
-        dragging = false;
-        wrapEl.style.opacity = '1';
-        if (clone && clone.parentNode) { document.body.removeChild(clone); clone = null; }
-        inboxBtn.classList.remove('drop-hover');
-
-        if (overInboxBtn) {
-          unplaceEventToInbox(ev.id);
-          refreshFn();
-        }
-      }
-
-      document.addEventListener('touchmove', onMove, { passive: false });
-      document.addEventListener('touchend', onEnd, { passive: true });
-      document.addEventListener('touchcancel', onEnd, { passive: true });
-    }, { passive: true });
   }
 
   // ── 오늘 탭 타임라인(미정/오전/오후/밤) ──────────────────────
@@ -4028,7 +4062,7 @@
       ul.dataset.slotList = slotDef.key;
 
       itemsInSlot.forEach(function (t) {
-        const li = buildTodoRow(t.kind, t.item, dateStr, refreshFn, { dragHandle: true });
+        const li = buildTodoRow(t.kind, t.item, dateStr, refreshFn);
         const wrap = wrapWithSwipeToDelete(li, 'var(--surface)', function () {
           if (t.kind === 'repeat') {
             if (!Array.isArray(t.item.excludedDates)) t.item.excludedDates = [];
@@ -4038,10 +4072,16 @@
           }
           saveState();
           refreshFn();
+        }, {
+          eventId: t.item.id,
+          refreshFn: refreshFn,
+          // 반복 할일은 애초에 특정 날짜에 "배치"된 게 아니라서(매번 규칙으로
+          // 계산됨) 미배치 버튼 위에 놓아도 아무 반응 없음 — 한 번짜리(날짜
+          // 지정) 할일만 대상. 시간대 구역 사이 순서 변경(rootEl)은 두 종류 다 됨.
+          enableInboxDrop: t.kind === 'onetime',
+          rootEl: containerEl,
         });
         wrap.dataset.eventId = t.item.id;
-        const handle = li.querySelector('.item-drag-handle');
-        setupTimelineDrag(handle, wrap, containerEl, refreshFn, t.kind);
         ul.appendChild(wrap);
       });
 
@@ -4050,104 +4090,6 @@
     });
 
     refreshTimelineEmptyStates(containerEl);
-  }
-
-  // 시간대 구역들 사이를 드래그해서 넘나들거나, 같은 구역 안에서 순서를 바꾸는 드래그.
-  // 팀 순서 변경(setupLongPressDrag)과 같은 꾹 눌러서 드래그하는 방식 — 손잡이(handleEl)에서
-  // 시작한 터치만 반응하도록 stopPropagation으로 스와이프 삭제 제스처와 완전히 분리한다.
-  function setupTimelineDrag(handleEl, wrapEl, rootEl, refreshFn, kind) {
-    handleEl.addEventListener('touchstart', function (e) {
-      e.stopPropagation();
-      const startY = e.touches[0].clientY;
-      const startX = e.touches[0].clientX;
-      let dragging = false;
-      let clone = null;
-      let cloneStartTop = 0, cloneStartLeft = 0;
-      let overInboxBtn = false;
-      // 반복 할일은 애초에 특정 날짜에 "배치"된 게 아니라서(매번 규칙으로
-      // 계산됨) 미배치 버튼 위에 놓아도 아무 반응 없음 — 한 번짜리(날짜 지정)
-      // 할일만 대상.
-      const inboxBtn = kind === 'onetime' ? document.getElementById('btn-inbox-open') : null;
-
-      const timer = setTimeout(function () {
-        dragging = true;
-        const rect = wrapEl.getBoundingClientRect();
-        cloneStartTop = rect.top;
-        cloneStartLeft = rect.left;
-        clone = wrapEl.cloneNode(true);
-        clone.style.cssText += ';position:fixed;left:' + rect.left + 'px;top:' + rect.top + 'px;width:' + rect.width + 'px;z-index:999;box-shadow:0 6px 24px rgba(0,0,0,0.18);pointer-events:none;opacity:0.95;background:var(--surface);border-radius:10px;';
-        document.body.appendChild(clone);
-        wrapEl.style.opacity = '0.2';
-        if (navigator.vibrate) navigator.vibrate(40);
-      }, 500);
-
-      function onMove(e) {
-        const touch = e.touches[0];
-        if (!dragging) {
-          if (Math.abs(touch.clientY - startY) > 8 || Math.abs(touch.clientX - startX) > 8) clearTimeout(timer);
-          return;
-        }
-        e.preventDefault();
-        clone.style.top = (cloneStartTop + touch.clientY - startY) + 'px';
-        clone.style.left = cloneStartLeft + 'px';
-
-        const hovered = document.elementFromPoint(touch.clientX, touch.clientY);
-
-        if (inboxBtn) {
-          overInboxBtn = !!(hovered && inboxBtn.contains(hovered));
-          inboxBtn.classList.toggle('drop-hover', overInboxBtn);
-        }
-
-        const list = hovered ? hovered.closest('.timeline-section-list') : null;
-        if (!list || !rootEl.contains(list)) return;
-
-        const siblings = Array.from(list.children).filter(function (c) { return c !== wrapEl; });
-        let insertBefore = null;
-        for (let s = 0; s < siblings.length; s++) {
-          const sr = siblings[s].getBoundingClientRect();
-          if (touch.clientY < sr.top + sr.height / 2) { insertBefore = siblings[s]; break; }
-        }
-        if (insertBefore) list.insertBefore(wrapEl, insertBefore);
-        else list.appendChild(wrapEl);
-        refreshTimelineEmptyStates(rootEl);
-      }
-
-      function onEnd() {
-        clearTimeout(timer);
-        document.removeEventListener('touchmove', onMove);
-        document.removeEventListener('touchend', onEnd);
-        document.removeEventListener('touchcancel', onEnd);
-        if (!dragging) return;
-        dragging = false;
-        wrapEl.style.opacity = '1';
-        if (clone && clone.parentNode) { document.body.removeChild(clone); clone = null; }
-        if (inboxBtn) inboxBtn.classList.remove('drop-hover');
-
-        if (overInboxBtn) {
-          unplaceEventToInbox(wrapEl.dataset.eventId);
-          refreshFn();
-          return;
-        }
-
-        const finalList = wrapEl.parentNode;
-        if (finalList && finalList.classList.contains('timeline-section-list')) {
-          const slotKey = finalList.dataset.slotList;
-          Array.from(finalList.children).forEach(function (w, i) {
-            const ev = (state.events || []).find(function (e) { return e.id === w.dataset.eventId; });
-            if (!ev) return;
-            ev.timelineOrder = i * 10;
-            if (slotKey === 'unset') delete ev.timeSlot;
-            else ev.timeSlot = slotKey;
-          });
-          saveState();
-        }
-        refreshFn();
-      }
-
-      document.addEventListener('touchmove', onMove, { passive: false });
-      document.addEventListener('touchend', onEnd, { passive: true });
-      document.addEventListener('touchcancel', onEnd, { passive: true });
-    }, { passive: true });
   }
 
   // ── 오늘 탭 ──────────────────────────────────────────────

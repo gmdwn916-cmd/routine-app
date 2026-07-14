@@ -602,12 +602,32 @@
     반복 할일 전체 삭제는 반드시 "반복 할일" 탭에서만(openRepeatEditor의
     삭제 버튼). 이 구분 헷갈리지 말 것 — 실제로 헷갈려서 버그 신고된 적 있음.
   - 화면에 그릴 때는 반드시 buildTodoRow()/renderTodoList() 공용 함수로 그릴 것.
-    반복 할일과 한 번짜리 할 일은 겉모습(체크 버튼·카테고리 점·인라인 수정·
-    스와이프 삭제)이 완전히 같아야 함 — 별도 마크업/스타일을 새로 만들지 말 것.
-    (예전엔 today-event-item/dd-event-item으로 따로 그렸다가 통합함.)
-    buildTodoRow의 5번째 인자(opts.dragHandle)는 오늘 탭 타임라인에서만 켜서
-    드래그 손잡이를 붙이는 용도 — 반복/한 번짜리 사이 차별이 아니라 화면(오늘
-    탭 vs 날짜상세) 차이이므로 이 통일 규칙에 어긋나지 않음.
+    반복 할일과 한 번짜리 할 일은 겉모습이 완전히 같아야 함 — 별도 마크업/
+    스타일을 새로 만들지 말 것(예전엔 today-event-item/dd-event-item으로
+    따로 그렸다가 통합함). 오늘 탭과 날짜 상세도 겉모습·조작 방식이 완전히
+    같음(2026-07-14 재정리로 더 확실해짐, 아래 항목 참고) — 화면마다 다르게
+    만들지 말 것.
+  - **할 일 줄 조작 방식(2026-07-14 재정리)**: 줄에 상시로 붙어있던 반복 전환
+    버튼·중요(★) 버튼·드래그 손잡이(≡)를 전부 없애고, 텍스트를 누르면 뜨는
+    작은 메뉴(반복/중요/수정 3개, 카테고리 고르기 팝업과 같은 cat-picker-menu
+    스타일 재사용, 취소 버튼 없이 바깥 탭하면 닫힘 — openTodoItemMenu 함수,
+    HTML의 #todo-item-menu)로 옮김. 텍스트를 눌러 바로 고치던 것도 이제
+    메뉴의 "수정"을 거침(startInlineTextEdit — 예전 makeEventTextEditable을
+    "클릭 시 실행되던 것"에서 "메뉴가 호출하는 함수"로 바꾼 것, 기간(멀티데이)
+    할일은 수정을 누르면 그대로 openPeriodEdit). 다시 버튼들을 줄에 상시로
+    붙이거나 텍스트 탭으로 바로 수정되게 되돌리지 말 것.
+  - **드래그(2026-07-14 카드 전체로 확장)**: 손잡이 없이 카드(줄) 자체를 꾹
+    눌러서 드래그함. wrapWithSwipeToDelete(rowEl, bgVar, onDelete, dragConfig)
+    가 스와이프 삭제와 드래그를 하나의 상태 기계로 합쳐서 처리(둘 다 같은
+    wrap 위에서 손가락을 보고 있어서 — 빠르게 움직이면 스와이프, 가만히
+    500ms 누르고 있으면 드래그로 갈림). dragConfig(선택, 없으면 스와이프만
+    — "반복 할일" 탭(renderRoutine)의 카드는 드래그 필요 없어서 안 줌):
+    { eventId, refreshFn, enableInboxDrop, rootEl(선택) } — enableInboxDrop이면
+    하단 미배치 버튼 위에 놓았을 때 unplaceEventToInbox 실행, rootEl이 있으면
+    (오늘 탭만) 그 안의 .timeline-section-list로 옮겨서 시간대/순서 변경까지
+    같이 됨(날짜 상세는 rootEl 자체가 없음 — 그 화면엔 시간대 구역이 없어서).
+    예전에 따로 있던 setupTimelineDrag/setupUnplaceDrag 함수는 이 안으로
+    흡수돼서 없어짐 — 다시 별도 함수로 쪼개지 말 것.
   - timeSlot?: 'morning'|'afternoon'|'night' — 오늘 탭 타임라인 구역. 없으면
     "미정"으로 취급(값이 'unset'으로 저장되지는 않음, 그냥 필드 자체가 없는
     상태 = 미정). 카테고리·important처럼 그 할 일 객체 자체에 저장되는 정보라
