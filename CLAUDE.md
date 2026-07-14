@@ -195,11 +195,16 @@
     웹 API만으로 해결됨(App 플러그인 안 씀).
   - 위젯 크기는 처음엔 1x1(가장 작음)에 아이콘(+ 모양, ic_widget_add.xml)만 있고
     글씨가 없었는데, 위젯 선택 화면에서 뭔지 알아보기 힘들다는 이유로(아래
-    "위젯 선택 화면" 항목 참고) 2026-07-14에 상단에 "할 일 추가" 글씨를 추가함 —
-    1x1로는 글씨+아이콘이 다 안 들어가서 2x1(minWidth 110dp, minHeight 70dp)로
-    키움. 레이아웃도 아이콘 하나만 있던 FrameLayout에서 세로 LinearLayout(글씨
-    TextView 위 + 아이콘 아래)으로 바뀜 — 클릭 반응 영역도 아이콘(widget_add_button)
-    에서 루트 전체(widget_quick_add_root)로 넓혀서 글씨를 눌러도 입력창이 뜸.
+    "위젯 선택 화면" 항목 참고) 2026-07-14에 상단에 "할 일 추가" 글씨를 추가함.
+    처음엔 글씨+아이콘을 다 넣으려고 2x1(minWidth 110dp)로 키웠었는데, 사용자가
+    "1x1로 유지하고 그 작은 칸 안에 글씨·그림을 잘 정리해서 넣어달라"고 다시
+    요청해서 1x1(40dp)로 되돌리고, 대신 글씨를 아주 작게(8sp, 한 줄, 넘치면
+    말줄임) 위에 얇게 두고 아이콘은 남은 공간을 꽉 채우도록(weight=1) 줄여서
+    좁은 칸 안에서도 둘 다 보이게 함 — 다시 위젯 크기를 키우는 방향으로 바꾸지
+    말 것(사용자가 명시적으로 1x1 유지를 원함). 레이아웃도 아이콘 하나만 있던
+    FrameLayout에서 세로 LinearLayout(글씨 TextView 위 + 아이콘 아래)으로 바뀜 —
+    클릭 반응 영역도 아이콘(widget_add_button)에서 루트 전체
+    (widget_quick_add_root)로 넓혀서 글씨를 눌러도 입력창이 뜸.
   - QuickAddActivity는 android:taskAffinity=""로 MainActivity와 완전히 다른
     작업(task)으로 뜸(+ 위젯 쪽 Intent에 FLAG_ACTIVITY_NEW_TASK|MULTIPLE_TASK) —
     안 하면 앱이 이미 켜져 있을 때 위젯을 눌렀을 때 입력창과 함께 앱 화면까지
