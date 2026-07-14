@@ -124,9 +124,15 @@
   **웹(브라우저/GitHub Pages) 버전에서는 여전히 안 울림** — 설치된 안드로이드
   앱에서만 동작(isNativeApp() 체크로 웹에서는 안내 문구만 보여주고 스킵).
 - 설정 탭 "근무유형별 알람"(sd-alarms, renderShiftAlarmSettings)에서 근무유형별로
-  켜기/끄기 + 시각(HTML time input) 설정. state.shiftAlarms = { [근무이름]:
-  {enabled, time:"HH:MM"} }. 저장은 카테고리·별표처럼 바뀔 때마다 즉시(확인
-  버튼 없음).
+  켜기/끄기 + 시각 설정. state.shiftAlarms = { [근무이름]: {enabled,
+  time:"HH:MM"} }. 저장은 카테고리·별표처럼 바뀔 때마다 즉시(확인 버튼 없음).
+  **시각 입력 방식(2026-07-14 변경)**: 처음엔 드래그로 숫자를 돌리는 다이얼
+  (bindNumberSpinner, 기간 편집 화면의 스피너와 같은 방식)이었는데, 사용자가
+  "다이얼 말고 타이핑으로" 요청해서 `<input type="number">` 두 칸(시/분,
+  .shift-alarm-time-input)으로 바꿈 — change/blur 시 0~23·0~59 범위로
+  clamp하고 "HH:MM" 문자열로 합쳐 저장. 다른 화면(기간으로 고르기 등)의
+  드래그 다이얼(.promote-interval-field)은 그대로 두고 안 건드림 — 다시
+  섞어서 알람 시각도 드래그 방식으로 되돌리지 말 것.
 - scheduleShiftAlarms()가 앱을 켤 때(초기화 시점)와 알람 설정을 바꿀 때마다
   호출됨 — 오늘부터 14일치 근무를 계산해서(getEffectiveShiftName 재사용,
   날짜 예외·D번호 예외 다 반영됨), 알람 켜진 근무유형인 날마다 그 시각에
@@ -135,14 +141,33 @@
   _scheduledAlarmIds(직전에 우리가 예약한 id 목록, state에 저장해둠)를 먼저
   취소하고 새로 깜 — 플러그인이 돌려주는 예약 목록에 의존하지 않고 우리가
   직접 추적하는 방식이라 더 확실함.
-  알림 채널은 앱 초기화 시 한 번 생성(id: 'shift-alarm', importance:5로 헤드업+
-  소리). 권한 요청(ensureAlarmPermission)은 예약 직전에 매번 확인 — 이미
-  허용돼 있으면 다시 안 물어봄.
-  **한계(1차 버전, 실사용 후 보완 예정)**: SCHEDULE_EXACT_ALARM 권한 없이
-  기본 예약 방식만 씀 — Doze 모드에서 몇 분 정도 늦게 울릴 수 있음(칼같이
-  정확한 시각이 필요하면 나중에 정확한 알람 권한 추가 검토). 화면을 깨우는
-  풀스크린 알람 스타일(진짜 알람시계처럼 잠금화면 위로 뜨는 것)도 아직 없음
-  — 지금은 일반 알림(소리+진동, 무음모드 무시 안 될 수 있음)까지만 구현.
+  알림 채널은 앱 초기화 시 한 번 생성(id: 'shift-alarm').
+  권한 요청(ensureAlarmPermission)은 예약 직전에 매번 확인 — 이미 허용돼
+  있으면 다시 안 물어봄.
+- **"알람이 제대로 안 울림" 버그 수정(2026-07-14)**: 사용자 신고로 찾은 진짜
+  원인 세 가지, 전부 @capacitor/local-notifications 플러그인의 안드로이드
+  네이티브 코드(node_modules 안의 실제 구현)를 직접 열어서 확인함:
+  1) 알림 채널 importance를 5로 줬었는데, 안드로이드 NotificationManager의
+     정식 중요도 값은 0~4뿐(4=IMPORTANCE_HIGH가 최댓값, 5는 정식으로 없는
+     값) — 기기/버전에 따라 다르게 처리될 수 있는 값이라 4로 고침.
+  2) createChannel 호출에 vibrate를 안 줬었는데, 플러그인 기본값이 false라
+     진동이 꺼진 채로 채널이 만들어지고 있었음(안내 문구는 "소리·진동으로
+     알려줘요"라고 해놓고 실제로는 진동이 꺼져 있었음) — vibrate:true 추가.
+  3) **제일 결정적인 원인**: 각 알람의 schedule에 allowWhileIdle을 안 줬었는데,
+     플러그인 기본값이 false라 기기가 Doze(절전) 상태일 때 그냥 미뤄지는
+     기본 예약 방식(AlarmManager.set/setExact)으로만 잡히고 있었음 — 특히
+     정확한 알람 권한이 없는 안드로이드 12+ 기기에서는 이게 가장 약한 예약
+     방식이라 많이 늦거나 사실상 안 울리는 것처럼 느껴질 수 있었음.
+     schedule에 allowWhileIdle:true를 추가해서 Doze 중에도 깨우는 방식
+     (setExactAndAllowWhileIdle/setAndAllowWhileIdle)을 쓰게 함 — 정밀 알람
+     권한 없이도 훨씬 안정적으로 울림.
+  **한계(여전히 남음, 1차 버전)**: SCHEDULE_EXACT_ALARM 권한(안드로이드 12+
+  기기에서 "정확한 알람" 특별 권한)까지 요청하는 건 이번 수정 범위 밖 —
+  allowWhileIdle만으로도 대부분 상황에서 눈에 띄게 나아지지만, 정말 초 단위로
+  정확한 시각이 필요하면 나중에 이 권한 요청 흐름을 추가로 검토할 것. 화면을
+  깨우는 풀스크린 알람 스타일(진짜 알람시계처럼 잠금화면 위로 뜨는 것)도
+  아직 없음 — 지금은 일반 알림(소리+진동, 무음모드 무시 안 될 수 있음)까지만
+  구현.
 
 ## 배포
 - GitHub Pages. 저장소 routine-app.

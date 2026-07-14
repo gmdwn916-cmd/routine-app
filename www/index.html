@@ -1607,7 +1607,30 @@
       gap: 4px;
     }
     .shift-alarm-time-spin.disabled { opacity: 0.4; }
-    .shift-alarm-time-spin .promote-interval-field { min-width: 34px; padding: 6px 2px; font-size: 15px; }
+    /* 2026-07-14: 드래그(다이얼)로 숫자를 돌리던 방식 대신 직접 타이핑하는 입력칸으로
+       바꿈 — 다른 곳(기간으로 고르기 등)의 드래그 스피너(.promote-interval-field)는
+       그대로 두고, 이 알람 시각 칸만 별도 클래스로 분리함. */
+    .shift-alarm-time-input {
+      width: 40px;
+      padding: 6px 2px;
+      border: 1.5px solid var(--line);
+      border-radius: 10px;
+      background: var(--surface-2);
+      color: #007aff;
+      font-weight: 700;
+      font-size: 15px;
+      font-family: inherit;
+      text-align: center;
+      -webkit-appearance: none;
+      appearance: none;
+      outline: none;
+    }
+    .shift-alarm-time-input::-webkit-inner-spin-button,
+    .shift-alarm-time-input::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    .shift-alarm-time-input:focus { border-color: #007aff; }
     .shift-alarm-toggle {
       border: 1.5px solid var(--line);
       background: none;
@@ -5105,30 +5128,51 @@
       const timeWrap = document.createElement('div');
       timeWrap.className = 'shift-alarm-time-spin' + (rule.enabled ? '' : ' disabled');
 
-      const hourEl = document.createElement('div');
-      hourEl.className = 'promote-interval-field';
-      hourEl.textContent = String(hh).padStart(2, '0');
+      // 드래그로 돌리는 다이얼 대신 직접 숫자를 타이핑하는 입력칸(2026-07-14 변경).
+      const hourInput = document.createElement('input');
+      hourInput.type = 'number';
+      hourInput.className = 'shift-alarm-time-input';
+      hourInput.min = '0';
+      hourInput.max = '23';
+      hourInput.inputMode = 'numeric';
+      hourInput.disabled = !rule.enabled;
+      hourInput.value = String(hh).padStart(2, '0');
 
       const sep = document.createElement('span');
       sep.className = 'promote-interval-unit';
       sep.textContent = ':';
 
-      const minEl = document.createElement('div');
-      minEl.className = 'promote-interval-field';
-      minEl.textContent = String(mm).padStart(2, '0');
+      const minInput = document.createElement('input');
+      minInput.type = 'number';
+      minInput.className = 'shift-alarm-time-input';
+      minInput.min = '0';
+      minInput.max = '59';
+      minInput.inputMode = 'numeric';
+      minInput.disabled = !rule.enabled;
+      minInput.value = String(mm).padStart(2, '0');
 
       function commitTime() {
+        hh = parseInt(hourInput.value, 10);
+        if (isNaN(hh) || hh < 0) hh = 0;
+        if (hh > 23) hh = 23;
+        mm = parseInt(minInput.value, 10);
+        if (isNaN(mm) || mm < 0) mm = 0;
+        if (mm > 59) mm = 59;
+        hourInput.value = String(hh).padStart(2, '0');
+        minInput.value = String(mm).padStart(2, '0');
         rule.time = String(hh).padStart(2, '0') + ':' + String(mm).padStart(2, '0');
         saveState();
         scheduleShiftAlarms();
       }
 
-      bindNumberSpinner(hourEl, function () { return hh; }, function (v) { hh = v; hourEl.textContent = String(hh).padStart(2, '0'); }, 0, 23, commitTime);
-      bindNumberSpinner(minEl, function () { return mm; }, function (v) { mm = v; minEl.textContent = String(mm).padStart(2, '0'); }, 0, 59, commitTime);
+      hourInput.addEventListener('change', commitTime);
+      hourInput.addEventListener('blur', commitTime);
+      minInput.addEventListener('change', commitTime);
+      minInput.addEventListener('blur', commitTime);
 
-      timeWrap.appendChild(hourEl);
+      timeWrap.appendChild(hourInput);
       timeWrap.appendChild(sep);
-      timeWrap.appendChild(minEl);
+      timeWrap.appendChild(minInput);
 
       const toggleBtn = document.createElement('button');
       toggleBtn.type = 'button';
@@ -5137,6 +5181,8 @@
       toggleBtn.addEventListener('click', function () {
         rule.enabled = !rule.enabled;
         timeWrap.classList.toggle('disabled', !rule.enabled);
+        hourInput.disabled = !rule.enabled;
+        minInput.disabled = !rule.enabled;
         toggleBtn.classList.toggle('is-on', rule.enabled);
         toggleBtn.textContent = rule.enabled ? '켜짐' : '꺼짐';
         saveState();
@@ -5204,7 +5250,15 @@
         id: id,
         title: '근무 알람',
         body: eff.name + ' 근무일이에요',
-        schedule: { at: at },
+        // 2026-07-14 버그 수정: allowWhileIdle을 안 줘서(기본값 false) 기기가
+        // Doze(절전) 상태일 때 이 알람이 그냥 later로 미뤄지는 일반
+        // 알람(AlarmManager.set/setExact)으로만 잡히고 있었음 — 특히 정확한
+        // 알람 권한이 없는 안드로이드 12+ 기기에서는 이게 가장 약한 예약
+        // 방식이라 오래 미뤄지거나 사실상 안 울리는 것처럼 느껴질 수 있었음.
+        // allowWhileIdle:true를 주면 Doze 중에도 깨우는 방식(setExactAndAllowWhileIdle/
+        // setAndAllowWhileIdle)을 쓰게 됨 — 실기기 정밀 알람 권한 없이도 훨씬
+        // 안정적으로 울림.
+        schedule: { at: at, allowWhileIdle: true },
         channelId: 'shift-alarm',
       });
     }
@@ -7167,12 +7221,18 @@
   }
   if (isNativeApp() && window.capacitorLocalNotifications) {
     const LN = window.capacitorLocalNotifications.LocalNotifications;
+    // 2026-07-14 버그 수정: importance가 안드로이드에 정식으로 없는 값(5)이었고
+    // (정식 최댓값은 4=IMPORTANCE_HIGH), vibrate를 안 줘서 기본값(false)으로
+    // 진동이 꺼져 있었음 — 무음/진동 모드일 때 완전히 안 울리는 원인이 될 수
+    // 있어서 명시적으로 켬. "소리·진동으로 알려줘요"라고 안내 문구에 이미
+    // 써뒀던 것과 실제 동작을 맞춤.
     LN.createChannel({
       id: 'shift-alarm',
       name: '근무 알람',
       description: '근무유형별로 설정한 알람',
-      importance: 5,
+      importance: 4,
       visibility: 1,
+      vibrate: true,
     }).catch(function () {}).then(function () {
       scheduleShiftAlarms();
     });
