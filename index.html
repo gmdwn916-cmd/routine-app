@@ -2576,9 +2576,6 @@
       </div>
       <div id="dd-events-list"></div>
     </div>
-    <div class="btn-row" style="padding-top:4px">
-      <button class="btn btn-secondary" id="btn-dd-close">닫기</button>
-    </div>
   </div>
 </div>
 
@@ -3783,6 +3780,10 @@
 
   // ── 탭 전환 ──────────────────────────────────────────────
   function switchTab(name) {
+    // 날짜 상세가 떠 있는 채로 다른 탭으로 넘어가면 뒤에 남아있지 않도록 같이 닫음
+    // ("닫기" 버튼을 없앤 대신 다른 페이지로 이동해도 자동으로 닫히게 함).
+    closeDayDetail();
+
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
     document.getElementById('tab-' + name).classList.add('active');
@@ -5537,7 +5538,6 @@
   document.getElementById('day-detail-overlay').addEventListener('click', function (e) {
     if (e.target === this) closeDayDetail();
   });
-  document.getElementById('btn-dd-close').addEventListener('click', closeDayDetail);
 
   document.getElementById('btn-dd-change-shift').addEventListener('click', function () {
     const { name } = getEffectiveShiftName(detailDateStr, detailDayIdx0);
