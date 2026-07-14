@@ -5004,6 +5004,28 @@
     try { await bridge.setTodayWidgetData({ json: JSON.stringify(payload) }); } catch (e) {}
   }
 
+  // ── 미배치 위젯(위젯 5, 읽기 전용) ──
+  // 미배치(인박스) 목록을 그대로 보여주기만 함 — 위젯 2·3처럼 근무/날짜 계산이
+  // 없어서 오히려 제일 단순함. targetMonth로 "대략 이 달에" 태그해둔 항목은
+  // 앱의 기본 미배치 목록(연간 탭에서 그 달을 보고 있을 때만 따로 뜨는 것 —
+  // renderInboxList의 generalItems)과 똑같이 여기서도 뺌(위젯엔 "지금 보고
+  // 있는 달"이라는 맥락이 없어서 항상 이 기본 화면과 같은 걸 보여줌). 체크·추가
+  // 같은 조작은 없음(체크는 위젯 1이, 조회는 이 위젯이 — 역할 분리) — 항목을
+  // 탭하면 그냥 앱이 열림(어떤 항목을 눌렀는지는 구분 안 함).
+  function buildInboxWidgetPayload() {
+    const inbox = (state && Array.isArray(state.inbox)) ? state.inbox : [];
+    const items = inbox.filter(function (it) { return !it.targetMonth; })
+      .map(function (it) { return { id: it.id, text: it.text }; });
+    return { count: items.length, items: items };
+  }
+
+  async function pushInboxWidgetToWidget() {
+    const bridge = getWidgetBridge();
+    if (!bridge) return;
+    const payload = buildInboxWidgetPayload();
+    try { await bridge.setInboxWidgetData({ json: JSON.stringify(payload) }); } catch (e) {}
+  }
+
   // 위젯이 하나 더 늘 때마다 아래 각 저장 시점에서 일일이 또 호출을 추가하지
   // 않도록, 위젯 관련 push는 전부 이 함수 하나로 모음(호출부는 pushAllWidgets()
   // 하나만 부르면 됨).
@@ -5011,6 +5033,7 @@
     pushMonthCalendarToWidget();
     pushScheduleToWidget();
     pushTodayWidgetToWidget();
+    pushInboxWidgetToWidget();
   }
 
   function renderShiftAlarmSettings() {

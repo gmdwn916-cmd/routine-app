@@ -377,10 +377,11 @@
     앱을 열지 않음(그 칸의 할 일을 눌러도 마찬가지) — 의도된 트레이드오프.
 - 위젯 1·2·3이 늘어나면서, 여러 저장 시점마다 위젯마다 따로 push 호출을 추가하는
   게 번거로워져서 pushAllWidgets() 함수 하나로 묶음(pushMonthCalendarToWidget()
-  + pushScheduleToWidget() + pushTodayWidgetToWidget() 순서로 호출) — 앞으로
-  위젯이 더 늘어도 이 함수 안에만 추가하면 됨, 각 저장 시점 코드는 안 건드려도 됨.
+  + pushScheduleToWidget() + pushTodayWidgetToWidget() + pushInboxWidgetToWidget()
+  순서로 호출) — 앞으로 위젯이 더 늘어도 이 함수 안에만 추가하면 됨, 각 저장
+  시점 코드는 안 건드려도 됨.
 
-## 오늘 전체 관리 위젯 (네이티브 전용, 2026-07-14 — 4개 위젯 세트 마지막, 유일하게 "쓰기" 있음)
+## 오늘 전체 관리 위젯 (네이티브 전용, 2026-07-14, 유일하게 "쓰기" 있음)
 - 오늘 날짜·요일·근무를 위젯 2·3처럼 크게 보여주고, 그 아래 오늘의 반복 할일 +
   한 번짜리 할 일을 스크롤 가능한 목록으로 보여줌. 목록의 각 줄을 탭하면 위젯
   안에서 바로 완료 체크가 토글됨 — 위젯 1~3은 전부 "읽기 전용"이었는데 이
@@ -471,10 +472,11 @@
     `android:label`을 달아줌(안드로이드가 위젯 선택 화면에 보여주는 이름은 앱
     자체 라벨이 아니라 이 리시버의 label을 씀) — QuickAddWidgetProvider="할 일
     추가", MonthCalendarWidgetProvider="달력", ScheduleWidgetProvider="스케줄",
-    TodayWidgetProvider="오늘 할일". **ScheduleWidgetProvider는 사용자가 말한
-    "일정" 대신 "스케줄"로 붙임** — 이 프로젝트는 "일정"이라는 표현 자체를 안
-    쓰기로 정해뒀어서(용어 통일 규칙 참고) 위젯 이름에도 그 규칙을 그대로
-    지킴. "일정"이 아니라 다른 표현이 필요하면 그때 다시 정할 것.
+    TodayWidgetProvider="오늘 할일", InboxWidgetProvider="미배치"(2026-07-14
+    추가). **ScheduleWidgetProvider는 사용자가 말한 "일정" 대신 "스케줄"로
+    붙임** — 이 프로젝트는 "일정"이라는 표현 자체를 안 쓰기로 정해뒀어서(용어
+    통일 규칙 참고) 위젯 이름에도 그 규칙을 그대로 지킴. "일정"이 아니라 다른
+    표현이 필요하면 그때 다시 정할 것.
   - **미리보기 — 2026-07-14 최초 시도 실패 후 재작업**: 처음엔 `android:previewLayout`
     만 추가해서 위젯이 실제로 쓰는 살아있는 레이아웃(@layout/widget_*)을 그대로
     재사용하려 했는데, 사용자 기기에서 위젯 선택 화면에 미리보기가 하나도 안
@@ -487,11 +489,12 @@
     1) `previewLayout`은 유지하되, 실제 위젯이 쓰는 레이아웃이 아니라 예시
        데이터(가짜 날짜·가짜 근무·가짜 할 일)를 하드코딩으로 미리 박아넣은
        **미리보기 전용 레이아웃**(widget_month_calendar_preview.xml/
-       widget_schedule_preview.xml/widget_today_preview.xml — 파일 이름에
-       "_preview" 붙음, Java 코드가 절대 참조하지 않음, 순전히 이 미리보기
-       속성에서만 쓰임)을 새로 만들어 연결함. 빠른 할일 추가 위젯은 원래부터
-       텍스트가 XML에 하드코딩돼 있어서(글씨·아이콘 다 고정) 별도 preview
-       레이아웃 없이 실제 레이아웃을 그대로 재사용해도 문제없음.
+       widget_schedule_preview.xml/widget_today_preview.xml/
+       widget_inbox_preview.xml — 파일 이름에 "_preview" 붙음, Java 코드가
+       절대 참조하지 않음, 순전히 이 미리보기 속성에서만 쓰임)을 새로 만들어
+       연결함. 빠른 할일 추가 위젯은 원래부터 텍스트가 XML에 하드코딩돼
+       있어서(글씨·아이콘 다 고정) 별도 preview 레이아웃 없이 실제 레이아웃을
+       그대로 재사용해도 문제없음.
     2) 그래도 API 31 미만이거나 `previewLayout`을 안 받아주는 런처를 위해
        `android:previewImage`(모든 안드로이드 버전에서 동작하는 예전 방식)도
        같이 추가함 — 진짜 스크린샷 대신, Node.js의 `sharp` 라이브러리로 각
@@ -501,6 +504,32 @@
        택한 방법 — 사용자가 "실시간 데이터 아니고 예시 사진이어도 된다"고
        명시적으로 허락함. 나중에 위젯 디자인이 크게 바뀌면 이 PNG들도 그때
        다시 만들어야 함(자동으로 안 바뀜 — previewLayout과 다른 점).
+
+## 미배치 위젯 (네이티브 전용, 읽기 전용, 2026-07-14, 5번째 위젯)
+- 미배치(인박스) 목록을 그대로 보여줌 — 위젯 2·3·4와 달리 근무·날짜 계산이
+  아예 없어서 다섯 개 위젯 중 가장 단순함. buildInboxWidgetPayload()가
+  state.inbox에서 targetMonth로 태그된 항목만 뺀 목록(count, items)을 만들어
+  넘김 — 이 필터링은 앱의 기본 미배치 목록 화면(연간 탭에서 그 달을 안 보고
+  있을 때의 renderInboxList, generalItems)과 똑같은 기준(!it.targetMonth)임.
+  위젯엔 "지금 연간 탭에서 몇 월을 보고 있는지" 같은 맥락이 없어서 항상 이
+  기본 화면과 같은 걸 보여줌 — targetMonth 태그된 항목까지 보여주려 하지 말 것
+  (지저분해지지 않게 하려는 원래 설계 의도와 어긋남).
+- 체크·추가 같은 조작 없음(순수 조회용) — 항목을 탭하면 그냥 앱이 열림, 어떤
+  항목을 눌렀는지는 구분 안 함(위젯 4처럼 개별 항목마다 다른 동작이 필요
+  없어서). 그래도 목록(ListView)의 각 줄이 탭에 반응하려면 fillInIntent가
+  있어야 하는 안드로이드 제약 때문에, 내용이 비어있는 fillInIntent를 각
+  줄에 붙이고 PendingIntentTemplate 자체를 "앱 열기" 액티비티 인텐트로 씀
+  (위젯 4의 체크 토글용 브로드캐스트 템플릿과 다른 부분 — 여기선 브로드캐스트가
+  아니라 액티비티 실행이 템플릿). 이 템플릿용 PendingIntent만 FLAG_MUTABLE
+  (다른 위젯들의 단순 클릭은 FLAG_IMMUTABLE 그대로) — fillInIntent 병합 자체가
+  MUTABLE을 요구하는 안드로이드 제약이라, 병합할 내용이 비어있어도 예외 없음.
+- 위젯 4(TodayWidgetProvider/TodayWidgetService)와 완전히 같은 구조
+  (RemoteViewsService + RemoteViewsFactory로 목록을 채움, Provider는 헤더만) —
+  다만 체크·임시 보관함(pending toggles) 관련 코드가 전혀 없어서 두 파일
+  (InboxWidgetProvider/InboxWidgetService) 다 훨씬 짧음.
+- 배경도 다른 위젯들과 동일하게 isDark 판단 + widget_background_light/dark
+  명시적 선택(런처의 실시간 배경 재해석과 우리가 push 시점에 확정하는 글자색이
+  어긋나는 사고 방지, 위젯 2·3·4·1과 같은 이유).
 
 ## 용어 (통일 — 혼동 금지)
 - 할 일 = state.events[] 전체. 반복이 꺼져 있으면 한 번짜리(특정 날짜),

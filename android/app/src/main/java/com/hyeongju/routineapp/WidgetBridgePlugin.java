@@ -152,6 +152,23 @@ public class WidgetBridgePlugin extends Plugin {
         call.resolve();
     }
 
+    // 미배치 위젯(위젯 5)용 — 근무/날짜 계산이 아예 없는 가장 단순한 위젯이라
+    // JS가 넘겨준 목록(count, items)을 그대로 저장하고 다시 그리게만 함.
+    // 읽기 전용이라 임시 보관함(pending toggles) 같은 것도 필요 없음.
+    @PluginMethod
+    public void setInboxWidgetData(PluginCall call) {
+        String json = call.getString("json");
+        if (json == null) {
+            call.reject("json missing");
+            return;
+        }
+        SharedPreferences prefs = getContext().getSharedPreferences(
+            InboxWidgetProvider.PREFS_NAME, Context.MODE_PRIVATE);
+        prefs.edit().putString(InboxWidgetProvider.KEY_INBOX_DATA, json).apply();
+        InboxWidgetProvider.refreshAll(getContext());
+        call.resolve();
+    }
+
     // 데이터 내보내기(백업)용 — 네이티브 앱 안의 웹뷰는 일반 브라우저와 달리
     // "파일 다운로드"를 자체적으로 처리하는 기능이 없어서, blob 링크를 눌러도
     // 아무 일도 안 일어남. 그래서 네이티브에서는 이 경로 대신 안드로이드가
