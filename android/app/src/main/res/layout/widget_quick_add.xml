@@ -6,21 +6,21 @@
     android:orientation="vertical"
     android:gravity="center_horizontal"
     android:background="@drawable/widget_background"
-    android:paddingTop="2dp"
     android:paddingLeft="2dp"
     android:paddingRight="2dp">
 
     <TextView
         android:id="@+id/quick_add_label"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="bottom|center_horizontal"
         android:includeFontPadding="false"
         android:maxLines="1"
         android:ellipsize="end"
         android:textStyle="bold"
         android:textColor="@color/widget_text_primary"
-        android:textSize="8sp"
+        android:textSize="12sp"
         android:text="할 일 추가" />
 
     <ImageButton
