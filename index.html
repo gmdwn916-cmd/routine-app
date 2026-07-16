@@ -6828,9 +6828,14 @@
       repeatEditorTargetEvent.important = promoteImportant;
     }
 
-    if (repeatEditorSourceEvent) {
-      state.events = state.events.filter(function (e) { return e.id !== repeatEditorSourceEvent.id; });
-    }
+    // "반복으로 전환"해도 원래 날짜의 한 번짜리 기록은 지우지 않고 그대로 둠
+    // (2026-07-16, 사용자 요청 — 예전엔 여기서 repeatEditorSourceEvent를
+    // state.events에서 지웠는데, 그러면 새 반복 규칙이 그 원래 날짜와 안
+    // 맞을 때 달력에서 그 날짜의 기록이 통째로 사라져 보였음). 이제는 새
+    // 반복 규칙이 원래 그대로 새 항목으로 하나 더 생기고, 원래 한 번짜리
+    // 항목은 손대지 않음 — 같은 날짜에 반복 규칙도 겹쳐 맞아떨어지면 그
+    // 날은 둘 다(한 번짜리 기록 + 반복 항목) 보일 수 있음(의도된 트레이드
+    // 오프, 사용자가 직접 이 방식을 선택함).
 
     saveState();
     renderRoutine();
@@ -6839,17 +6844,34 @@
     if (detailDateStr !== null) { renderDDTodos(); }
   }
 
-  // 이미 켜진 탭을 한 번 더 누르면 선택을 취소함(2026-07-16, 사용자 요청) —
-  // 단, 이미 저장돼 있는 반복 할일을 편집하는 중(repeatEditorTargetEvent가
-  // 있음)이면 취소해도 아무 일도 안 일어남(반복 규칙이 없는 반복 할일은
-  // 데이터 구조상 존재할 수 없어서 — 사용자가 직접 확인한 동작). 새로
-  // 만드는 중일 때만 실제로 선택이 풀리고, syncPromoteEditorToState()는
-  // 규칙이 없으면 아무것도 저장하지 않고 조용히 넘어가므로(기존 "아직 규칙을
-  // 못 만든 상태" 처리와 동일) 안전함.
+  // 이미 켜진 탭을 한 번 더 누르면 선택을 취소함(2026-07-16, 사용자 요청).
+  // 새로 만드는 중이면 그냥 선택만 풀림(아래 deselectMode) —
+  // syncPromoteEditorToState()는 규칙이 없으면 아무것도 저장하지 않고
+  // 조용히 넘어가므로(기존 "아직 규칙을 못 만든 상태" 처리와 동일) 안전함.
+  // **이미 저장된 반복 할일을 편집하는 중이면(repeatEditorTargetEvent가 있음)
+  // 다르게 동작함(2026-07-16, 같은 날 재요청으로 추가)** — 반복 규칙이 없는
+  // 반복 할일은 데이터 구조상 존재할 수 없어서 그냥 선택만 풀 수는 없고,
+  // 안내 문구로 확인한 뒤 그 반복 할일 자체를 통째로 삭제함("반복 할일" 탭
+  // 카드를 스와이프해서 지우는 것과 완전히 같은 삭제 경로 재사용).
+  function deselectMode() {
+    setPromoteMode(null);
+    syncPromoteEditorToState();
+  }
+  function confirmDeleteEditingRepeatEvent() {
+    if (!confirm('반복 방식을 선택 해제하면 이 반복 할일이 삭제돼요. 삭제할까요?')) return;
+    const ev = repeatEditorTargetEvent;
+    state.events = state.events.filter(function (e) { return e.id !== ev.id; });
+    saveState();
+    closeRepeatEditor();
+    renderRoutine();
+    renderGrid();
+    renderToday();
+    if (detailDateStr !== null) { renderDDTodos(); }
+  }
   document.getElementById('btn-promote-mode-interval').addEventListener('click', function () {
-    if (!repeatEditorTargetEvent && promoteMode === 'interval') {
-      setPromoteMode(null);
-      syncPromoteEditorToState();
+    if (promoteMode === 'interval') {
+      if (repeatEditorTargetEvent) { confirmDeleteEditingRepeatEvent(); }
+      else { deselectMode(); }
       return;
     }
     setPromoteMode('interval');
@@ -6859,9 +6881,9 @@
     syncPromoteEditorToState();
   });
   document.getElementById('btn-promote-mode-shift').addEventListener('click', function () {
-    if (!repeatEditorTargetEvent && promoteMode === 'shift') {
-      setPromoteMode(null);
-      syncPromoteEditorToState();
+    if (promoteMode === 'shift') {
+      if (repeatEditorTargetEvent) { confirmDeleteEditingRepeatEvent(); }
+      else { deselectMode(); }
       return;
     }
     setPromoteMode('shift');
