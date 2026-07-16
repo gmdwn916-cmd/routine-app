@@ -6819,6 +6819,17 @@
         id: genId('e'), text: text, category: category, repeat: rule,
         important: promoteImportant,
       };
+      // "반복으로 전환"해도 원래 날짜의 한 번짜리 기록은 지우지 않고 그대로
+      // 둠(2026-07-16) — 다만 새 반복 규칙이 하필 그 원래 날짜와도 맞아
+      // 떨어지면 같은 날 같은 할 일이 둘로 겹쳐 보이는 문제가 있었음(사용자가
+      // 직접 확인, 오류로 신고) — 그래서 새로 만드는 반복 항목의
+      // excludedDates에 원래 날짜를 처음부터 넣어둠(오늘 탭에서 반복 할일을
+      // 왼쪽으로 쓸어서 "이 날짜만 제외"하는 것과 완전히 같은 방식 재사용) —
+      // 그 날짜만 반복 쪽에서 빠지고, 대신 원래 한 번짜리 기록이 그 날짜를
+      // 그대로 보여줌. 다른 날짜는 영향 없음.
+      if (repeatEditorSourceEvent) {
+        repeatEditorTargetEvent.excludedDates = [repeatEditorSourceEvent.date];
+      }
       if (!Array.isArray(state.events)) state.events = [];
       state.events.push(repeatEditorTargetEvent);
     } else {
@@ -6827,15 +6838,6 @@
       repeatEditorTargetEvent.repeat = rule;
       repeatEditorTargetEvent.important = promoteImportant;
     }
-
-    // "반복으로 전환"해도 원래 날짜의 한 번짜리 기록은 지우지 않고 그대로 둠
-    // (2026-07-16, 사용자 요청 — 예전엔 여기서 repeatEditorSourceEvent를
-    // state.events에서 지웠는데, 그러면 새 반복 규칙이 그 원래 날짜와 안
-    // 맞을 때 달력에서 그 날짜의 기록이 통째로 사라져 보였음). 이제는 새
-    // 반복 규칙이 원래 그대로 새 항목으로 하나 더 생기고, 원래 한 번짜리
-    // 항목은 손대지 않음 — 같은 날짜에 반복 규칙도 겹쳐 맞아떨어지면 그
-    // 날은 둘 다(한 번짜리 기록 + 반복 항목) 보일 수 있음(의도된 트레이드
-    // 오프, 사용자가 직접 이 방식을 선택함).
 
     saveState();
     renderRoutine();
