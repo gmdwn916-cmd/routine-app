@@ -1732,6 +1732,15 @@
       margin: -4px 4px 12px;
       line-height: 1.4;
     }
+    .shift-alarm-warning {
+      font-size: 12px;
+      color: #FF3B30;
+      background: rgba(255, 59, 48, 0.1);
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin: 0 0 12px;
+      line-height: 1.4;
+    }
 
     /* ── 루틴 탭 ── */
     .routine-guard {
@@ -5271,6 +5280,26 @@
     // 하지 않음(위 ensureFullScreenIntentIfNeeded 주석 참고, 앱이 안 열리는
     // 것처럼 보이던 버그의 원인이었음).
     ensureFullScreenIntentIfNeeded();
+    // 알림 권한이 꺼져 있으면 알람이 예약은 되도 실제로 울릴 때 아무 반응이
+    // 없음(scheduleShiftAlarms이 조용히 아무것도 안 하고 끝남) — 그런데
+    // 화면에는 아무 표시가 없어서 "왜 안 울리지" 헷갈리기 쉬움(2026-07-16,
+    // 실제로 이 문제로 혼동한 사용자 신고 있었음). 이 화면을 볼 때마다
+    // 권한 상태를 확인해서, 꺼져 있으면 위에 빨간 안내 문구를 보여줌.
+    (async function () {
+      const LN = window.capacitorLocalNotifications && window.capacitorLocalNotifications.LocalNotifications;
+      if (!LN) return;
+      let granted = true;
+      try {
+        const cur = await LN.checkPermissions();
+        granted = cur.display === 'granted';
+      } catch (e) {}
+      if (!granted && document.getElementById('shift-alarm-card') === card) {
+        const warn = document.createElement('div');
+        warn.className = 'shift-alarm-warning';
+        warn.textContent = '⚠️ 알림 권한이 꺼져 있어서 알람이 울리지 않아요. 휴대폰 설정 → 앱 → 루틴 → 알림에서 허용해주세요.';
+        card.insertBefore(warn, card.firstChild);
+      }
+    })();
     // 기본 순환 패턴의 근무 이름뿐 아니라, 날짜별/D번호별로 "근무 변경"해서
     // 임시로 붙인 근무 이름(예: 당직)도 여기 다 나오게 함(renderShiftColorSettings
     // 과 같은 수집 방식) — 사용자가 "변경한 근무도 알람 설정이 가능하게" 요청
