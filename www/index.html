@@ -1194,7 +1194,7 @@
     .cell-event-item {
       font-size: 9px;
       line-height: 1.2;
-      color: #ff9500;
+      color: var(--text-1); /* JS가 반복/중요 여부에 따라 인라인으로 덮어씀 */
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -2719,6 +2719,11 @@
     return getCategories().find(function (c) { return c.id === id; }) || CAT_FALLBACK;
   }
   const THEME_LABELS = { system: '시스템 설정', light: '라이트 모드', dark: '다크 모드' };
+  // 반복 할일 텍스트 색(2026-07-16) — 앱 기본 포인트색(--accent, 버튼 등에
+  // 쓰는 쨍한 초록 #34c759)을 처음 재사용했다가 "너무 눈에 띈다"는 요청으로
+  // 채도를 낮춘 전용 색으로 바꿈. buildTodoRow/appendEventIndicators/
+  // buildRoutineCard 셋 다 이 상수를 씀 — 다시 var(--accent)로 되돌리지 말 것.
+  const REPEAT_TEXT_COLOR = '#5fa475';
   function hexToRgb(hex) {
     return [parseInt(hex.slice(1,3),16), parseInt(hex.slice(3,5),16), parseInt(hex.slice(5,7),16)].join(',');
   }
@@ -3971,10 +3976,13 @@
     // 카테고리 기능이 지워지면서(2026-07-16) 할 일 텍스트 색은 더 이상
     // 카테고리 색이 아니라 반복/중요 여부로 정해짐 — 중요가 반복보다 우선
     // (중요는 "확 눈에 튀게", 반복은 "너무 튀지 않게" 요청받음): 중요 표시된
-    // 할 일은 주황(#ff9500), 그게 아니면서 반복 할일이면 초록(앱 기본
-    // 포인트색 var(--accent)과 같은 색 재사용), 둘 다 아니면 평소 글씨색
-    // (var(--text-1), 라이트/다크에 따라 자동으로 검정/흰색).
-    li.style.setProperty('--todo-text-color', item.important ? '#ff9500' : (kind === 'repeat' ? 'var(--accent)' : 'var(--text-1)'));
+    // 할 일은 주황(#ff9500), 그게 아니면서 반복 할일이면 차분한 초록
+    // (REPEAT_TEXT_COLOR — 처음엔 앱 기본 포인트색(var(--accent), 버튼 등에도
+    // 쓰는 쨍한 초록)을 재사용했는데 "너무 눈에 띈다"는 피드백으로 채도를
+    // 낮춘 전용 색으로 교체함, 2026-07-16 재조정 — 다시 var(--accent)로
+    // 되돌리지 말 것), 둘 다 아니면 평소 글씨색(var(--text-1), 라이트/다크에
+    // 따라 자동으로 검정/흰색).
+    li.style.setProperty('--todo-text-color', item.important ? '#ff9500' : (kind === 'repeat' ? REPEAT_TEXT_COLOR : 'var(--text-1)'));
 
     const textEl = document.createElement('span');
     textEl.className = 'item-text';
@@ -4336,6 +4344,11 @@
         const evEl = document.createElement('div');
         evEl.className = 'cell-event-item';
         evEl.textContent = ev.text;
+        // 달력 칸의 할 일 글자색도 buildTodoRow와 같은 규칙을 씀(2026-07-16
+        // — "모든 페이지에서 적용해달라"는 요청으로 확장, 예전엔 .cell-event-item
+        // 이 항상 고정 주황이었음). ev.repeat 필드 존재 여부로 반복 여부를 판단
+        // (한 번짜리 할 일은 이 필드 자체가 없음).
+        evEl.style.color = ev.important ? '#ff9500' : (ev.repeat ? REPEAT_TEXT_COLOR : 'var(--text-1)');
         evList.appendChild(evEl);
       });
       if (singleEvents.length > 3) {
@@ -4393,6 +4406,9 @@
           const item = document.createElement('div');
           item.className = 'year-month-item';
           item.textContent = ev.text;
+          // 이 목록은 전부 "중요 표시"된 할 일만 모은 것이라 항상 주황(2026-07-16
+          // — 다른 화면과 같은 색 규칙을 여기에도 적용해달라는 요청).
+          item.style.color = '#ff9500';
           list.appendChild(item);
         });
         box.appendChild(list);
@@ -7206,9 +7222,9 @@
     nameEl.className = 'routine-name';
     nameEl.textContent = ev.text;
     // 카테고리 기능이 지워지면서(2026-07-16) 이름 색은 buildTodoRow와 같은
-    // 규칙을 씀 — 이 목록은 전부 반복 할일이라 기본이 초록(var(--accent)),
-    // 중요 표시가 있으면 주황(#ff9500)으로 덮음.
-    nameEl.style.color = ev.important ? '#ff9500' : 'var(--accent)';
+    // 규칙을 씀 — 이 목록은 전부 반복 할일이라 기본이 차분한 초록
+    // (REPEAT_TEXT_COLOR), 중요 표시가 있으면 주황(#ff9500)으로 덮음.
+    nameEl.style.color = ev.important ? '#ff9500' : REPEAT_TEXT_COLOR;
 
     const daysEl = document.createElement('div');
     daysEl.className = 'routine-days';
