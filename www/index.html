@@ -426,15 +426,9 @@
     .today-items > .swipe-delete-wrap { border-bottom: 1px solid var(--divider); }
     .today-items > .swipe-delete-wrap:last-child { border-bottom: none; }
 
-    .item-icon {
-      font-size: 16px;
-      flex-shrink: 0;
-      line-height: 1;
-      color: var(--cat-color, inherit);
-    }
-
-    /* --cat-color는 JS가 li에 인라인으로 지정 (기존 인라인 색 지정 대체) */
-    .today-items .item-text { color: var(--cat-color, var(--text-1)); }
+    /* --todo-text-color는 JS가 li에 인라인으로 지정(반복/중요 여부에 따른
+       텍스트 색, 2026-07-16 — 카테고리 기능 제거 후 카테고리 색 대신 씀). */
+    .today-items .item-text { color: var(--todo-text-color, var(--text-1)); }
 
     /* ── 오늘 탭 리디자인 (여기 규칙은 오늘 탭에만 적용, 달력 상세는 기존 유지) ── */
     #tab-today .card {
@@ -454,19 +448,6 @@
     }
     #tab-today .today-items > .swipe-delete-wrap { border-bottom: 1px solid var(--divider); }
     #tab-today .today-items > .swipe-delete-wrap:last-child { border-bottom: none; }
-    #tab-today .item-icon {
-      width: 36px;
-      height: 36px;
-      min-width: 36px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: var(--radius-row);
-      font-size: 17px;
-      background: rgba(120,120,128,0.14);
-      background: color-mix(in srgb, var(--cat-color, var(--text-2)) var(--tint-badge), transparent);
-    }
-    #tab-today .item-text { color: var(--text-1); }
     #tab-today .item-check-btn {
       width: 28px;
       height: 28px;
@@ -504,33 +485,10 @@
     }
     .timeline-section-list.empty::before { content: '여기로 끌어다 놓기'; }
 
-    /* ── Category ── */
-    .cat-select {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      height: 40px;
-      box-sizing: border-box;
-      padding: 0 10px;
-      border: 1.5px solid var(--line);
-      border-radius: 10px;
-      font-size: 13px;
-      font-family: inherit;
-      background: var(--surface);
-      color: var(--text-1);
-      outline: none;
-      cursor: pointer;
-      max-width: 104px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      -webkit-appearance: none;
-      flex-shrink: 0;
-    }
-
-    /* 카테고리를 누르면 바로 저장(선택→닫힘)되는 팝업 목록 — 네이티브 select의
-       "완료" 버튼 같은 별도 확인 단계 없이 항목 탭 자체가 곧 확정. */
-    .cat-picker { position: relative; flex-shrink: 0; }
+    /* 이 팝업 목록 스타일(.cat-picker-menu/-item)은 원래 카테고리 고르기용으로
+       만들었지만, 카테고리 기능이 지워진 뒤(2026-07-16)로는 할 일 줄을 눌렀을
+       때 뜨는 (반복/중요/수정) 메뉴(openTodoItemMenu, #todo-item-menu)가
+       그대로 재사용 중 — 이름은 남아있어도 지우면 안 됨. */
     .cat-picker-menu {
       display: none;
       position: fixed;
@@ -1784,14 +1742,6 @@
 
     .routine-card:active { background: var(--surface-2); }
 
-    .routine-icon {
-      font-size: 22px;
-      flex-shrink: 0;
-      width: 32px;
-      text-align: center;
-      line-height: 1;
-    }
-
     .routine-info {
       flex: 1;
       min-width: 0;
@@ -2110,7 +2060,6 @@
       margin-top: 4px;
     }
 
-    .today-item--done .item-icon,
     .today-item--done .item-text { opacity: 0.4; }
     .item-check-btn {
       width: 26px;
@@ -2412,13 +2361,6 @@
         <p class="shift-color-hint">색은 배경에 옅게(약 15%) 적용됩니다. 너무 어두운 색은 글씨와 구분이 어려울 수 있어요.</p>
       </div>
 
-      <!-- 카테고리 관리 -->
-      <div id="sd-categories" style="display:none">
-        <div class="card" id="category-settings-card"></div>
-        <button type="button" class="btn btn-secondary" id="btn-category-add" style="width:100%;margin-top:10px;">+ 새 카테고리 추가</button>
-        <p class="shift-color-hint">카테고리를 지우면 그걸 쓰던 할 일은 "기타" 모양으로 보여요. "기타"는 항상 회색으로 고정돼 있고 수정·삭제가 안 돼요.</p>
-      </div>
-
       <!-- 주 시작 요일 -->
       <div id="sd-weekstart" style="display:none">
         <div class="card">
@@ -2547,9 +2489,6 @@
     </div>
     <div class="bulk-input-row">
       <input type="text" id="promote-text-input" maxlength="50" placeholder="예: 물 마시기, 주짓수…">
-      <div class="cat-picker" id="promote-cat-picker">
-        <button type="button" id="promote-cat-btn" class="cat-select"></button>
-      </div>
     </div>
     <div class="btn-row" id="promote-mode-row">
       <button class="btn btn-secondary" id="btn-promote-mode-interval">기간</button>
@@ -2746,12 +2685,6 @@
   </div>
 </div>
 
-<!-- 반복 할일 편집 시트의 카테고리 팝업 — 시트(#promote-panel)가 overflow-y:auto라
-     그 안에 있으면 위로 열 때 시트 경계에 잘리는 문제가 있었음(카테고리 버튼이
-     시트 맨 위쪽에 있어서 위로 열 공간이 부족). body 바로 아래로 빼서
-     position:fixed로 화면 좌표 기준으로 띄우면 어떤 조상의 overflow에도 안 잘림. -->
-<div id="promote-cat-menu" class="cat-picker-menu"></div>
-
 <!-- 할 일 줄의 텍스트를 탭하면 뜨는 (반복/중요/수정) 메뉴 — 위 카테고리 팝업과
      같은 이유로 body 바로 아래, position:fixed. -->
 <div id="todo-item-menu" class="cat-picker-menu"></div>
@@ -2829,7 +2762,6 @@
   const SETTINGS_ICONS = {
     cycle: '<svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 14.5-4.5M20 12a8 8 0 0 1-14.5 4.5"/><polyline points="18.5 3 18.5 7.5 14 7.5"/><polyline points="5.5 21 5.5 16.5 10 16.5"/></svg>',
     colors: '<svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><circle cx="12" cy="16" r="3"/></svg>',
-    tag: '<svg viewBox="0 0 24 24"><path d="M11 3h7a2 2 0 0 1 2 2v7a2 2 0 0 1-.6 1.4l-8 8a2 2 0 0 1-2.8 0l-6-6a2 2 0 0 1 0-2.8l8-8A2 2 0 0 1 11 3z"/><circle cx="15.5" cy="7.5" r="1.3" fill="currentColor" stroke="none"/></svg>',
     weekstart: '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/><rect x="5.5" y="12.5" width="4" height="4" rx="1" fill="currentColor" stroke="none"/></svg>',
     theme: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor" stroke="none"/></svg>',
     teams: '<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M4 20c0-3.3 2.2-6 5-6s5 2.7 5 6"/><circle cx="17" cy="9" r="2.3"/><path d="M15 20c.2-2.6 1.8-4.5 4-4.5"/></svg>',
@@ -4030,26 +3962,19 @@
   // "수정"을 거침. 드래그는 이제 줄(카드) 자체를 꾹 눌러서 하고, 이 함수 자체는
   // 드래그를 다루지 않음(호출부에서 wrapWithSwipeToDelete에 dragConfig로 넘김).
   function buildTodoRow(kind, item, dateStr, refreshFn) {
-    const cat = getCat(item.category);
     const isMulti = kind === 'onetime' && isMultiDay(item);
     const isDone = kind === 'repeat' ? isRepeatDoneOn(item.id, dateStr) : !!item.done;
 
     const li = document.createElement('li');
     li.dataset.id = item.id;
     li.className = 'today-item' + (isDone ? ' today-item--done' : '');
-    li.style.setProperty('--cat-color', cat.color);
-
-    // "기타" 카테고리는 아이콘 칸 자체를 안 보이게 함(2026-07-16 재조정 —
-    // 처음엔 글자만 비웠는데, 그래도 둥근 배지 자리(.item-icon)가 빈 채로
-    // 계속 남아 어색해서 요청으로 요소 자체를 아예 안 붙이기로 바꿈). 사용자가
-    // 직접 만든 다른 카테고리가 아이콘 없이 저장된 경우엔(이름만 입력하고
-    // 이모지를 안 붙인 경우) 여전히 점(●)으로 표시 — 그건 그대로 유지.
-    if (cat.id !== 'etc') {
-      const iconEl = document.createElement('span');
-      iconEl.className = 'item-icon';
-      iconEl.textContent = cat.icon || '●';
-      li.appendChild(iconEl);
-    }
+    // 카테고리 기능이 지워지면서(2026-07-16) 할 일 텍스트 색은 더 이상
+    // 카테고리 색이 아니라 반복/중요 여부로 정해짐 — 중요가 반복보다 우선
+    // (중요는 "확 눈에 튀게", 반복은 "너무 튀지 않게" 요청받음): 중요 표시된
+    // 할 일은 주황(#ff9500), 그게 아니면서 반복 할일이면 초록(앱 기본
+    // 포인트색 var(--accent)과 같은 색 재사용), 둘 다 아니면 평소 글씨색
+    // (var(--text-1), 라이트/다크에 따라 자동으로 검정/흰색).
+    li.style.setProperty('--todo-text-color', item.important ? '#ff9500' : (kind === 'repeat' ? 'var(--accent)' : 'var(--text-1)'));
 
     const textEl = document.createElement('span');
     textEl.className = 'item-text';
@@ -4726,9 +4651,6 @@
         });
         return names.length ? names.join(' · ') : '근무유형 없음';
       }},
-      { key: 'categories', icon: SETTINGS_ICONS.tag, label: '카테고리', getValue: function() {
-        return getCategories().length + '개';
-      }},
       { key: 'weekstart', icon: SETTINGS_ICONS.weekstart, label: '주 시작 요일', getValue: function() {
         return (!state || !state.weekStart) ? '월요일' : '일요일';
       }},
@@ -4785,10 +4707,10 @@
     document.getElementById('settings-list-view').style.display = 'none';
     document.getElementById('settings-detail-view').style.display = '';
 
-    var titles = { cycle: '교대 주기', colors: '근무유형 색', categories: '카테고리', weekstart: '주 시작 요일', theme: '테마', teams: '팀 근무', alarms: '근무유형별 알람', data: '데이터 백업' };
+    var titles = { cycle: '교대 주기', colors: '근무유형 색', weekstart: '주 시작 요일', theme: '테마', teams: '팀 근무', alarms: '근무유형별 알람', data: '데이터 백업' };
     document.getElementById('settings-detail-title').textContent = titles[key] || '';
 
-    ['sd-cycle','sd-colors','sd-categories','sd-weekstart','sd-theme','sd-teams','sd-alarms','sd-data'].forEach(function(id) {
+    ['sd-cycle','sd-colors','sd-weekstart','sd-theme','sd-teams','sd-alarms','sd-data'].forEach(function(id) {
       document.getElementById(id).style.display = 'none';
     });
     document.getElementById('sd-' + key).style.display = '';
@@ -4807,8 +4729,6 @@
       document.getElementById('warn-settings').textContent = '';
     } else if (key === 'colors') {
       renderShiftColorSettings();
-    } else if (key === 'categories') {
-      renderCategorySettings();
     } else if (key === 'weekstart') {
       document.getElementById('input-week-start').value = (state && state.weekStart !== undefined) ? String(state.weekStart) : '0';
     } else if (key === 'theme') {
@@ -5645,122 +5565,6 @@
     try { await alarmPlugin.ensureFullScreenIntentAllowed(); } catch (e) {}
   }
 
-  // ── 카테고리 관리 (사용자가 직접 추가·수정·삭제) ──────────────
-  // "아이콘 텍스트" 앞머리에 붙은 이모지 1개를 떼어내고 나머지를 이름으로 분리
-  function splitCategoryInput(raw) {
-    const trimmed = raw.trim();
-    const m = trimmed.match(/^(\p{Extended_Pictographic}️?)\s*(.*)$/u);
-    if (m) return { icon: m[1], name: m[2].trim() };
-    return { icon: '', name: trimmed };
-  }
-
-  function renderCategorySettings() {
-    const card = document.getElementById('category-settings-card');
-    card.innerHTML = '';
-    const cats = getCategories();
-
-    cats.forEach(function (cat) {
-      const row = document.createElement('div');
-      row.className = 'shift-color-row';
-
-      // "기타"는 항상 회색으로 고정 — 수정·삭제 불가(카테고리 미설정 시의 기본값이라 늘 있어야 함)
-      if (cat.id === 'etc') {
-        const rowTop = document.createElement('div');
-        rowTop.className = 'shift-color-row-top';
-        const label = document.createElement('span');
-        label.className = 'shift-color-name';
-        label.style.color = cat.color;
-        label.textContent = cat.name + ' · 고정';
-        rowTop.appendChild(label);
-        row.appendChild(rowTop);
-        card.appendChild(row);
-        return;
-      }
-
-      const rowTop = document.createElement('div');
-      rowTop.className = 'shift-color-row-top';
-
-      const nameInput = document.createElement('input');
-      nameInput.type = 'text';
-      nameInput.value = (cat.icon ? cat.icon + ' ' : '') + cat.name;
-      nameInput.maxLength = 14;
-      nameInput.placeholder = '예: 🥋 운동';
-      nameInput.className = 'shift-color-name';
-      nameInput.style.cssText = 'flex:1;min-width:0;width:0;border:1.5px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--surface-2);color:var(--text-1);font-family:inherit;';
-
-      nameInput.addEventListener('input', function () {
-        const parsed = splitCategoryInput(nameInput.value);
-        cat.icon = parsed.icon;
-        cat.name = parsed.name;
-        saveState();
-      });
-
-      const delBtn = document.createElement('button');
-      delBtn.className = 'inbox-item-del';
-      delBtn.textContent = '×';
-      delBtn.setAttribute('aria-label', '카테고리 삭제');
-      delBtn.style.flexShrink = '0';
-      delBtn.addEventListener('click', function () {
-        const i = state.categories.findIndex(function (c) { return c === cat; });
-        if (i === -1) return;
-        state.categories.splice(i, 1);
-        saveState();
-        renderCategorySettings();
-      });
-
-      rowTop.appendChild(nameInput);
-      rowTop.appendChild(delBtn);
-      row.appendChild(rowTop);
-
-      const rowBottom = document.createElement('div');
-      rowBottom.className = 'shift-color-row-bottom';
-      const swatchWrap = document.createElement('div');
-      swatchWrap.className = 'shift-color-swatches';
-      const colorInput = document.createElement('input');
-      colorInput.type = 'color';
-      colorInput.value = cat.color;
-      colorInput.className = 'shift-color-input';
-      colorInput.title = '직접 선택';
-
-      function selectColor(color) {
-        cat.color = color;
-        colorInput.value = color;
-        swatchWrap.querySelectorAll('.shift-color-swatch').forEach(function (s) {
-          s.classList.toggle('active', s.dataset.color === color);
-        });
-        saveState();
-      }
-
-      CATEGORY_COLOR_PRESETS.forEach(function (preset) {
-        const swatch = document.createElement('button');
-        swatch.className = 'shift-color-swatch' + (preset === cat.color ? ' active' : '');
-        swatch.dataset.color = preset;
-        swatch.style.background = preset;
-        swatch.title = preset;
-        swatch.addEventListener('click', function () { selectColor(preset); });
-        swatchWrap.appendChild(swatch);
-      });
-
-      colorInput.addEventListener('input', function () { cat.color = colorInput.value; });
-      colorInput.addEventListener('change', function () { selectColor(colorInput.value); });
-
-      rowBottom.appendChild(swatchWrap);
-      rowBottom.appendChild(colorInput);
-      row.appendChild(rowBottom);
-      card.appendChild(row);
-    });
-  }
-
-  document.getElementById('btn-category-add').addEventListener('click', function () {
-    if (!Array.isArray(state.categories)) state.categories = [];
-    const newCat = { id: genId('cat'), name: '새 카테고리', color: '#8e8e93', icon: '' };
-    const etcIdx = state.categories.findIndex(function (c) { return c.id === 'etc'; });
-    if (etcIdx === -1) state.categories.push(newCat);
-    else state.categories.splice(etcIdx, 0, newCat);
-    saveState();
-    renderCategorySettings();
-  });
-
   // 데이터 내보내기: 웹앱과 네이티브 앱(Capacitor)이 저장공간을 따로 쓰는 문제 때문에
   // 생긴 기능 — 지금 갖고 있는 state를 파일로 저장해서 다른 실행 환경으로 옮길 수 있게 함.
   // btn-data-export는 <button>이 아니라 <a>임 — 이 앵커 자체가 실제 사용자가 누른
@@ -6462,7 +6266,15 @@
   let promoteLunarValues = { month: 1, day: 1 };
   let promoteShiftGridSelected = new Set(); // 근무×요일 표에서 켜진 칸들 ("근무이름|요일번호" 문자열)
   let promoteShiftAllNames = []; // 현재 설정에 있는 근무 이름 전체 목록(표의 세로 행)
-  let promoteCategoryId = 'etc'; // 카테고리 팝업에서 고른 카테고리(select 대신 버튼+팝업 목록 사용)
+  // 카테고리 기능은 지워짐(2026-07-16, 사용자 요청 — 나중에 필요해지면 다시
+  // 만들 수 있게 데이터 계층(state.categories, getCategories/getCat 등)은
+  // 그대로 남겨뒀지만, 고르는 UI는 전부 없앰). 새로 만드는 반복 할일은
+  // 항상 'etc'(기타)로 저장되고, 이미 카테고리가 있던 예전 반복 할일을
+  // 편집할 때는 openRepeatEditor()가 그 값을 그대로 읽어와서 저장 시 안
+  // 바뀌게 함(고를 UI가 없다고 기존 값을 지우면 안 되므로) — 그래서 여기서
+  // 바꾸는 게 아니라 openRepeatEditor에서 매번 다시 채워짐, let으로 유지.
+  // 다시 카테고리 고르는 화면을 만들지 말 것(요청과 반대).
+  let promoteCategoryId = 'etc';
   // 이 화면(반복 할 일 만들기/전환/편집) 안의 중요(★) 토글 버튼은 다시
   // 지워짐(2026-07-16 재확인 요청) — 중요 표시가 필요하면 만든 뒤 "반복
   // 할일" 탭 목록에서 그 줄을 눌러 나오는 메뉴(반복/중요/수정)의 "중요"로
@@ -6471,29 +6283,6 @@
   // 사라지지 않게만 함(이 화면에서 값을 바꿀 방법은 없음, 읽기만 함) —
   // 다시 이 값을 UI로 노출하려 하지 말 것.
   let promoteImportant = false;
-
-  function renderPromoteCatButton() {
-    const cat = getCat(promoteCategoryId);
-    document.getElementById('promote-cat-btn').textContent = (cat.icon ? cat.icon + ' ' : '') + cat.name;
-  }
-
-  function renderPromoteCatMenu() {
-    const menu = document.getElementById('promote-cat-menu');
-    menu.innerHTML = '';
-    getCategories().forEach(function (c) {
-      const item = document.createElement('button');
-      item.type = 'button';
-      item.className = 'cat-picker-menu-item' + (c.id === promoteCategoryId ? ' active' : '');
-      item.textContent = (c.icon ? c.icon + ' ' : '') + c.name;
-      item.addEventListener('click', function () {
-        promoteCategoryId = c.id;
-        renderPromoteCatButton();
-        menu.classList.remove('open');
-        syncPromoteEditorToState();
-      });
-      menu.appendChild(item);
-    });
-  }
 
   // "근무로 고르기" 조건 묶음 하나를 사람이 읽을 문장으로. (예: "주간인 토요일마다")
   // 반복 할일 탭 목록에 표시할 때만 씀 — 편집 화면(표)에는 문장을 따로 안 보여줌.
@@ -6740,9 +6529,6 @@
     document.querySelectorAll('#promote-mode-row .btn').forEach(function (b) { b.classList.remove('active'); });
 
     promoteCategoryId = initialCategory;
-    renderPromoteCatButton();
-    renderPromoteCatMenu();
-    document.getElementById('promote-cat-menu').classList.remove('open');
 
     promoteShiftAllNames = [];
     state.days.forEach(function (d) {
@@ -6785,7 +6571,6 @@
 
   function closeRepeatEditor() {
     document.getElementById('promote-overlay').classList.remove('open');
-    document.getElementById('promote-cat-menu').classList.remove('open');
     repeatEditorTargetEvent = null;
     repeatEditorSourceEvent = null;
   }
@@ -6910,25 +6695,6 @@
     if (e.target === this) closeRepeatEditor();
   });
   document.getElementById('promote-text-input').addEventListener('input', syncPromoteEditorToState);
-  document.getElementById('promote-cat-btn').addEventListener('click', function () {
-    const menu = document.getElementById('promote-cat-menu');
-    const willOpen = !menu.classList.contains('open');
-    if (willOpen) {
-      // 시트(overflow-y:auto) 밖으로 뺀 팝업이라, 버튼의 실제 화면 좌표를 기준으로
-      // 매번 다시 계산해서 위치를 잡아야 함(고정된 CSS 위치가 아님).
-      const rect = this.getBoundingClientRect();
-      menu.style.right = (window.innerWidth - rect.right) + 'px';
-      menu.style.bottom = (window.innerHeight - rect.top + 6) + 'px';
-    }
-    menu.classList.toggle('open', willOpen);
-  });
-  document.addEventListener('click', function (e) {
-    const picker = document.getElementById('promote-cat-picker');
-    const menu = document.getElementById('promote-cat-menu');
-    if (picker && menu && !picker.contains(e.target) && !menu.contains(e.target)) {
-      menu.classList.remove('open');
-    }
-  });
   // ── 기간 할 일 수정 ──────────────────────────────────────────
   let periodEditingId = null;
 
@@ -7430,23 +7196,8 @@
   ];
 
   function buildRoutineCard(ev) {
-    const cat = getCat(ev.category);
-
     const card = document.createElement('div');
     card.className = 'routine-card';
-
-    // "기타" 카테고리는 아이콘 칸 자체를 안 보이게 함(buildTodoRow와 동일한
-    // 원칙, 2026-07-16).
-    const iconEl = cat.id === 'etc' ? null : document.createElement('span');
-    if (iconEl) {
-      iconEl.className = 'routine-icon';
-      if (cat.icon) {
-        iconEl.textContent = cat.icon;
-      } else {
-        iconEl.textContent = '●';
-        iconEl.style.color = cat.color;
-      }
-    }
 
     const infoEl = document.createElement('div');
     infoEl.className = 'routine-info';
@@ -7454,7 +7205,10 @@
     const nameEl = document.createElement('div');
     nameEl.className = 'routine-name';
     nameEl.textContent = ev.text;
-    nameEl.style.color = cat.color;
+    // 카테고리 기능이 지워지면서(2026-07-16) 이름 색은 buildTodoRow와 같은
+    // 규칙을 씀 — 이 목록은 전부 반복 할일이라 기본이 초록(var(--accent)),
+    // 중요 표시가 있으면 주황(#ff9500)으로 덮음.
+    nameEl.style.color = ev.important ? '#ff9500' : 'var(--accent)';
 
     const daysEl = document.createElement('div');
     daysEl.className = 'routine-days';
@@ -7467,7 +7221,6 @@
     chevron.className = 'routine-chevron';
     chevron.textContent = '›';
 
-    if (iconEl) card.appendChild(iconEl);
     card.appendChild(infoEl);
     card.appendChild(chevron);
 
