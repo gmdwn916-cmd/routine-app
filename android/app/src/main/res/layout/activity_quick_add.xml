@@ -11,11 +11,20 @@
          setOnEditorActionListener가 이미 처리하고 있었음, 버튼은 그 동작을
          한 번 더 보여주기만 하던 것이라 지워도 기능은 그대로 유지됨). 다시
          버튼을 추가하지 말 것. -->
+    <!-- 2026-07-16: 이 화면의 테마(QuickAddDialogTheme)가 Theme.AppCompat.
+         Light.Dialog로 고정돼 있어서(다크 모드에 안 맞춰짐), 글자/힌트 색을
+         따로 안 주면 항상 라이트 테마 기본값(까만 글씨)으로 나옴 — 반면 카드
+         배경(quick_add_bg.xml)은 @color/widget_bg를 참조해서 다크 모드일 때
+         카드가 어두워짐. 그러면 어두운 카드 위에 까만 힌트 글씨가 남아 안
+         보이는 문제가 생김. widget_text_primary/secondary(둘 다 라이트/다크
+         버전이 있음)를 직접 지정해서 카드 배경과 항상 같이 맞게 함. -->
     <EditText
         android:id="@+id/quick_add_input"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="할 일을 입력하세요"
+        android:textColor="@color/widget_text_primary"
+        android:textColorHint="@color/widget_text_secondary"
         android:imeOptions="actionDone"
         android:singleLine="true"
         android:maxLength="50"

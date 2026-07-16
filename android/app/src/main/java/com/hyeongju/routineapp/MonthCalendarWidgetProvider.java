@@ -185,6 +185,14 @@ public class MonthCalendarWidgetProvider extends AppWidgetProvider {
             views.setTextViewText(idFor(context, "cell_shift_" + i), "");
             views.setTextColor(idFor(context, "cell_date_" + i), primaryText);
             views.setInt(idFor(context, "cell_shift_" + i), "setBackgroundColor", 0x00000000);
+            // 오늘 표시 테두리(widget_today_cell_border) 리셋 — 이게 없으면
+            // 어제까지 "오늘"이었던 칸이 오늘이 아니게 된 뒤에도 테두리가 그대로
+            // 남아있음(RemoteViews는 매번 지정한 속성만 다시 적용하고, 지정 안 한
+            // 속성은 이전 상태를 그대로 유지함 — 날짜 칸마다 매번 새로 그릴 때
+            // 테두리를 명시적으로 지워주지 않으면 예전에 테두리 있던 칸에 계속
+            // 남음, 2026-07-16 발견·수정). 스케줄 위젯(sch_cell_N)은 처음부터
+            // 이 리셋이 있었음 — 이 위젯만 빠져있던 것.
+            views.setInt(idFor(context, "cell_container_" + i), "setBackgroundColor", 0x00000000);
         }
         views.setTextViewText(idFor(context, "widget_month_label"), "");
 

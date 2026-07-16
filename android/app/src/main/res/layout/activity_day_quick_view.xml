@@ -42,12 +42,18 @@
         android:lineSpacingExtra="4dp"
         android:textColor="@color/widget_text_primary" />
 
+    <!-- 2026-07-16: 이 화면 테마(QuickAddDialogTheme)가 라이트 고정이라 글자/
+         힌트 색을 따로 안 주면 다크 모드에서 카드 배경은 어두워지는데 힌트
+         글씨는 계속 까맣게 나와 안 보이는 문제가 있음 — activity_quick_add.xml과
+         같은 이유, 같은 방식으로 고침. -->
     <EditText
         android:id="@+id/dqv_input"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:hint="할 일을 입력하세요"
+        android:textColor="@color/widget_text_primary"
+        android:textColorHint="@color/widget_text_secondary"
         android:imeOptions="actionDone"
         android:singleLine="true"
         android:maxLength="50"

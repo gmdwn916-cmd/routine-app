@@ -267,6 +267,16 @@
   ListView, 오늘 할일·미배치 위젯이 이 방식)에서는 자식이 부모의
   fillInIntent를 자동으로 물려받지 않음 — 반응하길 원하는 뷰마다 각각
   fillInIntent를 걸어야 함.
+- **위젯에서 뜨는 작은 입력창(다이얼로그)의 다크 모드 글씨색**: QuickAddActivity/
+  TodayQuickAddActivity/DayQuickViewActivity 셋 다 QuickAddDialogTheme(부모가
+  `Theme.AppCompat.Light.Dialog`로 고정, DayNight 아님)을 씀 — 카드 배경
+  (quick_add_bg.xml)은 `@color/widget_bg`를 참조해서 다크 모드에 맞춰 어두워
+  지지만, 그 안의 EditText는 테마가 라이트로 고정돼 있어서 글자/힌트 색은
+  계속 밝은 배경 기준(까만 글씨) 그대로 나옴 — 다크 모드에서 어두운 카드 위에
+  까만 힌트 글씨가 남아 안 보이는 버그가 있었음(수정 완료, 2026-07-16). 이런
+  입력창을 새로 만들 때는 EditText에 `android:textColor`/`textColorHint`를
+  `@color/widget_text_primary`/`widget_text_secondary`로 항상 명시적으로 줄
+  것 — 테마가 알아서 맞춰줄 거라고 가정하지 말 것.
 - **위젯을 탭하면 관련 화면으로 이동**: "앱 열기" 인텐트에 목적지
   (widget_nav="month"|"today"|"inbox", 달력/스케줄 위젯은
   widget_nav_month="YYYY-MM"도 같이)를 실어 보내고, MainActivity.onCreate/
@@ -338,6 +348,16 @@
 - "오늘" 강조(파란 글자 + widget_today_cell_border 테두리)와 토(#007AFF)/
   일(#FF3B30) 헤더 색칠만 네이티브가 직접 처리(JS가 알려준 날짜 문자열/열
   번호를 쓰는 것뿐이라 근무 로직 중복 아님).
+  **버그(수정 완료, 2026-07-16)**: 오늘 표시 테두리가 날짜가 지나도 안
+  사라지던 문제 — RemoteViews는 매번 지정한 속성만 다시 적용하고 지정 안
+  한 속성은 이전 상태 그대로 유지하는데, cell_container_N의 테두리
+  배경(setBackgroundResource)이 "오늘"인 칸에서만 매번 새로 지정되고
+  전체 초기화 루프에는 리셋이 빠져 있었음 — 그래서 어제까지 오늘이었던
+  칸이 테두리를 계속 들고 있었음. 위젯 3(스케줄)의 sch_cell_N은 처음부터
+  리셋이 있었는데 이 위젯만 빠져 있던 것 — 42칸 초기화 루프에
+  `cell_container_N`의 배경을 매번 투명(setBackgroundColor 0)으로 리셋하는
+  줄을 추가해서 고침. 앞으로 칸마다 조건부로 배경/테두리를 입히는 새 위젯을
+  만들 때는 항상 전체 초기화 루프에 그 배경의 리셋도 같이 넣을 것.
 - **이전/다음 달 넘기기**: 화살표 버튼 없음 — 월요일 쪽 세로줄(헤더+6줄
   그리드 전체) 전체를 누르면 이전, 일요일 쪽 세로줄 전체를 누르면 다음
   (자기 자신에게 보내는 ACTION_PREV/NEXT 브로드캐스트로 표시 인덱스만
@@ -400,6 +420,13 @@
   항상 눌리도록 "보이지 않는 빈 줄"을 12개 덧붙임(FILLER_COUNT — 할 일이
   정말 0개일 때는 안 붙임, today_empty 문구가 정확히 0개일 때만 뜨는
   방식이라 건드리면 그 문구가 안 뜨게 됨).
+  **버그(수정 완료, 2026-07-16)**: 다크 모드에서 체크칸이 종종 안 보이던
+  문제 — 빈 줄은 item_check를 INVISIBLE로 숨기는데, 실제 항목 줄의
+  getViewAt()은 아이콘 이미지만 바꿔 끼울 뿐 visibility를 한 번도 다시
+  VISIBLE로 안 돌려놓고 있었음. 같은 레이아웃(getViewTypeCount()=1)을 쓰는
+  줄끼리 안드로이드가 뷰를 재활용할 때 이 상태가 그대로 남아서, 실제 항목
+  줄인데도 체크칸이 안 보이는 경우가 생겼음 — 실제 항목 쪽에도
+  `setViewVisibility(item_check, VISIBLE)`을 명시적으로 추가해서 고침.
 - 체크하면 항목이 목록에서 바로 사라짐(취소선으로 남기지 않음 — "체크하면
   안 보이게" 요청, 계속 보여주는 방식으로 되돌리지 말 것). handleToggle()이
   저장된 today_widget_data에서 그 항목을 즉시 통째로 제거하고, "이 항목을

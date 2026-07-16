@@ -124,6 +124,12 @@ public class TodayWidgetService extends RemoteViewsService {
                 done ? R.color.widget_text_secondary : R.color.widget_text_primary));
             row.setImageViewResource(idFor("item_check"),
                 done ? R.drawable.widget_check_on : R.drawable.widget_check_off);
+            // 빈 줄(위 position >= items.size() 분기)이 체크칸을 INVISIBLE로
+            // 숨기는데, 안드로이드가 같은 레이아웃을 쓰는 줄끼리 뷰를 재활용할 때
+            // 그 상태가 그대로 남아 실제 항목 줄인데도 체크칸이 안 보이는 문제가
+            // 있었음(다크 모드에서 자주 눈에 띔 — 2026-07-16 발견·수정) — 실제
+            // 항목은 항상 명시적으로 VISIBLE로 되돌림.
+            row.setViewVisibility(idFor("item_check"), View.VISIBLE);
 
             // 체크칸(item_check)이 탭됐을 때 어떤 항목의 무엇을 바꿔야 하는지 알려주는
             // 꼬리표. "done을 뒤집어라"가 아니라 "눌렀을 때 이 상태(!done)가 될
