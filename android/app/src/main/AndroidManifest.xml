@@ -138,6 +138,19 @@
             android:name=".InboxWidgetService"
             android:permission="android.permission.BIND_REMOTEVIEWS"
             android:exported="false" />
+
+        <!-- 근무유형별 알람(2026-07-16, 진짜 기상 알람으로 재구현) — 이 시각에
+             AlarmManager가 ShiftAlarmReceiver를 깨움 -->
+        <receiver
+            android:name=".ShiftAlarmReceiver"
+            android:exported="false" />
+        <!-- 알람이 울릴 때 화면 전체에 뜨는 화면(끄기/다시 울리기 버튼) -->
+        <activity
+            android:name=".ShiftAlarmActivity"
+            android:theme="@style/ShiftAlarmTheme"
+            android:excludeFromRecents="true"
+            android:launchMode="singleInstance"
+            android:exported="false" />
     </application>
 
     <!-- Permissions -->
@@ -146,4 +159,8 @@
     <!-- 데이터 내보내기(saveBackupFile)에서 안드로이드 9 이하 기기일 때만 필요.
          안드로이드 10+에서는 MediaStore 방식이라 이 권한 자체가 필요 없음. -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
+    <!-- 근무 알람이 울릴 때 화면 전체를 강제로 띄우는 데 필요(전화 수신 화면과
+         같은 원리) -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission android:name="android.permission.VIBRATE" />
 </manifest>

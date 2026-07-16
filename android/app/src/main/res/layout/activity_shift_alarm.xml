@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 근무 알람이 울릴 때 화면 전체에 뜨는 화면 — 시각·근무 이름을 크게 보여주고,
+     "끄기"/"다시 울리기" 버튼 둘만 있음. 버튼을 눌러야만 알람이 멈춤(뒤로가기로는
+     안 닫힘, ShiftAlarmActivity.onBackPressed() 참고). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:background="#1C1C1E"
+    android:padding="32dp">
+
+    <TextView
+        android:id="@+id/alarm_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="#FFFFFF"
+        android:textSize="64sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/alarm_shift_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:textColor="#FFFFFF"
+        android:textSize="20sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="64dp"
+        android:orientation="horizontal"
+        android:gravity="center">
+
+        <Button
+            android:id="@+id/alarm_snooze_button"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:text="5분 뒤 다시"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#3A3A3C" />
+
+        <Button
+            android:id="@+id/alarm_stop_button"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:text="끄기"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#007AFF" />
+
+    </LinearLayout>
+
+</LinearLayout>

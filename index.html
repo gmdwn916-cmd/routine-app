@@ -5266,15 +5266,68 @@
       card.innerHTML = '<div class="shift-color-empty">이 기능은 설치된 앱에서만 동작해요. 웹 브라우저에서는 알람이 울리지 않아요.</div>';
       return;
     }
+    // 기본 순환 패턴의 근무 이름뿐 아니라, 날짜별/D번호별로 "근무 변경"해서
+    // 임시로 붙인 근무 이름(예: 당직)도 여기 다 나오게 함(renderShiftColorSettings
+    // 과 같은 수집 방식) — 사용자가 "변경한 근무도 알람 설정이 가능하게" 요청
+    // (2026-07-16). 이렇게 안 하면 순환 패턴에 없는 근무(당직 등)는 알람을
+    // 아예 켤 수 없었음.
     const shiftNames = [];
     state.days.forEach(function (d) {
       if (d.shiftType.name && shiftNames.indexOf(d.shiftType.name) === -1) shiftNames.push(d.shiftType.name);
     });
+    if (Array.isArray(state.shiftOverrides)) {
+      state.shiftOverrides.forEach(function (o) {
+        if (o.shiftName && shiftNames.indexOf(o.shiftName) === -1) shiftNames.push(o.shiftName);
+      });
+    }
+    if (Array.isArray(state.dayOverrides)) {
+      state.dayOverrides.forEach(function (o) {
+        if (o.shiftName && shiftNames.indexOf(o.shiftName) === -1) shiftNames.push(o.shiftName);
+      });
+    }
     if (shiftNames.length === 0) {
       card.innerHTML = '<div class="shift-color-empty">등록된 근무유형이 없습니다.</div>';
       return;
     }
     if (!state.shiftAlarms) state.shiftAlarms = {};
+
+    // 소리·진동 전체 켜기/끄기(2026-07-16 추가) — 근무마다 따로가 아니라 알람
+    // 전체에 적용되는 설정. 기기가 무음/진동 모드여도 이 앱 설정이 켜져 있으면
+    // 그대로 울리게 하는 게 목적이라(요청 그대로), 소리는 계속 알람 전용
+    // 소리 스트림(AudioAttributes.USAGE_ALARM)으로 재생해서 기기의 무음/
+    // 진동 모드와 무관하게 남 — 이 두 토글은 "이 앱의 알람 자체에서" 소리/
+    // 진동을 낼지 말지만 결정함(기기 설정을 따라가는 게 아니라 이 앱
+    // 설정이 우선). 기본값은 소리·진동 둘 다 켜짐.
+    if (state.shiftAlarmSoundEnabled === undefined) state.shiftAlarmSoundEnabled = true;
+    if (state.shiftAlarmVibrateEnabled === undefined) state.shiftAlarmVibrateEnabled = true;
+
+    const globalRow = document.createElement('div');
+    globalRow.className = 'shift-color-row';
+    [
+      { key: 'shiftAlarmSoundEnabled', label: '소리' },
+      { key: 'shiftAlarmVibrateEnabled', label: '진동' },
+    ].forEach(function (opt) {
+      const rowTop = document.createElement('div');
+      rowTop.className = 'shift-color-row-top';
+      const nameEl = document.createElement('span');
+      nameEl.className = 'shift-alarm-name';
+      nameEl.textContent = opt.label;
+      const toggleBtn = document.createElement('button');
+      toggleBtn.type = 'button';
+      toggleBtn.className = 'shift-alarm-toggle' + (state[opt.key] ? ' is-on' : '');
+      toggleBtn.textContent = state[opt.key] ? '켜짐' : '꺼짐';
+      toggleBtn.addEventListener('click', function () {
+        state[opt.key] = !state[opt.key];
+        toggleBtn.classList.toggle('is-on', state[opt.key]);
+        toggleBtn.textContent = state[opt.key] ? '켜짐' : '꺼짐';
+        saveState();
+        scheduleShiftAlarms();
+      });
+      rowTop.appendChild(nameEl);
+      rowTop.appendChild(toggleBtn);
+      globalRow.appendChild(rowTop);
+    });
+    card.appendChild(globalRow);
 
     shiftNames.forEach(function (name) {
       if (!state.shiftAlarms[name]) state.shiftAlarms[name] = { enabled: false, time: '07:00' };
@@ -5366,11 +5419,16 @@
 
     const hint = document.createElement('p');
     hint.className = 'shift-color-hint';
-    hint.textContent = '켜둔 근무유형인 날 그 시각에 소리·진동으로 알려줘요. 처음 켤 때 알림 허용 창이 뜨면 허용해줘야 울려요.';
+    hint.textContent = '켜둔 근무유형인 날 그 시각에 화면 전체를 덮는 알람이 울려요. 직접 꺼야 멈춰요(기상 알람과 같아요). 처음 켤 때 알림 허용 창이 뜨면 허용해줘야 울려요.';
     card.appendChild(hint);
   }
 
   // 필요할 때(설정 저장 시점 등) 호출 — 최초 1회만 물어보고 이후엔 캐시된 결과로 판단.
+  // 알람 화면 자체(ShiftAlarmActivity)는 안드로이드 네이티브 코드로 직접
+  // 만들었지만, "알림 보여줘도 되나요?" 허락은 계속 @capacitor/local-notifications
+  // 플러그인의 권한 확인창을 그대로 재사용함(이미 잘 동작하던 부분이라 새로
+  // 안 만듦) — 이 허락이 있어야 알람이 울릴 때 화면을 띄우는 데 쓰는 알림도
+  // 뜰 수 있음(ShiftAlarmReceiver 참고).
   async function ensureAlarmPermission() {
     const LN = window.capacitorLocalNotifications && window.capacitorLocalNotifications.LocalNotifications;
     if (!LN) return false;
@@ -5380,26 +5438,43 @@
     return req.display === 'granted';
   }
 
-  // 오늘부터 앞으로 14일치 근무를 보고, 알람이 켜진 근무유형인 날마다 그 시각에
-  // 예약. 우리가 예약한 목록을 state._scheduledAlarmIds에 기록해뒀다가, 다시
-  // 예약할 때 그 id들만 먼저 취소하고 새로 까는 방식(플러그인이 돌려주는 예약
-  // 목록에 의존하지 않아서 더 확실함). id는 YYYYMMDD 숫자를 그대로 씀(하루에
-  // 알람 하나뿐이라 날짜 자체가 고유 id가 됨).
+  // 위젯들과 같은 방식(getWidgetBridge)으로 네이티브 플러그인을 한 번만
+  // 등록해서 재사용.
+  function getShiftAlarmPlugin() {
+    if (!isNativeApp() || !window.Capacitor || !window.Capacitor.registerPlugin) return null;
+    if (!window.__shiftAlarmPlugin) {
+      window.__shiftAlarmPlugin = window.Capacitor.registerPlugin('ShiftAlarm', {});
+    }
+    return window.__shiftAlarmPlugin;
+  }
+
+  // 오늘부터 앞으로 14일치 근무를 보고, 알람이 켜진 근무유형인 날마다 그 시각을
+  // 계산해서 네이티브(ShiftAlarmPlugin)에 통째로 넘김 — 예약은 항상 기존 걸
+  // 전부 취소하고 새로 까는 방식(네이티브 쪽 scheduleAll()이 그렇게 처리함,
+  // 예전 LocalNotifications 방식과 같은 원칙). id는 YYYYMMDD 숫자를 그대로 씀
+  // (하루에 알람 하나뿐이라 날짜 자체가 고유 id가 됨).
+  // **2026-07-16, "짧게 뜨는 알림"에서 "꺼야 꺼지는 진짜 기상 알람"으로 재구현**:
+  // 예전엔 @capacitor/local-notifications로 그냥 알림 하나를 예약했는데, 그
+  // 방식으로는 화면을 다 덮는 알람 화면이나 "끄기 전까지 계속 반복되는 소리"를
+  // 만들 수 없어서(플러그인이 지원 안 함) 안드로이드 코드로 직접 만든 전용
+  // 부품(ShiftAlarmPlugin/Receiver/Activity, CLAUDE.md의 "근무유형별 알람" 항목
+  // 참고)으로 예약·재생 둘 다 옮김 — 이 함수는 "언제 울려야 하는지"만 계산해서
+  // 넘기고, 실제로 화면을 띄우고 소리·진동을 반복하는 건 전부 네이티브 쪽 몫.
+  // 알람 켜진 항목이 있을 때만, 세션에 한 번만 "화면 강제로 띄우기" 권한을
+  // 확인·안내함(안드로이드 14+에서만 실제로 뭔가 함, 아래 함수 참고) — 껐다
+  // 켰다 할 때마다 설정 화면으로 계속 튕겨나가면 성가시니 세션당 한 번으로 제한.
+  let _fullScreenIntentChecked = false;
+
   async function scheduleShiftAlarms() {
     if (!isNativeApp()) return;
     if (!state || !state.cycleDays || !state.baseDate) return;
-    const LN = window.capacitorLocalNotifications && window.capacitorLocalNotifications.LocalNotifications;
-    if (!LN) return;
+    const alarmPlugin = getShiftAlarmPlugin();
+    if (!alarmPlugin) return;
 
     const ok = await ensureAlarmPermission();
     if (!ok) return;
 
-    const prevIds = Array.isArray(state._scheduledAlarmIds) ? state._scheduledAlarmIds : [];
-    if (prevIds.length) {
-      try { await LN.cancel({ notifications: prevIds.map(function (id) { return { id: id }; }) }); } catch (e) {}
-    }
-
-    const notifications = [];
+    const items = [];
     const now = new Date();
     const start = todayMidnight();
     for (let i = 0; i < 14; i++) {
@@ -5414,28 +5489,25 @@
       const at = new Date(d.getFullYear(), d.getMonth(), d.getDate(), parseInt(parts[0], 10), parseInt(parts[1], 10), 0, 0);
       if (at <= now) continue;
       const id = parseInt(dateStr.split('-').join(''), 10);
-      notifications.push({
-        id: id,
-        title: '근무 알람',
-        body: eff.name + ' 근무일이에요',
-        // 2026-07-14 버그 수정: allowWhileIdle을 안 줘서(기본값 false) 기기가
-        // Doze(절전) 상태일 때 이 알람이 그냥 later로 미뤄지는 일반
-        // 알람(AlarmManager.set/setExact)으로만 잡히고 있었음 — 특히 정확한
-        // 알람 권한이 없는 안드로이드 12+ 기기에서는 이게 가장 약한 예약
-        // 방식이라 오래 미뤄지거나 사실상 안 울리는 것처럼 느껴질 수 있었음.
-        // allowWhileIdle:true를 주면 Doze 중에도 깨우는 방식(setExactAndAllowWhileIdle/
-        // setAndAllowWhileIdle)을 쓰게 됨 — 실기기 정밀 알람 권한 없이도 훨씬
-        // 안정적으로 울림.
-        schedule: { at: at, allowWhileIdle: true },
-        channelId: 'shift-alarm',
-      });
+      items.push({ id: id, epochMillis: at.getTime(), shiftName: eff.name });
     }
 
-    if (notifications.length) {
-      try { await LN.schedule({ notifications: notifications }); } catch (e) {}
-    }
-    state._scheduledAlarmIds = notifications.map(function (n) { return n.id; });
+    // 소리·진동 켜짐/꺼짐도 같이 넘김 — 네이티브가 저장해뒀다가 알람이 실제로
+    // 울릴 때(ShiftAlarmActivity) 그 시점 값을 그대로 읽어서 반영함(예약해둔
+    // 시점이 아니라 울리는 시점 값을 따름 — 켰다 껐다 한 뒤 아직 안 울린
+    // 알람도 항상 최신 설정을 따르게 하려는 것).
+    const soundEnabled = state.shiftAlarmSoundEnabled !== false;
+    const vibrateEnabled = state.shiftAlarmVibrateEnabled !== false;
+    try {
+      await alarmPlugin.scheduleAll({ items: items, sound: soundEnabled, vibrate: vibrateEnabled });
+    } catch (e) {}
+    state._scheduledAlarmIds = items.map(function (n) { return n.id; });
     saveState();
+
+    if (items.length && !_fullScreenIntentChecked) {
+      _fullScreenIntentChecked = true;
+      try { await alarmPlugin.ensureFullScreenIntentAllowed(); } catch (e) {}
+    }
   }
 
   // ── 카테고리 관리 (사용자가 직접 추가·수정·삭제) ──────────────

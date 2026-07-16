@@ -146,31 +146,95 @@
   (`<input type="number">` 두 칸, .shift-alarm-time-input, change/blur 시
   0~23·0~59로 clamp) — **드래그 다이얼 방식이 아님**(다른 화면의 기간
   스피너 .promote-interval-field와는 다른 입력 방식, 섞어서 되돌리지 말 것).
-- scheduleShiftAlarms()가 앱 시작 시 + 알람 설정 변경 시 호출 — 오늘부터
-  14일치 근무를 계산해서(getEffectiveShiftName, 날짜·D번호 예외 다 반영)
-  알람 켜진 근무유형인 날마다 Capacitor Local Notifications로 예약. id는
-  날짜(YYYYMMDD) — 하루 알람 하나뿐이라 날짜 자체가 고유 id. 재예약 전
-  state._scheduledAlarmIds(직전 예약 id 목록)를 먼저 취소.
-- 알림 채널("shift-alarm")은 index.html의 JS가 아니라
-  MainActivity.ensureAlarmChannel()에서 네이티브로 직접 만듦(안드로이드
-  채널은 한 번 만들면 소리/중요도를 나중에 못 바꿔서, 앱을 켤 때마다 지우고
-  새로 만듦) — JS 쪽에서 LN.createChannel()을 다시 부르지 말 것.
-- **정확한 시각에 안 울리던 버그(수정 완료)**: 채널 importance가 유효
-  범위(0~4) 밖인 5였음, createChannel에 vibrate 기본값 false라 진동이
-  꺼져 있었음, 각 알람 schedule에 allowWhileIdle이 없어서 Doze(절전)
-  상태에서 예약이 약하게 걸렸음(특히 정확한 알람 권한이 없는 안드로이드
-  12+ 기기에서 심하게 늦거나 안 울리는 것처럼 느껴짐) — 셋 다 바로잡음
-  (allowWhileIdle:true는 지금도 scheduleShiftAlarms()에 남아있음).
-- **무음/진동 모드에서도 소리 나게**: @capacitor/local-notifications의
-  createChannel()이 채널 소리를 AudioAttributes.USAGE_NOTIFICATION으로
-  고정해버려서(JS로 못 바꿈) 무음/진동 모드를 그대로 존중해 소리가 안
-  나던 문제 — 채널 생성을 MainActivity 네이티브 코드로 옮기고 진짜
-  알람시계가 쓰는 AudioAttributes.USAGE_ALARM(무음/진동과 무관한 전용
-  스트림)으로 만듦. 소리는 RingtoneManager로 시스템 "기본 알람음"을 가져와
-  씀(사용자가 시스템 설정에서 알람음을 바꾸면 같이 따라감). **한계**: 기기의
-  "알람" 볼륨 자체가 0이면 진짜 알람시계도 마찬가지로 안 울림(사용자가
-  직접 올려야 하는 부분). SCHEDULE_EXACT_ALARM 권한 요청과 잠금화면 위
-  풀스크린 알람 화면은 아직 없음(필요해지면 검토).
+  **목록에 나오는 근무 이름은 기본 순환 패턴뿐 아니라 shiftOverrides/
+  dayOverrides로 "근무 변경"해서 붙인 이름(예: 당직)도 포함**(2026-07-16 —
+  renderShiftColorSettings()와 똑같은 수집 방식, 기본 패턴에 없는 근무는
+  알람을 아예 켤 수 없었던 문제 수정) — 다시 기본 패턴 이름만 모으는
+  방식으로 줄이지 말 것.
+- **소리·진동 전체 켜기/끄기(2026-07-16 추가)**: 근무별이 아니라 알람
+  기능 전체에 적용되는 토글 두 개(state.shiftAlarmSoundEnabled/
+  shiftAlarmVibrateEnabled, 기본값 둘 다 true) — renderShiftAlarmSettings()
+  맨 위, 근무별 목록보다 먼저 보임. 바뀔 때마다 scheduleShiftAlarms()를
+  다시 불러서 네이티브(ShiftAlarmPlugin)에 최신 값을 넘김 — 네이티브는
+  SharedPreferences("widget_bridge")의 KEY_SOUND_ENABLED/KEY_VIBRATE_ENABLED에
+  저장해두고, **예약 시점이 아니라 알람이 실제로 울리는 시점**(ShiftAlarmActivity.
+  startRinging())에 그 값을 읽어서 반영함 — 켰다 껐다 한 뒤 아직 안 울린
+  알람도 항상 최신 설정을 따름. 소리를 꺼두면 MediaPlayer 자체를 안 만들고,
+  진동을 꺼두면 Vibrator.vibrate() 자체를 안 부름.
+  **"기기의 무음/진동 모드와 무관하게 이 앱 설정이 우선"(요청 그대로)**: 소리는
+  AudioAttributes.USAGE_ALARM 스트림으로 재생하는데, 안드로이드가 이 스트림을
+  무음/진동 모드·방해금지 모드와 별개로 취급해서 그대로 남 — 별도 코드
+  없이 이미 되던 부분. 진동도 알림 채널을 거치지 않고 Vibrator.vibrate()를
+  직접 부르는 방식이라 마찬가지로 기기 무음/진동 모드와 무관하게 동작함
+  (채널을 거치는 진동만 무음/진동 모드의 영향을 받음 — 이 앱은 채널
+  소리·진동을 아예 꺼뒀으므로 해당 없음, 아래 항목 참고). 기기 자체의
+  "알람" 볼륨이 0이거나 진동을 시스템에서 완전히 꺼둔 극히 드문 경우만
+  예외(앱이 어떻게 할 수 없는 부분).
+- **"진짜 기상 알람"으로 재구현(2026-07-16)** — 처음엔 짧게 떴다 사라지는
+  일반 알림이었는데, 사용자가 "화면 전체를 덮고, 사용자가 꺼야 꺼지는
+  알람"을 요청해서 완전히 새로 만듦. @capacitor/local-notifications
+  플러그인은 이런 동작(화면 강제로 띄우기, 끄기 전까지 소리 반복)을 지원
+  안 해서, 이 기능만 안드로이드 코드로 직접 만든 전용 부품 3개로 구현함
+  (WidgetBridgePlugin처럼 이 프로젝트 전용으로 새로 쓴 것 — npm 패키지
+  아님):
+  - **ShiftAlarmScheduler**(그냥 자바 클래스, 플러그인 아님) — 알람 하나를
+    실제로 예약/취소하는 공통 로직. `AlarmManager.setAlarmClock()`을 씀 —
+    "진짜 알람시계" 앱을 위한 API라 안드로이드 12+에서 정확한 시각 알람에
+    보통 필요한 별도 권한(SCHEDULE_EXACT_ALARM) 없이도 항상 정확한 시각에
+    울리고 절전(Doze) 상태에서도 깨움. 예전 방식(LocalNotifications +
+    allowWhileIdle)보다 이 앱이 원하는 동작에 더 정확히 맞아서 이걸로
+    바꿈 — 다시 LocalNotifications 기반 예약으로 되돌리지 말 것.
+  - **ShiftAlarmReceiver** — 예약된 시각에 안드로이드가 깨우는
+    BroadcastReceiver. 여기서 화면을 직접 띄우지 않음(백그라운드 상태에서
+    액티비티를 바로 띄우는 건 안드로이드 10+부터 막혀 있어서) — 대신
+    `setFullScreenIntent()`가 달린 알림을 하나 올려서 안드로이드가 알아서
+    화면을 띄우게 함(전화 수신 화면과 같은 원리). 화면이 꺼져있거나
+    잠겨있으면 안드로이드가 자동으로 전체 화면으로 띄우고, 화면이 켜져
+    있고 잠금이 풀려있으면 대신 위에서 살짝 뜨는 알림으로만 보여주고
+    눌러야 열림 — 둘 다 안드로이드가 정한 동작이라 앱에서 더 강제할 수
+    없음.
+  - **ShiftAlarmActivity** — 알람이 울릴 때 뜨는 화면 자체. `setShowWhenLocked`/
+    `setTurnScreenOn`(API 27+, 그 미만은 옛 윈도우 플래그)으로 잠금화면
+    위로 뜨게 함. 소리(RingtoneManager의 시스템 "기본 알람음",
+    AudioAttributes.USAGE_ALARM, MediaPlayer로 반복 재생)와 진동
+    (VibrationEffect.createWaveform 반복)이 "끄기"를 누르기 전까지 계속
+    남 — **뒤로가기는 막아둠(onBackPressed에서 아무 것도 안 함)**, 오직
+    "끄기"/"5분 뒤 다시"(스누즈, ShiftAlarmScheduler.scheduleOne을 5분
+    뒤 시각으로 다시 호출) 버튼 두 개로만 멈춤. 다시 뒤로가기로 닫히게
+    하거나, 일정 시간 뒤 자동으로 꺼지게 만들지 말 것 — "사용자가 꺼야
+    꺼지는 알람"이 이 기능의 핵심 요구사항.
+  - **ShiftAlarmPlugin**(Capacitor 플러그인) — JS가 "이 날짜들에 이 근무
+    이름으로 알람을 걸어야 한다"(scheduleShiftAlarms()가 계산)를 통째로
+    넘기면(scheduleAll({items, sound, vibrate})) 기존 예약을 전부 취소하고
+    새로 깖(예전 LocalNotifications 방식과 같은 "통째로 다시 깔기" 원칙
+    유지, id는 여전히 YYYYMMDD 날짜 숫자) — sound/vibrate 두 값(아래 "소리·
+    진동 전체 켜기/끄기" 항목 참고)도 이때 같이 SharedPreferences에 저장됨.
+    ensureFullScreenIntentAllowed()도 이 플러그인에 있음 — 안드로이드
+    14(API 34)부터는 "화면 강제로 띄우기" 권한이 자동으로 안 켜져 있어서,
+    이 메서드가 확인해보고 안 켜져 있으면 그 설정 화면으로 바로 안내함(JS의
+    scheduleShiftAlarms()가 알람이 1개 이상 켜져 있을 때 세션당 한 번만
+    호출 — 계속 설정 화면으로 튕겨나가면 성가시므로).
+  - 알림 채널("shift-alarm")은 여전히 MainActivity.ensureAlarmChannel()에서
+    네이티브로 직접 만듦 — 다만 **이제 소리·진동이 전혀 없는 조용한
+    채널**(channel.setSound(null,null), enableVibration(false))로 바뀜.
+    소리·진동은 전부 ShiftAlarmActivity가 반복 재생을 직접 책임지므로,
+    채널에도 소리를 주면 화면이 뜨기 전 아주 잠깐 겹쳐 울리는 어색함이
+    생길 수 있어서 뺌 — importance만 HIGH로 유지(fullScreenIntent가
+    동작하려면 필요). 다시 이 채널에 소리를 넣지 말 것.
+  - JS의 ensureAlarmPermission()(알림을 띄워도 되는지 허락 확인)은 그대로
+    @capacitor/local-notifications 플러그인의 권한 확인창을 재사용함 —
+    화면 자체는 새로 만들었지만 "알림 허락받기"는 이미 잘 되던 부분이라
+    새로 안 만듦.
+- **예전에 겪었던 문제들(지금 구조에서는 해당 없음, 기록만 남김)**: 채널
+  importance가 유효 범위(0~4) 밖인 5였던 것, createChannel의 vibrate 기본값이
+  false였던 것, allowWhileIdle이 없어서 Doze 중 예약이 약했던 것 — 전부
+  LocalNotifications 플러그인을 쓰던 시절의 문제였고, setAlarmClock() 기반
+  구조로 바뀌면서 근본적으로 해당 사항이 없어짐.
+- **남은 한계**: 기기 자체의 "알람" 볼륨이 0이면(무음/진동 모드와는 별개의,
+  시스템 설정 안의 독립된 볼륨) 진짜 알람시계 앱도 마찬가지로 소리가 안
+  남 — 사용자가 직접 그 볼륨을 올려야 함. 화면이 켜져 있고 잠금이 풀려있는
+  상태에서 알람이 울리면 전체 화면 대신 일반 알림으로만 뜰 수 있음(안드로이드가
+  정한 동작, 뒤 "ShiftAlarmReceiver" 항목 참고).
 
 ## 배포
 - GitHub Pages. 저장소 routine-app.

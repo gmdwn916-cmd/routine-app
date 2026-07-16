@@ -5,9 +5,6 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.media.AudioAttributes;
-import android.media.RingtoneManager;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.webkit.WebSettings;
@@ -32,6 +29,7 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(WidgetBridgePlugin.class);
+        registerPlugin(ShiftAlarmPlugin.class);
         super.onCreate(savedInstanceState);
         // 개발 중 계속 새 APK를 설치해서 테스트하는데, 안드로이드는 APK를 새로
         // 설치해도 앱 데이터/캐시는 그대로 유지해서 웹뷰가 예전 index.html을
@@ -43,20 +41,16 @@ public class MainActivity extends BridgeActivity {
         savePendingNavTarget(getIntent());
     }
 
-    // 근무유형별 알람이 무음/진동 모드에서도 항상 소리로 울리게 함(2026-07-14).
-    // @capacitor/local-notifications 플러그인의 createChannel()은 채널의 소리를
-    // 항상 AudioAttributes.USAGE_NOTIFICATION으로 고정해서 만듦(플러그인 자체
-    // 네이티브 코드에 하드코딩돼 있어 JS에서 바꿀 수 없음) — 이 용도는 무음/
-    // 진동 모드일 때 안드로이드가 그대로 존중해서 안 울리거나 진동만 됨. 진짜
-    // 알람시계 앱들이 쓰는 것과 같은 방식(USAGE_ALARM + 알람용 소리 스트림)으로
-    // 직접 채널을 만들어야만 무음/진동 모드를 무시하고 항상 소리가 남 — 그래서
-    // 이 채널만은 플러그인을 거치지 않고 안드로이드 API로 직접 만듦. 채널
-    // 속성(소리/중요도 등)은 한 번 만들면 안드로이드가 이후 바뀐 값을 무시하므로,
-    // 예전(이 수정 이전) 버전에서 이미 잘못된 설정으로 만들어져 남아있을 수 있는
-    // 채널을 먼저 지우고 새로 만듦 — 앱을 켤 때마다 실행되지만 가벼운 작업이라
-    // 문제없음. index.html 쪽의 LN.createChannel() 호출은 지웠음(같은 id로
-    // 또 만들려고 해도 이미 존재해서 무시되고, 남겨두면 "어느 쪽이 진짜 설정을
-    // 하는지" 헷갈리므로) — 다시 JS에서 이 채널을 만들려고 하지 말 것.
+    // 근무유형별 알람 채널(2026-07-16, "진짜 기상 알람"으로 재구현하며 정리) —
+    // 이제 소리·진동은 전부 ShiftAlarmActivity(알람이 울릴 때 뜨는 화면)가
+    // 직접 반복해서 재생함(꺼야 꺼지는 알람이 목적이라 한 번만 울리고 마는
+    // 채널 소리로는 부족함) — 그래서 이 채널 자체는 소리·진동 없이 조용하게
+    // 만듦(채널 소리·알림 진동까지 같이 울리면 화면이 뜨기 전 아주 잠깐
+    // 겹쳐 울리는 어색함이 생길 수 있어서). 채널은 fullScreenIntent가 있는
+    // 알림을 올리기 위한 최소한의 통로 역할만 함 — importance는 여전히
+    // HIGH로 둬야 fullScreenIntent가 제대로 동작함. 채널 속성은 한 번 만들면
+    // 안드로이드가 이후 바뀐 값을 무시하므로, 예전(알림 소리가 있던) 버전이
+    // 만들어둔 채널이 남아있을 수 있어 항상 먼저 지우고 새로 만듦.
     private void ensureAlarmChannel() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
 
@@ -68,19 +62,10 @@ public class MainActivity extends BridgeActivity {
         NotificationChannel channel = new NotificationChannel(
             ALARM_CHANNEL_ID, "근무 알람", NotificationManager.IMPORTANCE_HIGH
         );
-        channel.setDescription("근무유형별로 설정한 알람");
+        channel.setDescription("근무유형별로 설정한 알람 — 화면 전체에 뜨는 알람 화면으로 울림");
         channel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PUBLIC);
-        channel.enableVibration(true);
-
-        AudioAttributes attrs = new AudioAttributes.Builder()
-            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-            .setUsage(AudioAttributes.USAGE_ALARM)
-            .build();
-        Uri alarmSound = RingtoneManager.getActualDefaultRingtoneUri(this, RingtoneManager.TYPE_ALARM);
-        if (alarmSound == null) {
-            alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-        }
-        channel.setSound(alarmSound, attrs);
+        channel.enableVibration(false);
+        channel.setSound(null, null);
 
         nm.createNotificationChannel(channel);
     }
