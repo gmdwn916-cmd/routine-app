@@ -4074,15 +4074,17 @@
     li.className = 'today-item' + (isDone ? ' today-item--done' : '');
     li.style.setProperty('--cat-color', cat.color);
 
-    const iconEl = document.createElement('span');
-    iconEl.className = 'item-icon';
-    // "기타"는 원래 아이콘이 없는 카테고리라 점(●)으로 대신 채워왔는데,
-    // 사용자가 이걸 지워달라고 요청(2026-07-16) — "기타"만 아예 빈 채로 둠.
-    // 사용자가 직접 만든 다른 카테고리가 아이콘 없이 저장된 경우엔(이름만
-    // 입력하고 이모지를 안 붙인 경우) 여전히 점으로 표시(구분 안 되면
-    // 헷갈리므로 이건 그대로 유지).
-    iconEl.textContent = cat.icon || (cat.id === 'etc' ? '' : '●');
-    li.appendChild(iconEl);
+    // "기타" 카테고리는 아이콘 칸 자체를 안 보이게 함(2026-07-16 재조정 —
+    // 처음엔 글자만 비웠는데, 그래도 둥근 배지 자리(.item-icon)가 빈 채로
+    // 계속 남아 어색해서 요청으로 요소 자체를 아예 안 붙이기로 바꿈). 사용자가
+    // 직접 만든 다른 카테고리가 아이콘 없이 저장된 경우엔(이름만 입력하고
+    // 이모지를 안 붙인 경우) 여전히 점(●)으로 표시 — 그건 그대로 유지.
+    if (cat.id !== 'etc') {
+      const iconEl = document.createElement('span');
+      iconEl.className = 'item-icon';
+      iconEl.textContent = cat.icon || '●';
+      li.appendChild(iconEl);
+    }
 
     const textEl = document.createElement('span');
     textEl.className = 'item-text';
@@ -4136,6 +4138,20 @@
         openRepeatEditor({ sourceEvent: item });
       });
       menu.appendChild(repeatItem);
+    } else if (kind === 'repeat') {
+      // 이미 반복으로 설정된 할일도 여기서 바로 그 반복 규칙(언제마다
+      // 반복되는지)을 고칠 수 있게 함(2026-07-16, 사용자 요청) — "반복 할일"
+      // 탭에서 카드를 눌렀을 때(buildRoutineCard)와 완전히 같은 방식으로
+      // openRepeatEditor({ editEvent: item })를 그대로 재사용.
+      const repeatItem = document.createElement('button');
+      repeatItem.type = 'button';
+      repeatItem.className = 'cat-picker-menu-item';
+      repeatItem.textContent = '반복';
+      repeatItem.addEventListener('click', function () {
+        menu.classList.remove('open');
+        openRepeatEditor({ editEvent: item });
+      });
+      menu.appendChild(repeatItem);
     }
 
     const impItem = document.createElement('button');
@@ -4145,7 +4161,10 @@
     impItem.addEventListener('click', function () {
       item.important = !item.important;
       saveState();
-      menu.classList.remove('open');
+      // 다른 메뉴 항목(반복/수정)과 달리 "중요"는 눌러도 메뉴를 안 닫음
+      // (2026-07-16, 사용자 요청) — 대신 버튼 글자만 바로 갱신해서 눌린
+      // 결과가 그 자리에서 보이게 함. 바깥을 탭하면 여전히 닫힘.
+      impItem.textContent = item.important ? '★ 중요 해제' : '☆ 중요 표시';
       refreshFn();
     });
     menu.appendChild(impItem);
@@ -7417,13 +7436,17 @@
     const card = document.createElement('div');
     card.className = 'routine-card';
 
-    const iconEl = document.createElement('span');
-    iconEl.className = 'routine-icon';
-    if (cat.icon) {
-      iconEl.textContent = cat.icon;
-    } else if (cat.id !== 'etc') {
-      iconEl.textContent = '●';
-      iconEl.style.color = cat.color;
+    // "기타" 카테고리는 아이콘 칸 자체를 안 보이게 함(buildTodoRow와 동일한
+    // 원칙, 2026-07-16).
+    const iconEl = cat.id === 'etc' ? null : document.createElement('span');
+    if (iconEl) {
+      iconEl.className = 'routine-icon';
+      if (cat.icon) {
+        iconEl.textContent = cat.icon;
+      } else {
+        iconEl.textContent = '●';
+        iconEl.style.color = cat.color;
+      }
     }
 
     const infoEl = document.createElement('div');
@@ -7445,7 +7468,7 @@
     chevron.className = 'routine-chevron';
     chevron.textContent = '›';
 
-    card.appendChild(iconEl);
+    if (iconEl) card.appendChild(iconEl);
     card.appendChild(infoEl);
     card.appendChild(chevron);
 
