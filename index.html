@@ -1726,6 +1726,45 @@
       flex-shrink: 0;
     }
     .shift-alarm-toggle.is-on { border-color: var(--accent); color: var(--accent); }
+    /* 소리/진동 전체 켜기·끄기 줄 — 근무별 줄(.shift-color-row)보다 더
+       컴팩트하게(2026-07-16, "더 작게" 요청) 별도 패딩/간격을 씀. */
+    .shift-alarm-global-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 6px 0 10px;
+      border-bottom: 1px solid var(--divider);
+    }
+    .shift-alarm-global-row .shift-alarm-name { font-size: 14px; }
+    /* 실제 스위치 모양 토글(2026-07-16 — 텍스트 버튼 방식을 대체) */
+    .toggle-switch {
+      position: relative;
+      width: 38px;
+      height: 22px;
+      border-radius: 11px;
+      border: none;
+      background: var(--line);
+      cursor: pointer;
+      flex-shrink: 0;
+      padding: 0;
+      -webkit-appearance: none;
+      appearance: none;
+      transition: background 0.15s ease;
+    }
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fff;
+      transition: transform 0.15s ease;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    }
+    .toggle-switch.is-on { background: var(--accent); }
+    .toggle-switch.is-on::after { transform: translateX(16px); }
     .shift-color-hint {
       font-size: 11px;
       color: var(--text-2);
@@ -5300,20 +5339,18 @@
         card.insertBefore(warn, card.firstChild);
       }
     })();
-    // 기본 순환 패턴의 근무 이름뿐 아니라, 날짜별/D번호별로 "근무 변경"해서
-    // 임시로 붙인 근무 이름(예: 당직)도 여기 다 나오게 함(renderShiftColorSettings
-    // 과 같은 수집 방식) — 사용자가 "변경한 근무도 알람 설정이 가능하게" 요청
-    // (2026-07-16). 이렇게 안 하면 순환 패턴에 없는 근무(당직 등)는 알람을
-    // 아예 켤 수 없었음.
+    // 기본 순환 패턴의 근무 이름뿐 아니라, D번호별로 "근무 변경"해서 붙인
+    // 근무 이름(예: 당직)도 여기 다 나오게 함 — 이건 그 자리(D번호)가 돌아올
+    // 때마다 반복해서 적용되는 변경이라 알람을 걸 만한 대상이기 때문
+    // (2026-07-16 최초 추가). **날짜별 근무 변경(state.shiftOverrides, 예:
+    // "괌여행"처럼 특정 날짜 하루만 바꾼 것)은 일부러 뺌(2026-07-16 재조정 —
+    // 사용자가 "일회성으로 바뀐 근무는 알람 목록에 넣지 말아달라" 요청)** —
+    // 반복 안 되는 하루짜리 변경까지 알람 목록에 계속 남으면 목록이 지저분해짐.
+    // 다시 shiftOverrides를 이 목록에 합치지 말 것.
     const shiftNames = [];
     state.days.forEach(function (d) {
       if (d.shiftType.name && shiftNames.indexOf(d.shiftType.name) === -1) shiftNames.push(d.shiftType.name);
     });
-    if (Array.isArray(state.shiftOverrides)) {
-      state.shiftOverrides.forEach(function (o) {
-        if (o.shiftName && shiftNames.indexOf(o.shiftName) === -1) shiftNames.push(o.shiftName);
-      });
-    }
     if (Array.isArray(state.dayOverrides)) {
       state.dayOverrides.forEach(function (o) {
         if (o.shiftName && shiftNames.indexOf(o.shiftName) === -1) shiftNames.push(o.shiftName);
@@ -5336,7 +5373,7 @@
     if (state.shiftAlarmVibrateEnabled === undefined) state.shiftAlarmVibrateEnabled = true;
 
     const globalRow = document.createElement('div');
-    globalRow.className = 'shift-color-row';
+    globalRow.className = 'shift-alarm-global-row';
     [
       { key: 'shiftAlarmSoundEnabled', label: '소리' },
       { key: 'shiftAlarmVibrateEnabled', label: '진동' },
@@ -5346,14 +5383,14 @@
       const nameEl = document.createElement('span');
       nameEl.className = 'shift-alarm-name';
       nameEl.textContent = opt.label;
+      // 텍스트 버튼("켜짐"/"꺼짐") 대신 실제 토글 스위치 모양(.toggle-switch,
+      // 2026-07-16 — "토글 형태로 넣어달랬는데 버튼식이었다" 요청으로 교체).
       const toggleBtn = document.createElement('button');
       toggleBtn.type = 'button';
-      toggleBtn.className = 'shift-alarm-toggle' + (state[opt.key] ? ' is-on' : '');
-      toggleBtn.textContent = state[opt.key] ? '켜짐' : '꺼짐';
+      toggleBtn.className = 'toggle-switch' + (state[opt.key] ? ' is-on' : '');
       toggleBtn.addEventListener('click', function () {
         state[opt.key] = !state[opt.key];
         toggleBtn.classList.toggle('is-on', state[opt.key]);
-        toggleBtn.textContent = state[opt.key] ? '켜짐' : '꺼짐';
         saveState();
         scheduleShiftAlarms();
       });
@@ -5455,6 +5492,16 @@
     hint.className = 'shift-color-hint';
     hint.textContent = '켜둔 근무유형인 날 그 시각에 화면 전체를 덮는 알람이 울려요. 직접 꺼야 멈춰요(기상 알람과 같아요). 처음 켤 때 알림 허용 창이 뜨면 허용해줘야 울려요.';
     card.appendChild(hint);
+
+    // 배터리 절약 기능이 알람을 막는 기기가 있음(2026-07-16, 실제 사용자
+    // 사례 — 삼성 기기에서 스위치도 켜져 있고 시각도 맞는데 알람이 전혀
+    // 안 울렸는데, "설정 → 앱 → 루틴 → 배터리"를 "제한 없음"으로 바꾸니
+    // 해결됨). 코드로는 더 손쓸 수 없는 기기 설정 영역이라, 안내 문구로
+    // 미리 알려줌.
+    const batteryHint = document.createElement('p');
+    batteryHint.className = 'shift-color-hint';
+    batteryHint.textContent = '알람이 안 울리면 휴대폰 배터리 절약 기능이 이 앱을 막고 있을 수 있어요. 설정 → 앱 → 루틴 → 배터리에서 "제한 없음"으로 바꿔보세요.';
+    card.appendChild(batteryHint);
   }
 
   // 필요할 때(설정 저장 시점 등) 호출 — 최초 1회만 물어보고 이후엔 캐시된 결과로 판단.
