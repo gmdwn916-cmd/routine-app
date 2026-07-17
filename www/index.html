@@ -1773,6 +1773,28 @@
       min-width: 0;
     }
 
+    .routine-name-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 3px;
+    }
+
+    .routine-name-row .routine-name { margin-bottom: 0; flex: 1; min-width: 0; }
+
+    .routine-shift-save-btn {
+      flex-shrink: 0;
+      font-size: 12px;
+      font-weight: 600;
+      color: #fff;
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      padding: 4px 10px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
     .routine-name {
       font-size: 16px;
       font-weight: 600;
@@ -1978,14 +2000,12 @@
       grid-column: 1 / -1;
     }
 
-    /* 반복·중요 탭의 근무·요일 카드 — 이름을 누르면 펼쳐지는 보기 전용 표
-       (2026-07-17). 편집 화면의 표(.promote-shift-matrix)와 같은 모양을
-       재사용하되, 칸이 <div>라 클릭 커서를 안 보여줌. */
+    /* 반복·중요 탭의 근무·요일 카드 — 이름을 누르면 펼쳐지는 표(2026-07-17).
+       편집 화면의 표(.promote-shift-matrix)와 같은 모양을 재사용하고,
+       칸을 눌러 바로 조건을 고칠 수 있음(같은 날 추가 요청 — 처음엔 보기
+       전용 <div>였다가 <button> + 클릭 핸들러로 바뀜, 기본 cursor:pointer 그대로 씀). */
     .routine-shift-preview {
       margin-top: 8px;
-    }
-    .routine-shift-preview .promote-shift-cell {
-      cursor: default;
     }
 
     .promote-interval-row {
@@ -6445,12 +6465,16 @@
 
   // 표의 켜진 칸들을 저장용 groups[]로 압축. 근무 하나당 묶음 하나 —
   // 그 근무의 요일 7개가 전부 켜져 있으면 요일 제한 없이("이 근무 날마다"), 아니면 켜진 요일만.
-  function collapseGridSelectionToGroups() {
+  // 반복·중요 탭 카드의 인라인 표 저장(buildShiftMatrixPreview)에서도 같은
+  // 압축 로직이 필요해서, 실제 계산은 selected/allNames를 인자로 받는
+  // 범용 함수로 뺌 — 편집 화면(promoteShiftGridSelected/promoteShiftAllNames)은
+  // 이 함수를 그 전역 변수로 부르는 얇은 래퍼로 유지.
+  function collapseSelectionToGroups(selected, allNames) {
     const groups = [];
-    promoteShiftAllNames.forEach(function (name) {
+    allNames.forEach(function (name) {
       const wds = [];
       for (let wd = 0; wd < 7; wd++) {
-        if (promoteShiftGridSelected.has(shiftCellKey(name, wd))) wds.push(wd);
+        if (selected.has(shiftCellKey(name, wd))) wds.push(wd);
       }
       if (wds.length === 0) return;
       groups.push(wds.length === 7
@@ -6458,6 +6482,10 @@
         : { shiftNames: [name], offset: 0, weekdays: wds });
     });
     return groups;
+  }
+
+  function collapseGridSelectionToGroups() {
+    return collapseSelectionToGroups(promoteShiftGridSelected, promoteShiftAllNames);
   }
 
   function renderIntervalSpinner() {
@@ -7376,14 +7404,20 @@
   }
 
   // "근무·요일" 반복 카드에서 이름을 누르면 펼쳐지는, 그 규칙의 근무×요일
-  // 표(2026-07-17 추가) — 편집 화면의 promote-shift-matrix와 같은 모양이지만
-  // 여기서는 보기 전용(칸에 클릭 핸들러 없음, <button> 대신 <div>).
+  // 표(2026-07-17 추가) — 편집 화면의 promote-shift-matrix와 같은 모양.
+  // **칸을 눌러 바로 조건을 수정할 수 있음(2026-07-17 추가 요청)** — 편집
+  // 화면(promoteShiftGridSelected)과 다른 별도의 선택 상태를 이 표 자신(wrap)에
+  // 담아둠(wrap._selectedSet/_allNames), 칸 클릭은 그 자리에서 칸 색만 바꾸고
+  // 아직 저장은 안 함 — 실제 저장은 이름 오른쪽의 "저장" 버튼을 눌러야 됨
+  // (buildRoutineCard의 저장 버튼 클릭 핸들러 참고).
   function buildShiftMatrixPreview(ev) {
     const wrap = document.createElement('div');
     wrap.className = 'promote-shift-matrix routine-shift-preview';
     const allNames = computeAllShiftNames();
     if (allNames.length === 0) return wrap;
     const selected = gridSelectionForShiftRule(ev.repeat, allNames);
+    wrap._selectedSet = selected;
+    wrap._allNames = allNames;
     const DOW_KR = ['일', '월', '화', '수', '목', '금', '토'];
     const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
@@ -7404,13 +7438,28 @@
       if (shiftColor) label.style.color = shiftColor;
       wrap.appendChild(label);
       WEEKDAY_ORDER.forEach(function (wd) {
-        const cell = document.createElement('div');
-        cell.className = 'promote-shift-cell' + (selected.has(shiftCellKey(name, wd)) ? ' selected' : '');
+        const key = shiftCellKey(name, wd);
+        const cell = document.createElement('button');
+        cell.type = 'button';
+        cell.className = 'promote-shift-cell' + (selected.has(key) ? ' selected' : '');
+        cell.setAttribute('aria-label', name + ' ' + DOW_KR[wd] + '요일');
+        cell.addEventListener('click', function (e) {
+          e.stopPropagation();
+          const nowSelected = !cell.classList.contains('selected');
+          if (nowSelected) selected.add(key); else selected.delete(key);
+          cell.classList.toggle('selected', nowSelected);
+        });
         wrap.appendChild(cell);
       });
     });
     return wrap;
   }
+
+  // 반복·중요 탭에서 "근무·요일" 카드의 인라인 표를 한 번에 하나만 열어두기
+  // 위한 전역 참조(2026-07-17 추가) — a카드의 표가 열려있는 상태에서 b카드
+  // 이름을 누르면 a의 표를 먼저 닫음. renderRoutine()이 목록을 통째로
+  // 다시 그릴 때도 리셋(그 시점에 이미 옛 DOM은 다 사라지므로).
+  let closeOpenRoutineShiftPreview = function () {};
 
   function buildRoutineCard(ev) {
     const card = document.createElement('div');
@@ -7418,6 +7467,9 @@
 
     const infoEl = document.createElement('div');
     infoEl.className = 'routine-info';
+
+    const nameRow = document.createElement('div');
+    nameRow.className = 'routine-name-row';
 
     const nameEl = document.createElement('div');
     nameEl.className = 'routine-name';
@@ -7427,20 +7479,59 @@
     // (REPEAT_TEXT_COLOR), 중요 표시가 있으면 주황(#ff9500)으로 덮음.
     nameEl.style.color = ev.important ? '#ff9500' : REPEAT_TEXT_COLOR;
 
-    infoEl.appendChild(nameEl);
+    nameRow.appendChild(nameEl);
+    infoEl.appendChild(nameRow);
 
     // "근무·요일" 반복은 이름 밑에 조건 문장(describeRepeatRule) 대신, 이름을
     // 누르면 실제 근무×요일 표를 펼쳐서 보여줌(2026-07-17, 사용자 요청 —
     // 문장 설명보다 표 자체가 더 정확하고 빠르게 확인됨). 그 밖의 방식
     // (기간 등)은 조건 문장을 그대로 보여줌 — 이 방식엔 표가 없어서 대상 아님.
-    if (ev.repeat && ev.repeat.type === 'shift') {
+    const isShiftType = !!(ev.repeat && ev.repeat.type === 'shift');
+    if (isShiftType) {
+      // 표에서 칸을 눌러 조건을 바로 고칠 수 있게 됐고(buildShiftMatrixPreview),
+      // 그 변경을 실제로 저장하는 작은 버튼을 이름 오른쪽에 둠(2026-07-17
+      // 추가) — 표가 펼쳐져 있을 때만 보임.
+      const saveBtn = document.createElement('button');
+      saveBtn.type = 'button';
+      saveBtn.className = 'routine-shift-save-btn';
+      saveBtn.textContent = '저장';
+      saveBtn.style.display = 'none';
+      nameRow.appendChild(saveBtn);
+
       nameEl.style.cursor = 'pointer';
       nameEl.addEventListener('click', function (e) {
         // 카드 전체 탭(→ 편집 화면 열기)과 분리해야 하므로 여기서 막음.
         e.stopPropagation();
         const existing = infoEl.querySelector('.routine-shift-preview');
-        if (existing) { existing.remove(); return; }
-        infoEl.appendChild(buildShiftMatrixPreview(ev));
+        if (existing) {
+          existing.remove();
+          saveBtn.style.display = 'none';
+          closeOpenRoutineShiftPreview = function () {};
+          return;
+        }
+        // 다른 카드의 표가 열려있으면 먼저 닫음(한 번에 하나만).
+        closeOpenRoutineShiftPreview();
+        const preview = buildShiftMatrixPreview(ev);
+        infoEl.appendChild(preview);
+        saveBtn.style.display = '';
+        closeOpenRoutineShiftPreview = function () {
+          preview.remove();
+          saveBtn.style.display = 'none';
+        };
+      });
+
+      saveBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        const preview = infoEl.querySelector('.routine-shift-preview');
+        if (!preview || !preview._selectedSet) return;
+        const groups = collapseSelectionToGroups(preview._selectedSet, preview._allNames);
+        if (groups.length === 0) return; // 칸을 하나도 안 골랐으면 저장 안 함(빈 규칙 방지)
+        ev.repeat = { type: 'shift', groups: groups };
+        saveState();
+        renderRoutine();
+        renderGrid();
+        renderToday();
+        if (detailDateStr !== null) { renderDDTodos(); }
       });
     } else {
       const daysEl = document.createElement('div');
@@ -7449,12 +7540,18 @@
       infoEl.appendChild(daysEl);
     }
 
-    const chevron = document.createElement('span');
-    chevron.className = 'routine-chevron';
-    chevron.textContent = '›';
-
     card.appendChild(infoEl);
-    card.appendChild(chevron);
+
+    // "근무·요일" 카드는 이름을 눌러 표를 펼쳐 바로 조건을 고칠 수 있게 되면서
+    // 화살표(다른 화면으로 이동한다는 표시)가 더 이상 안 맞아서 뺌(2026-07-17,
+    // 사용자 요청) — 그 밖의 방식(기간 등)은 카드를 누르면 여전히 편집 화면이
+    // 열리므로 화살표를 그대로 둠.
+    if (!isShiftType) {
+      const chevron = document.createElement('span');
+      chevron.className = 'routine-chevron';
+      chevron.textContent = '›';
+      card.appendChild(chevron);
+    }
 
     card.addEventListener('click', function () { openRepeatEditor({ editEvent: ev }); });
     return card;
@@ -7543,6 +7640,9 @@
 
     renderRoutineFilterButtons();
     list.innerHTML = '';
+    // 목록을 통째로 다시 그리는 시점에는 옛 카드의 표(DOM)가 이미 다 사라지므로,
+    // "열려있는 표를 닫는" 참조도 같이 리셋(안 하면 이미 없는 노드를 참조).
+    closeOpenRoutineShiftPreview = function () {};
 
     if (routineFilterMode === 'repeat') {
       // '반복' 모드 — 예전 "반복 할일" 탭과 완전히 같음(중요 여부 상관없이
