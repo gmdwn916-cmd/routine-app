@@ -1135,14 +1135,32 @@
     .grid-cell.is-holiday .cell-date { color: #ff3b30; }
     .grid-cell.today .cell-date { color: #007aff; }
 
-    /* 근무 표시는 이제 항상 이 하나의 모양만 씀(2026-07-17) — 예전엔 "이어진
-       근무"만 옆 칸까지 늘어난 띠(.cell-shift-band)였고, 나머지는 칸 안에서만
-       꽉 차는 배지(.cell-shift-badge)로 따로 있었는데, "스케줄 위젯처럼 모든
-       근무 칸이 좌우로 이어지게 해달라"는 요청으로 그 구분 자체를 없앰 — 이제
-       매일 항상 칸 좌우 여백(4px)만큼 옆으로 늘어나 옆 칸과 맞닿는다(이름이
-       다른 칸끼리도 마찬가지로 맞닿되, 모서리만 둥글게 남아 색이 바뀌는
-       지점처럼 보임). 글자색은 고정하지 않고 applyShiftBadgeColor가 인라인으로
-       칠하는 옅은 톤 배경 + 그 색 글자를 그대로 씀. */
+    /* 근무 표시는 두 모양 중 하나(2026-07-17, 세 번째 재조정으로 원래
+       구도로 되돌림) — **진짜 근무 일괄 수정(같은 batchId)으로 이어진
+       날짜만** 옆 칸까지 늘어난 띠(.cell-shift-band)로 보이고, 그 밖의
+       모든 경우(기본 순환 패턴, D번호 예외, 하루씩 따로 바꾼 날짜 예외)는
+       평범한 근무와 똑같이 칸 안에서만 꽉 차는 독립된 배지(.cell-shift-badge)로
+       보임 — 다시 이어붙지 않음. **중간에 "이름만 같으면 출처 상관없이 항상
+       이어붙임"으로 바꿨던 버전은 폐기됨**(하루씩 따로 "비번"으로 바꾼
+       이틀이 우연히 이름이 같다는 이유만으로 일괄 수정처럼 합쳐 보이는
+       버그가 있었음) — appendShiftIndicator가 어느 모양을 쓸지는 이제
+       오직 batchId 연결 여부로만 정함. */
+    .cell-shift-badge {
+      font-size: 10px;
+      font-weight: 700;
+      height: 16px;
+      line-height: 16px;
+      border-radius: 4px;
+      padding: 0 5px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    /* 같은 batchId로 이어진 날짜끼리만 하나로 이어진 띠로 표시.
+       칸 자체의 좌우 여백(4px)만큼 옆으로 늘려서 옆 칸 띠와 맞닿게 한다. */
     .cell-shift-band {
       font-size: 10px;
       font-weight: 700;
@@ -1157,14 +1175,8 @@
       box-sizing: border-box;
     }
 
-    /* 앞뒤로 다른 이름(또는 근무 없음)과 맞닿는 쪽만 둥글게 — 양쪽 다 다르면
-       (band-start와 band-end 둘 다, 고립된 하루) 네 모서리 다 둥글게(마지막
-       세 번째 규칙, 두 클래스를 같이 가진 선택자라 우선순위가 더 높아서 항상
-       이 규칙이 이김 — 단독 규칙끼리는 CSS 우선순위가 같아 나중 규칙이 통째로
-       덮어써버리므로 순서에 기대면 안 됨). */
     .cell-shift-band.band-start { border-radius: 5px 0 0 5px; }
     .cell-shift-band.band-end { border-radius: 0 5px 5px 0; }
-    .cell-shift-band.band-start.band-end { border-radius: 5px; }
 
     .cell-event-bar {
       width: 100%;
@@ -3583,47 +3595,44 @@
     return state.shiftOverrides.find(function (o) { return o.date === dateStr; }) || null;
   }
 
-  // 근무 표시는 두 가지를 서로 다른 기준으로 따로 정함(2026-07-17, 스케줄
-  // 위젯·달력 위젯과 모양을 맞추면서 정리):
-  //  1) 모서리(=옆 칸과 이어 붙는 모양)는 순전히 "실제로 보이는 근무 이름
-  //     (getEffectiveShiftName)이 앞뒤 날짜와 같은가"로만 정함 — 출처(기본
-  //     패턴/D번호 예외/날짜 예외) 상관없이 이름만 같으면 옆 칸까지 색이 죽
-  //     이어져 보임("스케줄 위젯처럼 모든 근무 칸이 좌우로 이어지게").
-  //  2) 그 칸에 글자를 실제로 찍을지는 "이 연속이 진짜 일괄 수정(근무 일괄
-  //     수정 시트에서 한 번에 만든 것)인가"로만 정함 — 괌여행처럼 날짜를
-  //     여러 개 골라서 한 번에 같은 이름으로 바꾼 경우만 그 구간 첫날에 한
-  //     번 쓰고 나머지 날은 비움(달력 위젯 스타일). **날짜 상세에서 하루씩
-  //     따로따로("한번만") 같은 이름으로 바꾼 경우는 일괄 수정이 아니므로
-  //     대상 아님**(2026-07-17 수정 — 처음엔 "날짜 예외끼리 이름이 같으면"만
-  //     보고 판단해서, 서로 다른 날 따로따로 "비번"으로 바꾼 경우까지 일괄
-  //     수정처럼 취급해 글자가 한 번만 보이는 버그가 있었음 — 이름이 같다는
-  //     것만으로는 "한 번에 같이 만들어진 것"인지 구분이 안 됨). 그래서 근무
-  //     일괄 수정 시트가 만드는 날짜 예외에는 그 시트를 한 번 쓸 때마다
-  //     공통 batchId를 붙여두고(아래 btn-bulk-shift-apply), 앞뒤 날짜의
-  //     batchId가 서로 같을 때만 진짜 일괄 수정으로 침 — "한번만"으로 만든
-  //     예외는 batchId 자체가 없어서 이 조건에 항상 안 걸리고, 기본 순환
-  //     패턴이 우연히 같은 이름을 반복하는 경우(예: 비번 비번)도 애초에
-  //     날짜 예외가 없어서 마찬가지로 안 걸림 — 두 경우 다 매 칸 이름을
-  //     그대로 반복(스케줄 위젯 스타일), 색만 같아서 칸끼리 안 끊기고
-  //     이어져 보임.
+  // 이어붙일지 말지는 오직 "진짜 근무 일괄 수정으로 이어진 날짜인가"로만
+  // 정함(2026-07-17, 세 번째 재조정 — "이름만 같으면 출처 상관없이 이어붙임"
+  // 버전은 폐기됨: 하루씩 따로 "비번"으로 바꾼 이틀이 우연히 이름이 같다는
+  // 이유만으로 일괄 수정처럼 하나로 합쳐 보이는 버그가 있었음). 근무 일괄
+  // 수정 시트가 만드는 날짜 예외에는 그 시트를 한 번 쓸 때마다 공통 batchId가
+  // 붙어있고(btn-bulk-shift-apply), 앞뒤 날짜의 batchId가 서로 같을 때만
+  // 진짜 일괄 수정으로 봄:
+  //  - 이어진 경우(괌여행 등): 옆 칸까지 늘어난 띠(.cell-shift-band)로 보이고,
+  //    그 구간 첫날에만 글자를 씀(달력 위젯 스타일).
+  //  - 그 밖의 모든 경우(기본 순환 패턴, D번호 예외, "한번만"으로 하루씩
+  //    따로 바꾼 날짜, batchId가 없는 옛 데이터)는 평범한 근무와 똑같이
+  //    독립된 배지(.cell-shift-badge)로 보이고 글자도 항상 씀 — 이름이
+  //    우연히 같아도(예: 비번 비번) 서로 안 이어붙임.
   function appendShiftIndicator(cell, cellDateStr, shiftName) {
     const d = parseLocalDate(cellDateStr);
     const prevDateStr = formatDateStr(new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1));
     const nextDateStr = formatDateStr(new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1));
-    const prevIdx0 = dayIndex0ForDate(prevDateStr);
-    const nextIdx0 = dayIndex0ForDate(nextDateStr);
-    const prevName = prevIdx0 !== null ? getEffectiveShiftName(prevDateStr, prevIdx0).name : '';
-    const nextName = nextIdx0 !== null ? getEffectiveShiftName(nextDateStr, nextIdx0).name : '';
-    const isStart = prevName !== shiftName;
-    const isEnd = nextName !== shiftName;
 
     const todayOv = getDateOverride(cellDateStr);
     const prevOv = getDateOverride(prevDateStr);
-    const isBulkContinuation = !!(todayOv && prevOv && todayOv.batchId && todayOv.batchId === prevOv.batchId);
+    const nextOv = getDateOverride(nextDateStr);
+    const linksWithPrev = !!(todayOv && todayOv.batchId && prevOv && prevOv.batchId === todayOv.batchId);
+    const linksWithNext = !!(todayOv && todayOv.batchId && nextOv && nextOv.batchId === todayOv.batchId);
 
+    if (!linksWithPrev && !linksWithNext) {
+      const shiftEl = document.createElement('div');
+      shiftEl.className = 'cell-shift-badge';
+      shiftEl.textContent = shiftName;
+      applyShiftBadgeColor(shiftEl, shiftName);
+      cell.appendChild(shiftEl);
+      return;
+    }
+
+    const isStart = !linksWithPrev;
+    const isEnd = !linksWithNext;
     const band = document.createElement('div');
     band.className = 'cell-shift-band' + (isStart ? ' band-start' : '') + (isEnd ? ' band-end' : '');
-    if (!isBulkContinuation) band.textContent = shiftName;
+    if (isStart) band.textContent = shiftName;
     applyShiftBadgeColor(band, shiftName);
     cell.appendChild(band);
   }
