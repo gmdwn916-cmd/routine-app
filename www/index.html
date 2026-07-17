@@ -1156,7 +1156,11 @@
     }
 
     /* 같은 근무가 여러 날 이어질 때 하나로 이어진 띠로 표시.
-       칸 자체의 좌우 여백(4px)만큼 옆으로 늘려서 옆 칸 띠와 맞닿게 한다. */
+       칸 자체의 좌우 여백(4px)만큼 옆으로 늘려서 옆 칸 띠와 맞닿게 한다.
+       글자색은 고정하지 않음(2026-07-17) — applyShiftBadgeColor가 인라인으로
+       칠하는 옅은 톤 배경 + 그 색 글자를 그대로 씀(예전엔 여기 color:#fff를
+       고정해두고 JS도 꽉 찬 색을 칠했는데, 이어붙일 때만 색이 달라 보인다는
+       지적으로 배지와 통일함). */
     .cell-shift-band {
       font-size: 10px;
       font-weight: 700;
@@ -1169,7 +1173,6 @@
       width: calc(100% + 8px);
       margin: 0 -4px;
       box-sizing: border-box;
-      color: #fff;
     }
 
     .cell-shift-band.band-start { border-radius: 5px 0 0 5px; }
@@ -2129,7 +2132,7 @@
     }
 
     /* 근무 변경 시트의 근무 선택 버튼 — 예전엔 직접 타이핑하는 입력칸이었는데,
-       설정 탭 "근무유형 색"에 있는 근무 중에서 고르는 팝업(#shift-picker-overlay)을
+       설정 탭 "근무 편집"에 있는 근무 중에서 고르는 팝업(#shift-picker-overlay)을
        여는 버튼으로 바뀜(2026-07-17). */
     .dd-shift-picker-btn {
       width: 100%;
@@ -2513,11 +2516,11 @@
         </div>
       </div>
 
-      <!-- 근무유형 색 -->
+      <!-- 근무 편집(구 근무유형 색) -->
       <div id="sd-colors" style="display:none">
         <div id="shift-color-card"></div>
         <div class="onboard-warn" id="shift-color-warn"></div>
-        <p class="shift-color-hint">색은 배경에 옅게(약 15%) 적용됩니다. 너무 어두운 색은 글씨와 구분이 어려울 수 있어요. 이름을 누르면 수정할 수 있어요.</p>
+        <p class="shift-color-hint">색은 배경에 옅게(약 15%) 적용됩니다. 너무 어두운 색은 글씨와 구분이 어려울 수 있어요. 이름을 누르면 수정할 수 있고, 왼쪽으로 밀면 지울 수 있어요.</p>
       </div>
 
       <!-- 주 시작 요일 -->
@@ -2961,11 +2964,6 @@
     }
   }
 
-  function applyShiftBandColor(el, shiftName) {
-    const color = getShiftColor(shiftName);
-    el.style.background = color || 'var(--text-3)';
-    el.style.color = '#fff';
-  }
 
   const STORAGE_KEY = 'shiftRoutine';
   let state = null;
@@ -3611,10 +3609,15 @@
       return;
     }
 
+    // 이어붙인 띠도 배지와 똑같은 색 규칙(옅은 15% 톤 배경 + 그 색 글자)을
+    // 씀(2026-07-17, 사용자 요청 — "이어붙인다고 색깔은 별도로 건들지 말고
+    // 기존 근무 색 그대로 해줘"). 예전엔 이 띠만 꽉 찬 색 배경 + 흰 글자로
+    // 따로 칠했었는데(applyShiftBandColor, 이제 삭제), 그러면 칸을 이어붙일
+    // 때만 색이 달라 보이는 것처럼 느껴져서 통일함.
     const band = document.createElement('div');
     band.className = 'cell-shift-band' + (isStart ? ' band-start' : '') + (isEnd ? ' band-end' : '');
     if (isStart) band.textContent = shiftName;
-    applyShiftBandColor(band, shiftName);
+    applyShiftBadgeColor(band, shiftName);
     cell.appendChild(band);
   }
 
@@ -4860,7 +4863,7 @@
         var d = parseLocalDate(state.baseDate);
         return n + suffix + ' · D1: ' + (d.getMonth()+1) + '/' + d.getDate();
       }},
-      { key: 'colors', icon: SETTINGS_ICONS.colors, label: '근무유형 색', getValue: function() {
+      { key: 'colors', icon: SETTINGS_ICONS.colors, label: '근무 편집', getValue: function() {
         if (!state || !state.cycleDays) return '미설정';
         var names = [];
         state.days.forEach(function(d) {
@@ -4924,7 +4927,7 @@
     document.getElementById('settings-list-view').style.display = 'none';
     document.getElementById('settings-detail-view').style.display = '';
 
-    var titles = { cycle: '교대 주기', colors: '근무유형 색', weekstart: '주 시작 요일', theme: '테마', teams: '팀 근무', alarms: '근무유형별 알람', data: '데이터 백업' };
+    var titles = { cycle: '교대 주기', colors: '근무 편집', weekstart: '주 시작 요일', theme: '테마', teams: '팀 근무', alarms: '근무유형별 알람', data: '데이터 백업' };
     document.getElementById('settings-detail-title').textContent = titles[key] || '';
 
     ['sd-cycle','sd-colors','sd-weekstart','sd-theme','sd-teams','sd-alarms','sd-data'].forEach(function(id) {
@@ -4988,7 +4991,7 @@
     return names;
   }
 
-  // 근무 이름을 바꿀 때(설정 탭 "근무유형 색"에서 이름을 눌러 수정, 2026-07-17
+  // 근무 이름을 바꿀 때(설정 탭 "근무 편집"에서 이름을 눌러 수정, 2026-07-17
   // 추가) 그 이름이 저장돼 있는 모든 곳을 한 번에 새 이름으로 옮김 — 한
   // 군데만 고치고 나머지를 그대로 두면 그 항목만 예전 이름으로 남아 "근무가
   // 둘로 갈라지는" 것처럼 보이므로, 이름이 나오는 곳을 전부 훑어야 함.
@@ -5034,6 +5037,26 @@
     const used = Object.keys(state.shiftColors || {}).map(function (n) { return state.shiftColors[n]; });
     const free = SHIFT_COLOR_PRESETS.find(function (c) { return used.indexOf(c) === -1; });
     return free || SHIFT_COLOR_PRESETS[used.length % SHIFT_COLOR_PRESETS.length];
+  }
+
+  // 근무 카드를 왼쪽으로 밀어서 삭제(2026-07-17 추가) — 그 근무의 색·알람
+  // 설정만 지움(state.shiftColors/shiftAlarms에서 제거). 기본 패턴이나
+  // 날짜·D번호 예외에 그 이름이 여전히 쓰이고 있으면(getAllShiftTypeNames이
+  // 그런 이름도 목록에 포함시키므로) 다음에 이 화면을 열 때 그 이름이 다시
+  // 나타날 수 있음 — 그때는 기본 회색/이름 매칭 색으로 보이며, 이는 "그
+  // 근무 자체를 근무표에서 지운다"는 뜻이 아니라 "이 화면에서 해둔 색
+  // 커스터마이징을 지운다"는 뜻이라 의도된 동작. 완전히 안 쓰이는(예:
+  // "+ 근무 추가"로 만들었다가 실제로는 아무 날짜에도 안 쓴) 이름은 삭제하면
+  // 그대로 목록에서 없어짐.
+  function deleteShiftType(name) {
+    if (state.shiftColors) delete state.shiftColors[name];
+    if (state.shiftAlarms) delete state.shiftAlarms[name];
+    saveState();
+    renderShiftColorSettings();
+    renderGrid();
+    renderToday();
+    renderRoutine();
+    pushAllWidgets();
   }
 
   // 근무 이름(nameEl)을 눌러 그 자리에서 바로 이름을 고침(2026-07-17 추가) —
@@ -5193,7 +5216,23 @@
       rowBottom.appendChild(swatchWrap);
       rowBottom.appendChild(colorInput);
       row.appendChild(rowBottom);
-      card.appendChild(row);
+
+      // 왼쪽으로 밀어서 삭제(2026-07-17 추가) — 다른 목록들과 같은 공용
+      // 스와이프 삭제 부품 재사용. row 자신의 카드 배경(var(--surface))과
+      // 맞춰서 bgVar도 'var(--surface)'로 줌(다른 곳에서 흔히 쓰는
+      // 'var(--bg)'를 그대로 쓰면 다크 모드에서 카드 배경과 살짝 달라짐).
+      // wrap 자체는 overflow:hidden이라 row의 모서리 둥글기·그림자가 그
+      // 안에서 잘려 보이므로(반복·중요 탭 카드와 같은 이유), 그 둘을 row
+      // 대신 wrap으로 옮김.
+      const rowWrap = wrapWithSwipeToDelete(row, 'var(--surface)', function () {
+        deleteShiftType(name);
+      });
+      row.style.marginBottom = '0';
+      row.style.boxShadow = 'none';
+      rowWrap.style.marginBottom = '8px';
+      rowWrap.style.borderRadius = '12px';
+      rowWrap.style.boxShadow = '0 1px 3px rgba(0,0,0,0.07)';
+      card.appendChild(rowWrap);
     });
 
     const addBtn = document.createElement('button');
@@ -6125,7 +6164,7 @@
 
   // 날짜 상세 "근무 변경" 시트에서 지금 고른 근무 이름(2026-07-17 추가) —
   // 예전엔 이 값을 직접 타이핑하는 입력칸(dd-shift-new-input)에 있었는데,
-  // 이제 설정 탭 "근무유형 색"에 있는 근무 중에서 팝업으로 고르는 방식으로
+  // 이제 설정 탭 "근무 편집"에 있는 근무 중에서 팝업으로 고르는 방식으로
   // 바뀌어서 이 변수에 담아둠. "이번 날짜만"/"...마다" 버튼은 여전히 그대로
   // 있고(적용 범위 선택은 유지하기로 함), 그 두 버튼을 눌러야 실제로
   // state에 반영됨 — 팝업에서 근무를 고르는 것 자체는 저장이 아니라 이
@@ -6165,7 +6204,7 @@
     if (names.length === 0) {
       const empty = document.createElement('div');
       empty.className = 'shift-picker-empty';
-      empty.textContent = '설정 탭 "근무유형 색"에서 먼저 근무를 추가해 주세요.';
+      empty.textContent = '설정 탭 "근무 편집"에서 먼저 근무를 추가해 주세요.';
       list.appendChild(empty);
     } else {
       names.forEach(function (name) {
