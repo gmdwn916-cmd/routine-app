@@ -1354,6 +1354,15 @@
     .btn-row { display: flex; gap: 10px; }
     .btn-row .btn { flex: 1; }
 
+    /* "반복 할 일" 편집 시트의 기간/근무·요일 모드 버튼만 작게(2026-07-17
+       요청) — 같이 쓰는 .btn/.btn-row는 다른 화면(온보딩 등)에도 널리
+       쓰이는 공용 스타일이라 거기는 안 건드리고, 이 버튼 행에만 좁힘. */
+    #promote-mode-row.btn-row { gap: 8px; }
+    #promote-mode-row .btn {
+      padding: 9px;
+      font-size: 14px;
+    }
+
     /* ── Onboarding ── */
     #onboard-overlay {
       display: none;
@@ -1533,14 +1542,18 @@
     .btn-ob-back:active { opacity: 0.75; }
 
     /* ── 근무유형 색 설정 ── */
+    /* 근무 하나당 독립된 카드로 보이게(2026-07-17 요청 — 예전엔 한 카드
+       안에 구분선만 있는 줄들이었음). */
     .shift-color-row {
       display: flex;
       flex-direction: column;
       gap: 8px;
-      padding: 12px 0;
-      border-bottom: 1px solid var(--divider);
+      padding: 14px 16px;
+      margin-bottom: 8px;
+      background: var(--surface);
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.07);
     }
-    .shift-color-row:last-child { border-bottom: none; }
     .shift-color-row-top {
       display: flex;
       align-items: center;
@@ -1557,6 +1570,47 @@
       font-size: 15px;
       font-weight: 600;
       color: var(--text-1);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .shift-color-name-input {
+      flex: 1;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-1);
+      font-family: inherit;
+      border: 1.5px solid #007aff;
+      border-radius: 8px;
+      padding: 4px 8px;
+      background: var(--surface-2);
+      outline: none;
+      min-width: 0;
+    }
+    .shift-color-add-btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1.5px dashed var(--line);
+      background: transparent;
+      color: var(--text-2);
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .shift-color-add-btn:active { background: var(--surface-2); }
+    .shift-color-add-input {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1.5px solid #007aff;
+      background: var(--surface-2);
+      color: var(--text-1);
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      box-sizing: border-box;
     }
     .shift-color-preview {
       min-width: 52px;
@@ -1835,7 +1889,7 @@
       margin-top: 2px;
     }
     /* ── 인박스 / 반복 승격 / 기간 수정 오버레이(공통 바텀시트 패턴) ── */
-    #inbox-overlay, #promote-overlay, #period-edit-overlay, #bulk-shift-overlay {
+    #inbox-overlay, #promote-overlay, #period-edit-overlay, #bulk-shift-overlay, #shift-picker-overlay {
       display: none;
       position: fixed;
       inset: 0;
@@ -1845,9 +1899,9 @@
       justify-content: center;
     }
 
-    #inbox-overlay.open, #promote-overlay.open, #period-edit-overlay.open, #bulk-shift-overlay.open { display: flex; }
+    #inbox-overlay.open, #promote-overlay.open, #period-edit-overlay.open, #bulk-shift-overlay.open, #shift-picker-overlay.open { display: flex; }
 
-    #inbox-panel, #promote-panel, #period-edit-panel, #bulk-shift-panel {
+    #inbox-panel, #promote-panel, #period-edit-panel, #bulk-shift-panel, #shift-picker-panel {
       background: var(--bg);
       width: 100%;
       max-width: 480px;
@@ -1857,7 +1911,7 @@
       padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 0));
     }
 
-    #inbox-panel h2, #promote-panel h2, #period-edit-panel h2, #bulk-shift-panel h2 {
+    #inbox-panel h2, #promote-panel h2, #period-edit-panel h2, #bulk-shift-panel h2, #shift-picker-panel h2 {
       font-size: 16px;
       font-weight: 700;
       color: var(--text-1);
@@ -2074,21 +2128,65 @@
       padding: 2px 6px;
     }
 
-    .dd-shift-edit-row input {
+    /* 근무 변경 시트의 근무 선택 버튼 — 예전엔 직접 타이핑하는 입력칸이었는데,
+       설정 탭 "근무유형 색"에 있는 근무 중에서 고르는 팝업(#shift-picker-overlay)을
+       여는 버튼으로 바뀜(2026-07-17). */
+    .dd-shift-picker-btn {
       width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 8px;
       padding: 9px 12px;
       border: 1.5px solid var(--line);
       border-radius: 10px;
       font-size: 14px;
+      font-weight: 600;
       font-family: inherit;
       background: var(--surface-2);
       color: var(--text-1);
-      outline: none;
+      cursor: pointer;
       margin-bottom: 8px;
       box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
     }
 
-    .dd-shift-edit-row input:focus { border-color: #007aff; }
+    .dd-shift-picker-swatch {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: none;
+    }
+
+    .shift-picker-item {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 13px 8px;
+      border: none;
+      border-bottom: 1px solid var(--divider);
+      background: none;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-1);
+      font-family: inherit;
+      cursor: pointer;
+      text-align: left;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .shift-picker-item:last-child { border-bottom: none; }
+    .shift-picker-item-swatch {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .shift-picker-empty {
+      font-size: 13px;
+      color: var(--text-2);
+      padding: 12px 0;
+    }
 
     .dd-shift-edit-title {
       font-size: 13px;
@@ -2417,8 +2515,9 @@
 
       <!-- 근무유형 색 -->
       <div id="sd-colors" style="display:none">
-        <div class="card" id="shift-color-card"></div>
-        <p class="shift-color-hint">색은 배경에 옅게(약 15%) 적용됩니다. 너무 어두운 색은 글씨와 구분이 어려울 수 있어요.</p>
+        <div id="shift-color-card"></div>
+        <div class="onboard-warn" id="shift-color-warn"></div>
+        <p class="shift-color-hint">색은 배경에 옅게(약 15%) 적용됩니다. 너무 어두운 색은 글씨와 구분이 어려울 수 있어요. 이름을 누르면 수정할 수 있어요.</p>
       </div>
 
       <!-- 주 시작 요일 -->
@@ -2556,22 +2655,19 @@
     </div>
 
     <div id="promote-interval-section" style="display:none">
-      <div style="display:flex;justify-content:flex-end;margin-bottom:6px;">
-        <button type="button" class="btn btn-secondary promote-lunar-toggle-btn" id="btn-promote-lunar-toggle">음력</button>
-      </div>
-
       <div id="promote-interval-days-block">
-        <div class="promote-interval-row">
+        <div class="promote-interval-row" id="promote-interval-row-days">
           <div class="promote-interval-field" id="pi-years" data-unit="years">0</div><span class="promote-interval-unit">년</span>
           <div class="promote-interval-field" id="pi-months" data-unit="months">0</div><span class="promote-interval-unit">개월</span>
           <div class="promote-interval-field" id="pi-days" data-unit="days">0</div><span class="promote-interval-unit">일</span>
           <span class="promote-interval-suffix">마다 반복</span>
+          <button type="button" class="btn btn-secondary promote-lunar-toggle-btn" id="btn-promote-lunar-toggle">음력</button>
         </div>
         <div class="promote-interval-hint">숫자 칸을 위아래로 밀면 값이 바뀌어요</div>
       </div>
 
       <div id="promote-lunar-section" style="display:none">
-        <div class="promote-interval-row">
+        <div class="promote-interval-row" id="promote-interval-row-lunar">
           <span class="promote-interval-suffix">매년 음력</span>
           <div class="promote-interval-field" id="pl-month" data-unit="month">1</div><span class="promote-interval-unit">월</span>
           <div class="promote-interval-field" id="pl-day" data-unit="day">1</div><span class="promote-interval-unit">일</span>
@@ -2631,6 +2727,14 @@
   </div>
 </div>
 
+<!-- ── 근무 선택 팝업(날짜 상세 "근무 변경"에서 씀) ── -->
+<div id="shift-picker-overlay">
+  <div id="shift-picker-panel">
+    <h2>근무 선택</h2>
+    <div id="shift-picker-list"></div>
+  </div>
+</div>
+
 <!-- ── 일별 상세 패널 ── -->
 <div id="day-detail-overlay">
   <div id="day-detail-panel">
@@ -2648,10 +2752,13 @@
     </div>
     <div class="dd-section dd-shift-edit-row" id="dd-shift-edit-row" style="display:none">
       <div class="dd-shift-edit-title">이 근무 변경, 어떻게 적용할까요?</div>
-      <input type="text" id="dd-shift-new-input" placeholder="새 근무명…" maxlength="20">
+      <button type="button" class="dd-shift-picker-btn" id="btn-dd-shift-picker">
+        <span class="dd-shift-picker-swatch" id="dd-shift-picker-swatch"></span>
+        <span id="dd-shift-picker-label">근무 선택</span>
+      </button>
       <div class="btn-row">
-        <button class="btn btn-secondary" id="btn-dd-shift-once">이번 날짜만</button>
-        <button class="btn btn-primary" id="btn-dd-shift-pattern">앞으로 이 자리마다</button>
+        <button class="btn btn-secondary" id="btn-dd-shift-once">한번만</button>
+        <button class="btn btn-primary" id="btn-dd-shift-pattern">마다</button>
       </div>
       <div class="dd-shift-note">설정탭의 기본 근무 패턴은 바뀌지 않아요.</div>
       <button class="dd-shift-cancel-btn" id="btn-dd-shift-cancel">취소</button>
@@ -3475,33 +3582,25 @@
     return { name: day ? day.shiftType.name : '', isOverride: false, overrideType: null };
   }
 
-  // 날짜 예외(근무 일괄변경/근무 변경으로 만들어진 override)만 조회. 기본 패턴·D번호 패턴은 대상 아님.
-  function getDateOverride(dateStr) {
-    if (!state || !Array.isArray(state.shiftOverrides)) return null;
-    return state.shiftOverrides.find(function (o) { return o.date === dateStr; }) || null;
-  }
-
-  // 근무 일괄변경(혹은 날짜별 근무 변경)으로 같은 근무명이 앞뒤로 이어질 때만
-  // 칸마다 반복 표기하지 않고 하나로 이어진 띠로 표시. 기본 패턴이 우연히 같은
-  // 이름을 반복하는 경우는 병합하지 않고 항상 기존 배지로 표시한다.
+  // 앞뒤 날짜의 "실제로 보이는" 근무 이름(getEffectiveShiftName — 날짜 예외 >
+  // D번호 예외 > 기본 패턴 순으로 이미 계산된 값)이 지금 날짜와 같으면 출처와
+  // 상관없이 하나로 이어진 띠로 표시(2026-07-17, 사용자 요청 — "위젯에서처럼
+  // 좌우로 쭉 연결해달라"). **예전엔 근무 일괄변경/근무 변경(날짜 예외)로
+  // 생긴 연속만 이어붙이고, 기본 순환 패턴이 우연히 같은 이름을 반복하는
+  // 경우는 일부러 안 이어붙였는데(그때는 그게 맞는 판단이었음), 이번 요청으로
+  // 그 구분 자체를 없앰** — 이름만 같으면 기본 패턴이든 D번호 예외든 날짜
+  // 예외든 항상 이어붙임. 이어붙이는 모양 자체(칸 좌우 여백만큼 늘려서 옆
+  // 칸과 맞닿게 하는 CSS, .cell-shift-band)는 이미 있던 걸 그대로 씀.
   function appendShiftIndicator(cell, cellDateStr, shiftName) {
-    const ov = getDateOverride(cellDateStr);
-    if (!ov) {
-      const shiftEl = document.createElement('div');
-      shiftEl.className = 'cell-shift-badge';
-      shiftEl.textContent = shiftName;
-      applyShiftBadgeColor(shiftEl, shiftName);
-      cell.appendChild(shiftEl);
-      return;
-    }
-
     const d = parseLocalDate(cellDateStr);
     const prevDateStr = formatDateStr(new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1));
     const nextDateStr = formatDateStr(new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1));
-    const prevOv = getDateOverride(prevDateStr);
-    const nextOv = getDateOverride(nextDateStr);
-    const isStart = !(prevOv && prevOv.shiftName === shiftName);
-    const isEnd = !(nextOv && nextOv.shiftName === shiftName);
+    const prevIdx0 = dayIndex0ForDate(prevDateStr);
+    const nextIdx0 = dayIndex0ForDate(nextDateStr);
+    const prevName = prevIdx0 !== null ? getEffectiveShiftName(prevDateStr, prevIdx0).name : '';
+    const nextName = nextIdx0 !== null ? getEffectiveShiftName(nextDateStr, nextIdx0).name : '';
+    const isStart = prevName !== shiftName;
+    const isEnd = nextName !== shiftName;
 
     if (isStart && isEnd) {
       const shiftEl = document.createElement('div');
@@ -4246,6 +4345,23 @@
     return null;
   }
 
+  // 맨 앞 숫자로 시각이 인식되는 항목끼리는 이른 시각순으로, 인식 안 되는
+  // 항목은 원래 순서 그대로 뒤에 이어붙임 — renderTodoList(날짜 상세)의 정렬
+  // 규칙과 같은 계산이라, 달력 탭 날짜 칸(appendEventIndicators)에도 그대로
+  // 씀(2026-07-17, "날짜 상세는 되는데 달력 칸은 안 된다"는 신고로 추가).
+  function sortByLeadingTime(list) {
+    return list.slice().sort(function (a, b) {
+      const ta = parseLeadingTimeFromText(a.text);
+      const tb = parseLeadingTimeFromText(b.text);
+      const va = ta ? ta.hh * 60 + ta.mm : null;
+      const vb = tb ? tb.hh * 60 + tb.mm : null;
+      if (va === null && vb === null) return 0;
+      if (va === null) return 1;
+      if (vb === null) return -1;
+      return va - vb;
+    });
+  }
+
   // 할 일이 날짜를 얻는 순간(배치)이나 텍스트를 고치는 순간마다 불러서,
   // 맨 앞 숫자가 시각으로 읽히면 그 시각에 맞는 오늘 탭 구역(timeSlot)과
   // 구역 안 정렬 순서(timelineOrder, 자정부터의 분 수)를 자동으로 채움 —
@@ -4420,11 +4536,12 @@
     }
 
     if (singleEvents.length > 0) {
+      const sortedSingle = sortByLeadingTime(singleEvents);
       const evList = document.createElement('div');
       evList.className = 'cell-event-list';
       // 2026-07-16: 2줄 → 3줄까지 보이게(사용자 요청) — cell-date/cell-shift-badge/
       // cell-event-list의 여백을 같이 좁혀서 3번째 줄이 들어갈 자리를 만듦.
-      singleEvents.slice(0, 3).forEach(function (ev) {
+      sortedSingle.slice(0, 3).forEach(function (ev) {
         const evEl = document.createElement('div');
         evEl.className = 'cell-event-item';
         evEl.textContent = ev.text;
@@ -4435,10 +4552,10 @@
         evEl.style.color = ev.important ? '#ff9500' : (ev.repeat ? REPEAT_TEXT_COLOR : 'var(--text-1)');
         evList.appendChild(evEl);
       });
-      if (singleEvents.length > 3) {
+      if (sortedSingle.length > 3) {
         const moreEl = document.createElement('div');
         moreEl.className = 'cell-event-more';
-        moreEl.textContent = '+' + (singleEvents.length - 3) + '개 더';
+        moreEl.textContent = '+' + (sortedSingle.length - 3) + '개 더';
         evList.appendChild(moreEl);
       }
       cell.appendChild(evList);
@@ -4846,37 +4963,171 @@
     renderSettings();
   }
 
+  // 근무유형 색 설정 화면 + 달력 "근무 변경" 피커가 공유하는 "지금 있는 근무
+  // 이름 전체" 목록(2026-07-17 추가) — 기본 패턴(state.days)·날짜 예외
+  // (shiftOverrides)·D번호 예외(dayOverrides)에서 실제 쓰이는 이름뿐 아니라,
+  // 이 설정 화면에서 "+ 근무 추가"로 아직 어디에도 안 쓰인 채 색만 미리
+  // 만들어둔 이름(state.shiftColors의 키)까지 합쳐서 반환. computeAllShiftNames()
+  // (반복 할일의 근무×요일 표 전용, state.days만 봄)와는 다른 더 넓은 목적의
+  // 함수라 따로 둠 — 그 함수를 이 용도로 넓히면 표의 세로 행 구성이 달라짐.
+  function getAllShiftTypeNames() {
+    const names = [];
+    if (!state) return names;
+    (state.days || []).forEach(function (d) {
+      if (d.shiftType.name && names.indexOf(d.shiftType.name) === -1) names.push(d.shiftType.name);
+    });
+    (state.shiftOverrides || []).forEach(function (o) {
+      if (o.shiftName && names.indexOf(o.shiftName) === -1) names.push(o.shiftName);
+    });
+    (state.dayOverrides || []).forEach(function (o) {
+      if (o.shiftName && names.indexOf(o.shiftName) === -1) names.push(o.shiftName);
+    });
+    Object.keys(state.shiftColors || {}).forEach(function (n) {
+      if (names.indexOf(n) === -1) names.push(n);
+    });
+    return names;
+  }
+
+  // 근무 이름을 바꿀 때(설정 탭 "근무유형 색"에서 이름을 눌러 수정, 2026-07-17
+  // 추가) 그 이름이 저장돼 있는 모든 곳을 한 번에 새 이름으로 옮김 — 한
+  // 군데만 고치고 나머지를 그대로 두면 그 항목만 예전 이름으로 남아 "근무가
+  // 둘로 갈라지는" 것처럼 보이므로, 이름이 나오는 곳을 전부 훑어야 함.
+  function renameShiftType(oldName, newName) {
+    if (!state || !oldName || !newName || oldName === newName) return;
+    (state.days || []).forEach(function (d) {
+      if (d.shiftType && d.shiftType.name === oldName) d.shiftType.name = newName;
+    });
+    (state.shiftOverrides || []).forEach(function (o) {
+      if (o.shiftName === oldName) o.shiftName = newName;
+    });
+    (state.dayOverrides || []).forEach(function (o) {
+      if (o.shiftName === oldName) o.shiftName = newName;
+    });
+    if (state.shiftColors && Object.prototype.hasOwnProperty.call(state.shiftColors, oldName)) {
+      state.shiftColors[newName] = state.shiftColors[oldName];
+      delete state.shiftColors[oldName];
+    }
+    if (state.shiftAlarms && Object.prototype.hasOwnProperty.call(state.shiftAlarms, oldName)) {
+      state.shiftAlarms[newName] = state.shiftAlarms[oldName];
+      delete state.shiftAlarms[oldName];
+    }
+    // 반복 할일의 "근무·요일" 조건(표에서 고른 근무 이름) — 새 그룹 형식과
+    // 예전 통짜 형식(groups 없이 shiftNames를 바로 가진 것) 둘 다 대상.
+    (state.events || []).forEach(function (ev) {
+      if (!ev.repeat || ev.repeat.type !== 'shift') return;
+      if (Array.isArray(ev.repeat.groups)) {
+        ev.repeat.groups.forEach(function (g) {
+          if (Array.isArray(g.shiftNames)) {
+            g.shiftNames = g.shiftNames.map(function (n) { return n === oldName ? newName : n; });
+          }
+        });
+      }
+      if (Array.isArray(ev.repeat.shiftNames)) {
+        ev.repeat.shiftNames = ev.repeat.shiftNames.map(function (n) { return n === oldName ? newName : n; });
+      }
+    });
+  }
+
+  // 근무유형을 새로 추가할 때 프리셋 중 아직 안 쓰인 색을 골라줌(다 쓰였으면
+  // 순서대로 다시 돌아가며 씀).
+  function pickUnusedShiftColorPreset() {
+    const used = Object.keys(state.shiftColors || {}).map(function (n) { return state.shiftColors[n]; });
+    const free = SHIFT_COLOR_PRESETS.find(function (c) { return used.indexOf(c) === -1; });
+    return free || SHIFT_COLOR_PRESETS[used.length % SHIFT_COLOR_PRESETS.length];
+  }
+
+  // 근무 이름(nameEl)을 눌러 그 자리에서 바로 이름을 고침(2026-07-17 추가) —
+  // startInlineTextEdit(할 일 텍스트 수정)과 같은 방식(입력칸으로 바꿔치기,
+  // blur/Enter로 확정, Escape로 취소).
+  function startShiftNameRename(nameEl, oldName) {
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'shift-color-name-input';
+    input.maxLength = 20;
+    input.value = oldName;
+    nameEl.replaceWith(input);
+    input.focus();
+    input.select();
+
+    let done = false;
+    function commit() {
+      if (done) return;
+      done = true;
+      const newName = input.value.trim();
+      if (!newName || newName === oldName) { renderShiftColorSettings(); return; }
+      if (getAllShiftTypeNames().indexOf(newName) !== -1) {
+        renderShiftColorSettings();
+        document.getElementById('shift-color-warn').textContent = '이미 있는 근무 이름이에요.';
+        return;
+      }
+      renameShiftType(oldName, newName);
+      saveState();
+      renderShiftColorSettings();
+      renderGrid();
+      renderToday();
+      renderRoutine();
+      pushAllWidgets();
+    }
+    input.addEventListener('blur', commit);
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') input.blur();
+      else if (e.key === 'Escape') { done = true; renderShiftColorSettings(); }
+    });
+  }
+
+  // "+ 근무 추가" 버튼(2026-07-17 추가) — 버튼을 입력칸으로 바꿔치기하고
+  // blur/Enter로 확정(할 일 텍스트 수정과 같은 관례). 색은 자동으로
+  // 안 겹치는 프리셋을 골라 배정 — 이 화면에서 바로 다시 고를 수 있음.
+  function startShiftTypeAdd(addBtn) {
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'shift-color-add-input';
+    input.maxLength = 20;
+    input.placeholder = '근무 이름…';
+    addBtn.replaceWith(input);
+    input.focus();
+
+    let done = false;
+    function commit() {
+      if (done) return;
+      done = true;
+      const name = input.value.trim();
+      if (!name) { renderShiftColorSettings(); return; }
+      if (getAllShiftTypeNames().indexOf(name) !== -1) {
+        renderShiftColorSettings();
+        document.getElementById('shift-color-warn').textContent = '이미 있는 근무 이름이에요.';
+        return;
+      }
+      if (!state.shiftColors) state.shiftColors = {};
+      state.shiftColors[name] = pickUnusedShiftColorPreset();
+      saveState();
+      renderShiftColorSettings();
+    }
+    input.addEventListener('blur', commit);
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') input.blur();
+      else if (e.key === 'Escape') { done = true; renderShiftColorSettings(); }
+    });
+  }
+
   function renderShiftColorSettings() {
     const card = document.getElementById('shift-color-card');
+    const warnEl = document.getElementById('shift-color-warn');
+    if (warnEl) warnEl.textContent = '';
     if (!state || !state.cycleDays) {
       card.innerHTML = '<div class="shift-color-empty">주기 설정을 먼저 완료해 주세요.</div>';
       return;
     }
-    const shiftNames = [];
-    state.days.forEach(function (d) {
-      if (d.shiftType.name && !shiftNames.includes(d.shiftType.name)) {
-        shiftNames.push(d.shiftType.name);
-      }
-    });
-    if (Array.isArray(state.shiftOverrides)) {
-      state.shiftOverrides.forEach(function (o) {
-        if (o.shiftName && !shiftNames.includes(o.shiftName)) {
-          shiftNames.push(o.shiftName);
-        }
-      });
-    }
-    if (Array.isArray(state.dayOverrides)) {
-      state.dayOverrides.forEach(function (o) {
-        if (o.shiftName && !shiftNames.includes(o.shiftName)) {
-          shiftNames.push(o.shiftName);
-        }
-      });
-    }
-    if (shiftNames.length === 0) {
-      card.innerHTML = '<div class="shift-color-empty">등록된 근무유형이 없습니다.</div>';
-      return;
-    }
+    const shiftNames = getAllShiftTypeNames();
     card.innerHTML = '';
+
+    if (shiftNames.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'shift-color-empty';
+      empty.textContent = '등록된 근무유형이 없습니다. 아래에서 추가해 보세요.';
+      card.appendChild(empty);
+    }
+
     shiftNames.forEach(function (name) {
       const currentColor = getShiftColor(name) || '#8e8e93';
 
@@ -4888,6 +5139,7 @@
       const nameEl = document.createElement('span');
       nameEl.className = 'shift-color-name';
       nameEl.textContent = name;
+      nameEl.addEventListener('click', function () { startShiftNameRename(nameEl, name); });
       const preview = document.createElement('div');
       preview.className = 'shift-color-preview';
       preview.textContent = name;
@@ -4943,6 +5195,13 @@
       row.appendChild(rowBottom);
       card.appendChild(row);
     });
+
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'shift-color-add-btn';
+    addBtn.textContent = '+ 근무 추가';
+    addBtn.addEventListener('click', function () { startShiftTypeAdd(addBtn); });
+    card.appendChild(addBtn);
   }
 
   // 위아래로 밀어서 숫자를 바꾸는 스피너(근무유형별 알람의 시/분에 씀) — 기간/음력
@@ -5864,11 +6123,84 @@
     if (e.target === this) closeDayDetail();
   });
 
+  // 날짜 상세 "근무 변경" 시트에서 지금 고른 근무 이름(2026-07-17 추가) —
+  // 예전엔 이 값을 직접 타이핑하는 입력칸(dd-shift-new-input)에 있었는데,
+  // 이제 설정 탭 "근무유형 색"에 있는 근무 중에서 팝업으로 고르는 방식으로
+  // 바뀌어서 이 변수에 담아둠. "이번 날짜만"/"...마다" 버튼은 여전히 그대로
+  // 있고(적용 범위 선택은 유지하기로 함), 그 두 버튼을 눌러야 실제로
+  // state에 반영됨 — 팝업에서 근무를 고르는 것 자체는 저장이 아니라 이
+  // 값만 채우는 것.
+  let ddShiftSelectedName = null;
+
+  // "이번 날짜만" 버튼은 그대로, "...마다" 버튼은 D번호를 그대로 노출하지
+  // 않기 위해 그 날짜의 요일 + 지금 고른 근무 이름으로 문구를 만듦(예:
+  // "화요일 주간마다") — 예전 "앞으로 이 자리마다"보다 실제로 뭐가 바뀌는지
+  // 더 와닿게 하려는 요청으로 바뀜.
+  function updateDDShiftPickerUI() {
+    const swatch = document.getElementById('dd-shift-picker-swatch');
+    const label = document.getElementById('dd-shift-picker-label');
+    const patternBtn = document.getElementById('btn-dd-shift-pattern');
+    if (ddShiftSelectedName) {
+      label.textContent = ddShiftSelectedName;
+      const color = getShiftColor(ddShiftSelectedName);
+      swatch.style.background = color || 'var(--text-3)';
+      swatch.style.display = '';
+    } else {
+      label.textContent = '근무 선택';
+      swatch.style.display = 'none';
+    }
+    const DOW_KR = ['일', '월', '화', '수', '목', '금', '토'];
+    const dayLabel = detailDateStr ? (DOW_KR[parseLocalDate(detailDateStr).getDay()] + '요일') : '';
+    patternBtn.textContent = ddShiftSelectedName ? (dayLabel + ' ' + ddShiftSelectedName + '마다') : (dayLabel + ' 마다');
+  }
+
+  function closeShiftPicker() {
+    document.getElementById('shift-picker-overlay').classList.remove('open');
+  }
+
+  function openShiftPicker() {
+    const list = document.getElementById('shift-picker-list');
+    list.innerHTML = '';
+    const names = getAllShiftTypeNames();
+    if (names.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'shift-picker-empty';
+      empty.textContent = '설정 탭 "근무유형 색"에서 먼저 근무를 추가해 주세요.';
+      list.appendChild(empty);
+    } else {
+      names.forEach(function (name) {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'shift-picker-item';
+        const swatch = document.createElement('span');
+        swatch.className = 'shift-picker-item-swatch';
+        swatch.style.background = getShiftColor(name) || 'var(--text-3)';
+        const label = document.createElement('span');
+        label.textContent = name;
+        item.appendChild(swatch);
+        item.appendChild(label);
+        item.addEventListener('click', function () {
+          ddShiftSelectedName = name;
+          updateDDShiftPickerUI();
+          closeShiftPicker();
+        });
+        list.appendChild(item);
+      });
+    }
+    document.getElementById('shift-picker-overlay').classList.add('open');
+  }
+
+  document.getElementById('shift-picker-overlay').addEventListener('click', function (e) {
+    if (e.target === this) closeShiftPicker();
+  });
+
+  document.getElementById('btn-dd-shift-picker').addEventListener('click', openShiftPicker);
+
   document.getElementById('btn-dd-change-shift').addEventListener('click', function () {
     const { name } = getEffectiveShiftName(detailDateStr, detailDayIdx0);
-    document.getElementById('dd-shift-new-input').value = name || '';
+    ddShiftSelectedName = name || null;
+    updateDDShiftPickerUI();
     document.getElementById('dd-shift-edit-row').style.display = '';
-    document.getElementById('dd-shift-new-input').focus();
   });
 
   document.getElementById('btn-dd-shift-cancel').addEventListener('click', function () {
@@ -5876,7 +6208,7 @@
   });
 
   document.getElementById('btn-dd-shift-once').addEventListener('click', function () {
-    const newShift = document.getElementById('dd-shift-new-input').value.trim();
+    const newShift = ddShiftSelectedName;
     if (!Array.isArray(state.shiftOverrides)) state.shiftOverrides = [];
     state.shiftOverrides = state.shiftOverrides.filter(function(o) { return o.date !== detailDateStr; });
     if (newShift) {
@@ -5892,7 +6224,7 @@
   });
 
   document.getElementById('btn-dd-shift-pattern').addEventListener('click', function () {
-    const newShift = document.getElementById('dd-shift-new-input').value.trim();
+    const newShift = ddShiftSelectedName;
     const day = state.days[detailDayIdx0];
     if (!Array.isArray(state.dayOverrides)) state.dayOverrides = [];
     state.dayOverrides = state.dayOverrides.filter(function(o) { return o.dayIndex !== day.dayIndex; });
@@ -6594,6 +6926,13 @@
     document.getElementById('promote-interval-days-block').style.display = subMode === 'interval' ? '' : 'none';
     document.getElementById('promote-lunar-section').style.display = subMode === 'lunar' ? '' : 'none';
     document.getElementById('btn-promote-lunar-toggle').classList.toggle('active', subMode === 'lunar');
+    // 음력 버튼을 지금 보이는 줄의 "...마다 반복" 옆으로 옮김(2026-07-17 위치
+    // 조정 요청 — 예전엔 이 버튼이 두 줄 모두와 상관없이 위쪽 별도 줄에
+    // 고정돼 있었음). 두 줄(기간/음력) 중 안 보이는 쪽엔 버튼이 없어도
+    // 되므로, appendChild로 현재 보이는 줄 쪽으로 옮겨서 하나의 버튼
+    // 엘리먼트를 그대로 재사용함(두 개로 복제하지 않음).
+    const targetRow = document.getElementById(subMode === 'lunar' ? 'promote-interval-row-lunar' : 'promote-interval-row-days');
+    targetRow.appendChild(document.getElementById('btn-promote-lunar-toggle'));
   }
 
   function openRepeatEditor(opts) {
