@@ -1135,32 +1135,14 @@
     .grid-cell.is-holiday .cell-date { color: #ff3b30; }
     .grid-cell.today .cell-date { color: #007aff; }
 
-    /* 근무 이름 한 줄의 높이를 .cell-shift-band(아래, 여러 날 이어지는 경우)와
-       정확히 똑같이(16px) 고정함(2026-07-16) — 예전엔 이 배지만 높이가
-       정해져 있지 않아서(padding으로만 크기가 정해짐), 어떤 날은 이어진
-       근무 띠(.cell-shift-band, 16px 고정)가 뜨고 어떤 날은 이 배지가 뜨는
-       상황이 섞이면 그 두 종류의 "근무 줄" 높이가 서로 달라 날짜 칸마다
-       줄 높이가 들쭉날쭉해 보였음. */
-    .cell-shift-badge {
-      font-size: 10px;
-      font-weight: 600;
-      height: 16px;
-      line-height: 16px;
-      border-radius: 4px;
-      padding: 0 5px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      width: 100%;
-      box-sizing: border-box;
-    }
-
-    /* 같은 근무가 여러 날 이어질 때 하나로 이어진 띠로 표시.
-       칸 자체의 좌우 여백(4px)만큼 옆으로 늘려서 옆 칸 띠와 맞닿게 한다.
-       글자색은 고정하지 않음(2026-07-17) — applyShiftBadgeColor가 인라인으로
-       칠하는 옅은 톤 배경 + 그 색 글자를 그대로 씀(예전엔 여기 color:#fff를
-       고정해두고 JS도 꽉 찬 색을 칠했는데, 이어붙일 때만 색이 달라 보인다는
-       지적으로 배지와 통일함). */
+    /* 근무 표시는 이제 항상 이 하나의 모양만 씀(2026-07-17) — 예전엔 "이어진
+       근무"만 옆 칸까지 늘어난 띠(.cell-shift-band)였고, 나머지는 칸 안에서만
+       꽉 차는 배지(.cell-shift-badge)로 따로 있었는데, "스케줄 위젯처럼 모든
+       근무 칸이 좌우로 이어지게 해달라"는 요청으로 그 구분 자체를 없앰 — 이제
+       매일 항상 칸 좌우 여백(4px)만큼 옆으로 늘어나 옆 칸과 맞닿는다(이름이
+       다른 칸끼리도 마찬가지로 맞닿되, 모서리만 둥글게 남아 색이 바뀌는
+       지점처럼 보임). 글자색은 고정하지 않고 applyShiftBadgeColor가 인라인으로
+       칠하는 옅은 톤 배경 + 그 색 글자를 그대로 씀. */
     .cell-shift-band {
       font-size: 10px;
       font-weight: 700;
@@ -1175,8 +1157,14 @@
       box-sizing: border-box;
     }
 
+    /* 앞뒤로 다른 이름(또는 근무 없음)과 맞닿는 쪽만 둥글게 — 양쪽 다 다르면
+       (band-start와 band-end 둘 다, 고립된 하루) 네 모서리 다 둥글게(마지막
+       세 번째 규칙, 두 클래스를 같이 가진 선택자라 우선순위가 더 높아서 항상
+       이 규칙이 이김 — 단독 규칙끼리는 CSS 우선순위가 같아 나중 규칙이 통째로
+       덮어써버리므로 순서에 기대면 안 됨). */
     .cell-shift-band.band-start { border-radius: 5px 0 0 5px; }
     .cell-shift-band.band-end { border-radius: 0 5px 5px 0; }
+    .cell-shift-band.band-start.band-end { border-radius: 5px; }
 
     .cell-event-bar {
       width: 100%;
@@ -3580,15 +3568,27 @@
     return { name: day ? day.shiftType.name : '', isOverride: false, overrideType: null };
   }
 
-  // 앞뒤 날짜의 "실제로 보이는" 근무 이름(getEffectiveShiftName — 날짜 예외 >
-  // D번호 예외 > 기본 패턴 순으로 이미 계산된 값)이 지금 날짜와 같으면 출처와
-  // 상관없이 하나로 이어진 띠로 표시(2026-07-17, 사용자 요청 — "위젯에서처럼
-  // 좌우로 쭉 연결해달라"). **예전엔 근무 일괄변경/근무 변경(날짜 예외)로
-  // 생긴 연속만 이어붙이고, 기본 순환 패턴이 우연히 같은 이름을 반복하는
-  // 경우는 일부러 안 이어붙였는데(그때는 그게 맞는 판단이었음), 이번 요청으로
-  // 그 구분 자체를 없앰** — 이름만 같으면 기본 패턴이든 D번호 예외든 날짜
-  // 예외든 항상 이어붙임. 이어붙이는 모양 자체(칸 좌우 여백만큼 늘려서 옆
-  // 칸과 맞닿게 하는 CSS, .cell-shift-band)는 이미 있던 걸 그대로 씀.
+  // 날짜 예외(근무 일괄변경/근무 변경으로 만들어진 override)만 조회. 기본
+  // 패턴·D번호 패턴은 대상 아님 — appendShiftIndicator가 "이 연속이 일괄
+  // 수정으로 생긴 건지"만 가릴 때 씀.
+  function getDateOverride(dateStr) {
+    if (!state || !Array.isArray(state.shiftOverrides)) return null;
+    return state.shiftOverrides.find(function (o) { return o.date === dateStr; }) || null;
+  }
+
+  // 근무 표시는 두 가지를 서로 다른 기준으로 따로 정함(2026-07-17, 스케줄
+  // 위젯·달력 위젯과 모양을 맞추면서 정리):
+  //  1) 모서리(=옆 칸과 이어 붙는 모양)는 순전히 "실제로 보이는 근무 이름
+  //     (getEffectiveShiftName)이 앞뒤 날짜와 같은가"로만 정함 — 출처(기본
+  //     패턴/D번호 예외/날짜 예외) 상관없이 이름만 같으면 옆 칸까지 색이 죽
+  //     이어져 보임("스케줄 위젯처럼 모든 근무 칸이 좌우로 이어지게").
+  //  2) 그 칸에 글자를 실제로 찍을지는 "이 연속이 일괄 수정(날짜 예외)으로
+  //     생긴 건가"로만 정함 — 괌여행처럼 여러 날을 한 번에 같은 이름으로
+  //     바꾼 경우만 그 구간 첫날에 한 번 쓰고 나머지 날은 비움(달력 위젯
+  //     스타일). 기본 순환 패턴이 우연히 같은 이름을 반복하는 경우(예: 비번
+  //     비번)는 일괄 수정이 아니므로 매 칸 이름을 그대로 반복(스케줄 위젯
+  //     스타일) — 색은 같아서 칸끼리 안 끊기고 이어져 보이되, 글자만 매번
+  //     다시 보임.
   function appendShiftIndicator(cell, cellDateStr, shiftName) {
     const d = parseLocalDate(cellDateStr);
     const prevDateStr = formatDateStr(new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1));
@@ -3600,23 +3600,13 @@
     const isStart = prevName !== shiftName;
     const isEnd = nextName !== shiftName;
 
-    if (isStart && isEnd) {
-      const shiftEl = document.createElement('div');
-      shiftEl.className = 'cell-shift-badge';
-      shiftEl.textContent = shiftName;
-      applyShiftBadgeColor(shiftEl, shiftName);
-      cell.appendChild(shiftEl);
-      return;
-    }
+    const todayOv = getDateOverride(cellDateStr);
+    const prevOv = getDateOverride(prevDateStr);
+    const isBulkContinuation = !!(todayOv && todayOv.shiftName === shiftName && prevOv && prevOv.shiftName === shiftName);
 
-    // 이어붙인 띠도 배지와 똑같은 색 규칙(옅은 15% 톤 배경 + 그 색 글자)을
-    // 씀(2026-07-17, 사용자 요청 — "이어붙인다고 색깔은 별도로 건들지 말고
-    // 기존 근무 색 그대로 해줘"). 예전엔 이 띠만 꽉 찬 색 배경 + 흰 글자로
-    // 따로 칠했었는데(applyShiftBandColor, 이제 삭제), 그러면 칸을 이어붙일
-    // 때만 색이 달라 보이는 것처럼 느껴져서 통일함.
     const band = document.createElement('div');
     band.className = 'cell-shift-band' + (isStart ? ' band-start' : '') + (isEnd ? ' band-end' : '');
-    if (isStart) band.textContent = shiftName;
+    if (!isBulkContinuation) band.textContent = shiftName;
     applyShiftBadgeColor(band, shiftName);
     cell.appendChild(band);
   }
@@ -4542,7 +4532,7 @@
       const sortedSingle = sortByLeadingTime(singleEvents);
       const evList = document.createElement('div');
       evList.className = 'cell-event-list';
-      // 2026-07-16: 2줄 → 3줄까지 보이게(사용자 요청) — cell-date/cell-shift-badge/
+      // 2026-07-16: 2줄 → 3줄까지 보이게(사용자 요청) — cell-date/cell-shift-band/
       // cell-event-list의 여백을 같이 좁혀서 3번째 줄이 들어갈 자리를 만듦.
       sortedSingle.slice(0, 3).forEach(function (ev) {
         const evEl = document.createElement('div');
