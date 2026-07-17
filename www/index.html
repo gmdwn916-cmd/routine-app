@@ -2178,6 +2178,12 @@
       color: var(--text-2);
       padding: 12px 0;
     }
+    .shift-picker-new-form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 12px 8px 4px;
+    }
 
     .dd-shift-edit-title {
       font-size: 13px;
@@ -5029,18 +5035,38 @@
     return free || SHIFT_COLOR_PRESETS[used.length % SHIFT_COLOR_PRESETS.length];
   }
 
-  // 근무 카드를 왼쪽으로 밀어서 삭제(2026-07-17 추가) — 그 근무의 색·알람
-  // 설정만 지움(state.shiftColors/shiftAlarms에서 제거). 기본 패턴이나
-  // 날짜·D번호 예외에 그 이름이 여전히 쓰이고 있으면(getAllShiftTypeNames이
-  // 그런 이름도 목록에 포함시키므로) 다음에 이 화면을 열 때 그 이름이 다시
-  // 나타날 수 있음 — 그때는 기본 회색/이름 매칭 색으로 보이며, 이는 "그
-  // 근무 자체를 근무표에서 지운다"는 뜻이 아니라 "이 화면에서 해둔 색
-  // 커스터마이징을 지운다"는 뜻이라 의도된 동작. 완전히 안 쓰이는(예:
-  // "+ 근무 추가"로 만들었다가 실제로는 아무 날짜에도 안 쓴) 이름은 삭제하면
-  // 그대로 목록에서 없어짐.
+  // 설정 탭 "교대 주기"에서 정한 기본 순환 패턴에 실제로 쓰이는 이름인지 —
+  // 이런 이름은 근무 편집에서 지울 수 없음(아래 deleteShiftType 참고).
+  function isBaseShiftPatternName(name) {
+    return (state.days || []).some(function (d) { return d.shiftType && d.shiftType.name === name; });
+  }
+
+  // 근무 카드를 왼쪽으로 밀어서 삭제(2026-07-17 추가, 같은 날 재수정 —
+  // 처음엔 색·알람 설정만 지웠는데, 그러면 날짜 예외(예: "괌여행")로 실제
+  // 근무표에 남아있는 이름은 카드가 계속 다시 나타나면서 "지워지지 않는다"는
+  // 신고를 받아 고침). **기본 교대 패턴에 있는 이름(예: 주간/야간/비번/휴무
+  // 등, 설정 탭 "교대 주기"가 관리)은 삭제 대상이 아님** — 그건 근무표의
+  // 뼈대라 여기서 지우면 안 되므로 막고 경고만 보여줌. **그 밖의 이름
+  // (날짜 예외로 만든 "괌여행" 같은 것, D번호 예외, 이 화면에서 "+ 근무
+  // 추가"로 만든 것)은 실제로 삭제** — 그 이름을 쓰던 날짜·자리 예외를 전부
+  // 지워서 원래 근무표(기본 패턴 또는 그 아래 우선순위)로 되돌림.
   function deleteShiftType(name) {
+    if (isBaseShiftPatternName(name)) {
+      renderShiftColorSettings();
+      document.getElementById('shift-color-warn').textContent = '이 근무는 기본 교대 근무라 지울 수 없어요. "교대 주기" 설정에서 근무 순서를 바꿔주세요.';
+      return;
+    }
+    if (Array.isArray(state.shiftOverrides)) {
+      state.shiftOverrides = state.shiftOverrides.filter(function (o) { return o.shiftName !== name; });
+    }
+    if (Array.isArray(state.dayOverrides)) {
+      state.dayOverrides = state.dayOverrides.filter(function (o) { return o.shiftName !== name; });
+    }
     if (state.shiftColors) delete state.shiftColors[name];
     if (state.shiftAlarms) delete state.shiftAlarms[name];
+    if (Array.isArray(state.adhocShiftNames)) {
+      state.adhocShiftNames = state.adhocShiftNames.filter(function (n) { return n !== name; });
+    }
     saveState();
     renderShiftColorSettings();
     renderGrid();
@@ -5131,7 +5157,15 @@
       card.innerHTML = '<div class="shift-color-empty">주기 설정을 먼저 완료해 주세요.</div>';
       return;
     }
-    const shiftNames = getAllShiftTypeNames();
+    // 달력 "근무 변경" 팝업의 "+ 새 근무 만들기"로 즉석에서 만든 이름은 이
+    // 목록에서 뺌(state.adhocShiftNames, 2026-07-17 추가 — 사용자가 "그
+    // 근무는 설정-근무편집에 추가하지 마"라고 명시적으로 요청) — 색은
+    // state.shiftColors에 똑같이 저장돼 있어서 달력 등에서는 평소처럼 잘
+    // 나오고, getAllShiftTypeNames()도 그대로 포함시켜서 그 팝업에서 나중에
+    // 다시 고를 수 있음 — 오직 이 관리 화면 목록에서만 숨김.
+    const shiftNames = getAllShiftTypeNames().filter(function (n) {
+      return !(state.adhocShiftNames && state.adhocShiftNames.indexOf(n) !== -1);
+    });
     card.innerHTML = '';
 
     if (shiftNames.length === 0) {
@@ -6187,35 +6221,104 @@
     document.getElementById('shift-picker-overlay').classList.remove('open');
   }
 
+  // "근무 선택" 팝업 맨 밑의 "+ 새 근무 만들기"(2026-07-17 추가) — 근무
+  // 이름을 쓰고 색을 고르면 그 자리에서 바로 확정(스와치 탭 = 선택+저장,
+  // 설정 탭 "근무 편집"의 색 고르기와 같은 방식)돼 그 날짜(또는 자리)에 바로
+  // 쓰임. **이렇게 만든 근무는 설정 탭 "근무 편집" 목록에는 일부러 안 보이게
+  // 함**(state.adhocShiftNames에 이름을 남겨 renderShiftColorSettings가
+  // 걸러냄, getAllShiftTypeNames 자체에서는 안 뺌 — 이 팝업에서 나중에 같은
+  // 근무를 다시 고를 수 있어야 하므로) — 사용자가 "그 근무는 설정-근무편집에
+  // 추가하지 마"라고 명시적으로 요청함. 색은 다른 근무들과 똑같이
+  // state.shiftColors에 저장되므로 달력·위젯 등 어디서든 평소와 같은 방식으로
+  // 정상적으로 칠해짐 — "목록에 안 보인다"는 것만 다르다.
+  function showShiftPickerNewForm(addBtn) {
+    const form = document.createElement('div');
+    form.className = 'shift-picker-new-form';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'shift-color-add-input';
+    input.maxLength = 20;
+    input.placeholder = '근무 이름…';
+
+    const swatchWrap = document.createElement('div');
+    swatchWrap.className = 'shift-color-swatches';
+
+    const warn = document.createElement('div');
+    warn.className = 'onboard-warn';
+
+    function confirmWith(color) {
+      const name = input.value.trim();
+      if (!name) { input.focus(); return; }
+      if (getAllShiftTypeNames().indexOf(name) !== -1) {
+        warn.textContent = '이미 있는 근무 이름이에요.';
+        return;
+      }
+      if (!state.shiftColors) state.shiftColors = {};
+      state.shiftColors[name] = color;
+      if (!Array.isArray(state.adhocShiftNames)) state.adhocShiftNames = [];
+      if (state.adhocShiftNames.indexOf(name) === -1) state.adhocShiftNames.push(name);
+      saveState();
+      ddShiftSelectedName = name;
+      updateDDShiftPickerUI();
+      closeShiftPicker();
+    }
+
+    SHIFT_COLOR_PRESETS.forEach(function (preset) {
+      const swatch = document.createElement('button');
+      swatch.type = 'button';
+      swatch.className = 'shift-color-swatch';
+      swatch.style.background = preset;
+      swatch.title = preset;
+      swatch.addEventListener('click', function () { confirmWith(preset); });
+      swatchWrap.appendChild(swatch);
+    });
+
+    const colorInput = document.createElement('input');
+    colorInput.type = 'color';
+    colorInput.className = 'shift-color-input';
+    colorInput.value = SHIFT_COLOR_PRESETS[0];
+    colorInput.title = '직접 선택';
+    colorInput.addEventListener('change', function () { confirmWith(colorInput.value); });
+    swatchWrap.appendChild(colorInput);
+
+    form.appendChild(input);
+    form.appendChild(swatchWrap);
+    form.appendChild(warn);
+    addBtn.replaceWith(form);
+    input.focus();
+  }
+
   function openShiftPicker() {
     const list = document.getElementById('shift-picker-list');
     list.innerHTML = '';
     const names = getAllShiftTypeNames();
-    if (names.length === 0) {
-      const empty = document.createElement('div');
-      empty.className = 'shift-picker-empty';
-      empty.textContent = '설정 탭 "근무 편집"에서 먼저 근무를 추가해 주세요.';
-      list.appendChild(empty);
-    } else {
-      names.forEach(function (name) {
-        const item = document.createElement('button');
-        item.type = 'button';
-        item.className = 'shift-picker-item';
-        const swatch = document.createElement('span');
-        swatch.className = 'shift-picker-item-swatch';
-        swatch.style.background = getShiftColor(name) || 'var(--text-3)';
-        const label = document.createElement('span');
-        label.textContent = name;
-        item.appendChild(swatch);
-        item.appendChild(label);
-        item.addEventListener('click', function () {
-          ddShiftSelectedName = name;
-          updateDDShiftPickerUI();
-          closeShiftPicker();
-        });
-        list.appendChild(item);
+    names.forEach(function (name) {
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'shift-picker-item';
+      const swatch = document.createElement('span');
+      swatch.className = 'shift-picker-item-swatch';
+      swatch.style.background = getShiftColor(name) || 'var(--text-3)';
+      const label = document.createElement('span');
+      label.textContent = name;
+      item.appendChild(swatch);
+      item.appendChild(label);
+      item.addEventListener('click', function () {
+        ddShiftSelectedName = name;
+        updateDDShiftPickerUI();
+        closeShiftPicker();
       });
-    }
+      list.appendChild(item);
+    });
+
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'shift-color-add-btn';
+    addBtn.textContent = '+ 새 근무 만들기';
+    addBtn.addEventListener('click', function () { showShiftPickerNewForm(addBtn); });
+    list.appendChild(addBtn);
+
     document.getElementById('shift-picker-overlay').classList.add('open');
   }
 
