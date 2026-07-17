@@ -6615,6 +6615,60 @@
     }
     if (!rule) return;
 
+    // "반복으로 전환" 중이고(원본 날짜가 있음) 새로 만드는 규칙이 "근무·요일"
+    // 방식이면, 같은 이름의 반복 할일이 이미 "근무·요일" 방식으로 있는지
+    // 확인함(2026-07-17, 사용자 요청) — 예: 이미 "주짓수"가 근무·요일 반복
+    // 으로 있는데, 달력에서 새로 추가한 "주짓수" 한 번짜리를 또 반복으로
+    // 바꾸면 같은 이름의 반복 할일이 중복으로 생기는 문제. **"기간" 방식은
+    // 이 확인 대상이 아님**(기간-근무, 기간-기간 모두 항상 별개 할일로
+    // 관리하기로 확정 — 다시 이 확인을 기간 쪽에도 넣지 말 것). "새로
+    // 만들기"(원본 날짜 없음)에도 적용하지 말 것(전환할 때만 확인하기로
+    // 확정).
+    const dupShiftTarget = (repeatEditorSourceEvent && rule.type === 'shift' && !repeatEditorTargetEvent)
+      ? (state.events || []).find(function (e) { return e.repeat && e.repeat.type === 'shift' && e.text === text; })
+      : null;
+
+    if (dupShiftTarget) {
+      const merge = confirm('이미 반복 할일에 "' + text + '"이(가) 있어요. 하나로 합칠까요?');
+      if (merge) {
+        // 기존 반복 할일의 규칙에 지금 고른 근무·요일 칸을 더해줌(합집합) —
+        // 기존 항목의 텍스트·카테고리·중요 표시는 그대로 유지(사용자가 직접
+        // 확인한 방식 — 새로 전환하던 쪽 값으로 안 덮음).
+        const existingGroups = (dupShiftTarget.repeat.groups && dupShiftTarget.repeat.groups.length)
+          ? dupShiftTarget.repeat.groups
+          : [{ shiftNames: dupShiftTarget.repeat.shiftNames || [], offset: dupShiftTarget.repeat.offset || 0, weekdays: dupShiftTarget.repeat.weekdays }];
+        const merged = expandGroupsToGridSelection(existingGroups);
+        promoteShiftGridSelected.forEach(function (key) { merged.add(key); });
+        promoteShiftGridSelected = merged;
+        dupShiftTarget.repeat = { type: 'shift', groups: collapseGridSelectionToGroups() };
+
+        // 전환 중이던 원본(한 번짜리) 기록은 그대로 보존하고, 그 날짜만
+        // 합쳐진 기존 반복 할일 쪽에서 빼줌(기존 "반복 전환 시 원본 기록
+        // 보존" 규칙과 동일한 방식, 대상만 새 항목이 아니라 기존 항목).
+        if (!Array.isArray(dupShiftTarget.excludedDates)) dupShiftTarget.excludedDates = [];
+        if (dupShiftTarget.excludedDates.indexOf(repeatEditorSourceEvent.date) === -1) {
+          dupShiftTarget.excludedDates.push(repeatEditorSourceEvent.date);
+        }
+
+        // 이 화면은 이제 그 기존 반복 할일을 편집하는 상태로 전환됨 — 합쳐진
+        // 칸 상태를 표에 바로 반영해서 보여줌("합친 뒤 그 칸이 체크된 상태를
+        // 보여달라"는 요청).
+        repeatEditorTargetEvent = dupShiftTarget;
+        repeatEditorSourceEvent = null;
+        document.getElementById('promote-title').textContent = '반복 할 일 편집';
+        renderShiftMatrix();
+
+        saveState();
+        renderRoutine();
+        renderGrid();
+        renderToday();
+        if (detailDateStr !== null) { renderDDTodos(); }
+        return;
+      }
+      // "아니요" — 지금 고른 칸은 그대로 유지한 채 아래 일반 생성 경로로
+      // 진행해서 별개의 반복 할일로 만듦.
+    }
+
     if (!repeatEditorTargetEvent) {
       repeatEditorTargetEvent = {
         id: genId('e'), text: text, category: category, repeat: rule,
@@ -6689,7 +6743,22 @@
       else { deselectMode(); }
       return;
     }
+    // "반복으로 전환" 중(원본 날짜가 있음)이고 표에서 아직 아무 칸도 안
+    // 골랐으면, 원래 그 날짜의 근무·요일 칸을 미리 체크해줌(2026-07-16,
+    // 사용자 요청) — 새로 만들기(원본 날짜 없음)거나 이미 칸을 고른 적
+    // 있으면(예: 기간→근무·요일로 갔다가 되돌아온 경우) 안 건드림.
+    if (repeatEditorSourceEvent && promoteShiftGridSelected.size === 0) {
+      const idx0 = dayIndex0ForDate(repeatEditorSourceEvent.date);
+      if (idx0 !== null) {
+        const shiftName = getEffectiveShiftName(repeatEditorSourceEvent.date, idx0).name;
+        if (shiftName) {
+          const wd = parseLocalDate(repeatEditorSourceEvent.date).getDay();
+          promoteShiftGridSelected.add(shiftCellKey(shiftName, wd));
+        }
+      }
+    }
     setPromoteMode('shift');
+    renderShiftMatrix();
     syncPromoteEditorToState();
   });
   document.getElementById('btn-promote-lunar-toggle').addEventListener('click', function () {
