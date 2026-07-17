@@ -3589,13 +3589,23 @@
   //     (getEffectiveShiftName)이 앞뒤 날짜와 같은가"로만 정함 — 출처(기본
   //     패턴/D번호 예외/날짜 예외) 상관없이 이름만 같으면 옆 칸까지 색이 죽
   //     이어져 보임("스케줄 위젯처럼 모든 근무 칸이 좌우로 이어지게").
-  //  2) 그 칸에 글자를 실제로 찍을지는 "이 연속이 일괄 수정(날짜 예외)으로
-  //     생긴 건가"로만 정함 — 괌여행처럼 여러 날을 한 번에 같은 이름으로
-  //     바꾼 경우만 그 구간 첫날에 한 번 쓰고 나머지 날은 비움(달력 위젯
-  //     스타일). 기본 순환 패턴이 우연히 같은 이름을 반복하는 경우(예: 비번
-  //     비번)는 일괄 수정이 아니므로 매 칸 이름을 그대로 반복(스케줄 위젯
-  //     스타일) — 색은 같아서 칸끼리 안 끊기고 이어져 보이되, 글자만 매번
-  //     다시 보임.
+  //  2) 그 칸에 글자를 실제로 찍을지는 "이 연속이 진짜 일괄 수정(근무 일괄
+  //     수정 시트에서 한 번에 만든 것)인가"로만 정함 — 괌여행처럼 날짜를
+  //     여러 개 골라서 한 번에 같은 이름으로 바꾼 경우만 그 구간 첫날에 한
+  //     번 쓰고 나머지 날은 비움(달력 위젯 스타일). **날짜 상세에서 하루씩
+  //     따로따로("한번만") 같은 이름으로 바꾼 경우는 일괄 수정이 아니므로
+  //     대상 아님**(2026-07-17 수정 — 처음엔 "날짜 예외끼리 이름이 같으면"만
+  //     보고 판단해서, 서로 다른 날 따로따로 "비번"으로 바꾼 경우까지 일괄
+  //     수정처럼 취급해 글자가 한 번만 보이는 버그가 있었음 — 이름이 같다는
+  //     것만으로는 "한 번에 같이 만들어진 것"인지 구분이 안 됨). 그래서 근무
+  //     일괄 수정 시트가 만드는 날짜 예외에는 그 시트를 한 번 쓸 때마다
+  //     공통 batchId를 붙여두고(아래 btn-bulk-shift-apply), 앞뒤 날짜의
+  //     batchId가 서로 같을 때만 진짜 일괄 수정으로 침 — "한번만"으로 만든
+  //     예외는 batchId 자체가 없어서 이 조건에 항상 안 걸리고, 기본 순환
+  //     패턴이 우연히 같은 이름을 반복하는 경우(예: 비번 비번)도 애초에
+  //     날짜 예외가 없어서 마찬가지로 안 걸림 — 두 경우 다 매 칸 이름을
+  //     그대로 반복(스케줄 위젯 스타일), 색만 같아서 칸끼리 안 끊기고
+  //     이어져 보임.
   function appendShiftIndicator(cell, cellDateStr, shiftName) {
     const d = parseLocalDate(cellDateStr);
     const prevDateStr = formatDateStr(new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1));
@@ -3609,7 +3619,7 @@
 
     const todayOv = getDateOverride(cellDateStr);
     const prevOv = getDateOverride(prevDateStr);
-    const isBulkContinuation = !!(todayOv && todayOv.shiftName === shiftName && prevOv && prevOv.shiftName === shiftName);
+    const isBulkContinuation = !!(todayOv && prevOv && todayOv.batchId && todayOv.batchId === prevOv.batchId);
 
     const band = document.createElement('div');
     band.className = 'cell-shift-band' + (isStart ? ' band-start' : '') + (isEnd ? ' band-end' : '');
@@ -4879,8 +4889,14 @@
     const isNewName = getAllShiftTypeNames().indexOf(newShift) === -1;
     if (!Array.isArray(state.shiftOverrides)) state.shiftOverrides = [];
     state.shiftOverrides = state.shiftOverrides.filter(function (o) { return !bulkShiftSelectedDates.has(o.date); });
+    // 이 시트로 한 번에 만드는 예외들에는 전부 같은 batchId를 붙임(2026-07-17
+    // 추가) — 달력 탭에서 "이 연속이 진짜 일괄 수정인지"(appendShiftIndicator의
+    // isBulkContinuation) 판단하는 유일한 근거. 날짜 상세에서 하루씩 따로
+    // "한번만"으로 바꾼 예외는 이 필드 자체가 없어서 이름이 우연히 같아도
+    // 절대 여기 걸리지 않음 — 그래서 이어붙여 보이되 글자는 매번 반복됨.
+    const batchId = genId('shiftbatch');
     bulkShiftSelectedDates.forEach(function (dateStr) {
-      state.shiftOverrides.push({ date: dateStr, shiftName: newShift });
+      state.shiftOverrides.push({ date: dateStr, shiftName: newShift, batchId: batchId });
     });
     // 새로 만든 이름일 때만 고른 색을 저장하고 "근무 편집" 목록에는 안 보이게
     // 함(day-detail의 "+ 새 근무 만들기"와 동일한 방식) — 이미 있던 이름을
