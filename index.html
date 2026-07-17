@@ -1978,6 +1978,16 @@
       grid-column: 1 / -1;
     }
 
+    /* 반복·중요 탭의 근무·요일 카드 — 이름을 누르면 펼쳐지는 보기 전용 표
+       (2026-07-17). 편집 화면의 표(.promote-shift-matrix)와 같은 모양을
+       재사용하되, 칸이 <div>라 클릭 커서를 안 보여줌. */
+    .routine-shift-preview {
+      margin-top: 8px;
+    }
+    .routine-shift-preview .promote-shift-cell {
+      cursor: default;
+    }
+
     .promote-interval-row {
       display: flex;
       align-items: center;
@@ -4131,30 +4141,54 @@
     const ul = document.createElement('ul');
     ul.className = 'today-items';
 
-    repeatItems.forEach(function (item) {
-      const li = buildTodoRow('repeat', item, dateStr, refreshFn);
-      // 여기서 스와이프 삭제는 이 날짜만 제외(excludedDates). 반복 할일 자체를
-      // 통째로 지우려면 "반복 할일" 탭에서 지워야 함.
-      ul.appendChild(wrapWithSwipeToDelete(li, bgVar, function () {
-        if (!Array.isArray(item.excludedDates)) item.excludedDates = [];
-        if (item.excludedDates.indexOf(dateStr) === -1) item.excludedDates.push(dateStr);
-        saveState();
-        refreshFn();
-      }));
+    // 맨 앞 숫자로 시각이 인식되면 그 시각 순서대로 나열함(2026-07-17, 사용자
+    // 요청 — 오늘 탭 타임라인의 시각 인식 규칙(parseLeadingTimeFromText)을
+    // 날짜 상세에도 적용). 날짜 상세는 오늘 탭과 달리 구역(미정/오전/오후/밤)
+    // 구분이 없는 하나의 목록이라 timeSlot/timelineOrder 저장값을 쓰지 않고,
+    // 렌더링하는 이 순간에 텍스트를 보고 바로 계산함(반복 할일도 포함 —
+    // "타이핑 중엔 인식 안 함" 원칙은 저장 시점 얘기였을 뿐이고, 여기는 화면에
+    // 뿌릴 때 읽기만 하는 것이라 상관없음). 시각이 인식된 항목끼리는 이른
+    // 시각순, 인식 안 된 항목은 시각 있는 항목들 뒤에 원래 순서(반복 먼저,
+    // 그다음 한 번짜리) 그대로 이어붙임.
+    const combined = repeatItems.map(function (it) { return { kind: 'repeat', item: it }; })
+      .concat(oneTimeItems.map(function (it) { return { kind: 'onetime', item: it }; }));
+    combined.sort(function (a, b) {
+      const ta = parseLeadingTimeFromText(a.item.text);
+      const tb = parseLeadingTimeFromText(b.item.text);
+      const va = ta ? ta.hh * 60 + ta.mm : null;
+      const vb = tb ? tb.hh * 60 + tb.mm : null;
+      if (va === null && vb === null) return 0;
+      if (va === null) return 1;
+      if (vb === null) return -1;
+      return va - vb;
     });
 
-    oneTimeItems.forEach(function (ev) {
-      // 날짜 지정된(배치된) 할 일이라 카드를 꾹 눌러 드래그하면 하단 "미배치"
-      // 버튼 위에 놓아 날짜 지정을 없애고 미배치로 돌려보낼 수 있음 — 반복
-      // 할일은 애초에 특정 날짜에 배치된 게 아니라서 이 드래그 대상이 아님
-      // (dragConfig 자체를 안 줌, 아래 repeatItems 쪽 참고).
-      const li = buildTodoRow('onetime', ev, dateStr, refreshFn);
-      const wrap = wrapWithSwipeToDelete(li, bgVar, function () {
-        state.events = state.events.filter(function (e) { return e !== ev; });
-        saveState();
-        refreshFn();
-      }, { eventId: ev.id, refreshFn: refreshFn, enableInboxDrop: true });
-      ul.appendChild(wrap);
+    combined.forEach(function (t) {
+      if (t.kind === 'repeat') {
+        const item = t.item;
+        const li = buildTodoRow('repeat', item, dateStr, refreshFn);
+        // 여기서 스와이프 삭제는 이 날짜만 제외(excludedDates). 반복 할일 자체를
+        // 통째로 지우려면 "반복 할일" 탭에서 지워야 함.
+        ul.appendChild(wrapWithSwipeToDelete(li, bgVar, function () {
+          if (!Array.isArray(item.excludedDates)) item.excludedDates = [];
+          if (item.excludedDates.indexOf(dateStr) === -1) item.excludedDates.push(dateStr);
+          saveState();
+          refreshFn();
+        }));
+      } else {
+        const ev = t.item;
+        // 날짜 지정된(배치된) 할 일이라 카드를 꾹 눌러 드래그하면 하단 "미배치"
+        // 버튼 위에 놓아 날짜 지정을 없애고 미배치로 돌려보낼 수 있음 — 반복
+        // 할일은 애초에 특정 날짜에 배치된 게 아니라서 이 드래그 대상이 아님
+        // (dragConfig 자체를 안 줌, 위 repeat 쪽 참고).
+        const li = buildTodoRow('onetime', ev, dateStr, refreshFn);
+        const wrap = wrapWithSwipeToDelete(li, bgVar, function () {
+          state.events = state.events.filter(function (e) { return e !== ev; });
+          saveState();
+          refreshFn();
+        }, { eventId: ev.id, refreshFn: refreshFn, enableInboxDrop: true });
+        ul.appendChild(wrap);
+      }
     });
 
     containerEl.appendChild(ul);
@@ -7312,6 +7346,72 @@
     { key: 'other', label: '기타' },
   ];
 
+  // 그 날짜 반복 규칙(shift 타입)을 근무×요일 표의 켜진 칸 Set으로 풀어줌 —
+  // expandGroupsToGridSelection과 똑같은 계산이지만, 그건 편집 화면이 열려
+  // 있어야만 채워지는 전역(promoteShiftAllNames)에 기대는 함수라 목록 화면
+  // (편집 화면을 아예 안 연 상태)에서는 못 씀. allNames를 인자로 직접 받는
+  // 버전을 따로 둠.
+  function computeAllShiftNames() {
+    const names = [];
+    (state.days || []).forEach(function (d) {
+      const n = d.shiftType.name;
+      if (n && names.indexOf(n) === -1) names.push(n);
+    });
+    return names;
+  }
+
+  function gridSelectionForShiftRule(rule, allNames) {
+    const groups = (rule.groups && rule.groups.length)
+      ? rule.groups
+      : [{ shiftNames: rule.shiftNames || [], offset: rule.offset || 0, weekdays: rule.weekdays }];
+    const selected = new Set();
+    groups.forEach(function (g) {
+      const names = (g.shiftNames && g.shiftNames.length) ? g.shiftNames : allNames;
+      const wds = (g.weekdays && g.weekdays.length) ? g.weekdays : [0, 1, 2, 3, 4, 5, 6];
+      names.forEach(function (name) {
+        wds.forEach(function (wd) { selected.add(shiftCellKey(name, wd)); });
+      });
+    });
+    return selected;
+  }
+
+  // "근무·요일" 반복 카드에서 이름을 누르면 펼쳐지는, 그 규칙의 근무×요일
+  // 표(2026-07-17 추가) — 편집 화면의 promote-shift-matrix와 같은 모양이지만
+  // 여기서는 보기 전용(칸에 클릭 핸들러 없음, <button> 대신 <div>).
+  function buildShiftMatrixPreview(ev) {
+    const wrap = document.createElement('div');
+    wrap.className = 'promote-shift-matrix routine-shift-preview';
+    const allNames = computeAllShiftNames();
+    if (allNames.length === 0) return wrap;
+    const selected = gridSelectionForShiftRule(ev.repeat, allNames);
+    const DOW_KR = ['일', '월', '화', '수', '목', '금', '토'];
+    const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
+
+    wrap.appendChild(document.createElement('div')).className = 'promote-shift-matrix-corner';
+    WEEKDAY_ORDER.forEach(function (wd) {
+      const h = document.createElement('div');
+      h.className = 'promote-shift-matrix-header';
+      h.textContent = DOW_KR[wd];
+      if (wd === 6) h.style.color = '#007aff';
+      else if (wd === 0) h.style.color = '#ff3b30';
+      wrap.appendChild(h);
+    });
+    allNames.forEach(function (name) {
+      const shiftColor = getShiftColor(name);
+      const label = document.createElement('div');
+      label.className = 'promote-shift-matrix-label';
+      label.textContent = name;
+      if (shiftColor) label.style.color = shiftColor;
+      wrap.appendChild(label);
+      WEEKDAY_ORDER.forEach(function (wd) {
+        const cell = document.createElement('div');
+        cell.className = 'promote-shift-cell' + (selected.has(shiftCellKey(name, wd)) ? ' selected' : '');
+        wrap.appendChild(cell);
+      });
+    });
+    return wrap;
+  }
+
   function buildRoutineCard(ev) {
     const card = document.createElement('div');
     card.className = 'routine-card';
@@ -7327,12 +7427,27 @@
     // (REPEAT_TEXT_COLOR), 중요 표시가 있으면 주황(#ff9500)으로 덮음.
     nameEl.style.color = ev.important ? '#ff9500' : REPEAT_TEXT_COLOR;
 
-    const daysEl = document.createElement('div');
-    daysEl.className = 'routine-days';
-    daysEl.textContent = describeRepeatRule(ev.repeat);
-
     infoEl.appendChild(nameEl);
-    infoEl.appendChild(daysEl);
+
+    // "근무·요일" 반복은 이름 밑에 조건 문장(describeRepeatRule) 대신, 이름을
+    // 누르면 실제 근무×요일 표를 펼쳐서 보여줌(2026-07-17, 사용자 요청 —
+    // 문장 설명보다 표 자체가 더 정확하고 빠르게 확인됨). 그 밖의 방식
+    // (기간 등)은 조건 문장을 그대로 보여줌 — 이 방식엔 표가 없어서 대상 아님.
+    if (ev.repeat && ev.repeat.type === 'shift') {
+      nameEl.style.cursor = 'pointer';
+      nameEl.addEventListener('click', function (e) {
+        // 카드 전체 탭(→ 편집 화면 열기)과 분리해야 하므로 여기서 막음.
+        e.stopPropagation();
+        const existing = infoEl.querySelector('.routine-shift-preview');
+        if (existing) { existing.remove(); return; }
+        infoEl.appendChild(buildShiftMatrixPreview(ev));
+      });
+    } else {
+      const daysEl = document.createElement('div');
+      daysEl.className = 'routine-days';
+      daysEl.textContent = describeRepeatRule(ev.repeat);
+      infoEl.appendChild(daysEl);
+    }
 
     const chevron = document.createElement('span');
     chevron.className = 'routine-chevron';
@@ -7462,13 +7577,16 @@
     const onetimeImportant = importantEvents.filter(function (e) { return !e.repeat; })
       .sort(function (a, b) { return (a.date || '').localeCompare(b.date || ''); });
 
-    if (repeatImportant.length) {
-      appendRoutineSectionLabel(list, '반복');
-      repeatImportant.forEach(function (ev) { appendRoutineCardRow(list, ev); });
-    }
+    // 한 번짜리(반복 아닌) 중요 할일을 먼저, 반복 할일은 그 뒤에(2026-07-17,
+    // 사용자 요청 — 처음엔 반복을 먼저 보여줬는데 순서를 바꿈). 한 번짜리는
+    // 이미 위에서 날짜 이른 순으로 정렬해둠.
     if (onetimeImportant.length) {
       appendRoutineSectionLabel(list, '한 번짜리');
       appendRoutineTodoRows(list, onetimeImportant);
+    }
+    if (repeatImportant.length) {
+      appendRoutineSectionLabel(list, '반복');
+      repeatImportant.forEach(function (ev) { appendRoutineCardRow(list, ev); });
     }
   }
 

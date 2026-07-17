@@ -873,13 +873,30 @@
     반복 규칙이 있는 항목 전부, ROUTINE_GROUPS로 근무·요일 → 기간 순 묶음,
     repeatGroupKey(rule)이 분류, buildRoutineCard로 그림 — 카드+화살표,
     누르면 openRepeatEditor로 규칙 편집). **'중요' 모드**는 반복이든
-    한 번짜리든 상관없이 item.important인 것만 모아서, 반복인 것은
-    "반복" 섹션에 buildRoutineCard로, 한 번짜리인 것은 "한 번짜리" 섹션에
-    buildTodoRow(다른 화면과 완전히 같은 줄 모양 — 텍스트를 누르면 반복/
-    중요/수정 메뉴, 스와이프하면 그 할 일 자체가 삭제됨, excludedDates
-    개념 없음)로 날짜 이른 순 정렬해서 그림. 공용 헬퍼(appendRoutineSectionLabel/
-    appendRoutineCardRow/appendRoutineTodoRows)로 두 모드가 그리는 코드를
-    공유 — 새 마크업을 만들지 않고 기존 두 렌더러를 그대로 재사용한 것.
+    한 번짜리든 상관없이 item.important인 것만 모아서 보여줌 — **한 번짜리
+    (반복 아닌) 것을 먼저, 반복인 것을 그 뒤에**(2026-07-17, 처음엔 반복을
+    먼저 보여줬다가 사용자 요청으로 순서를 바꿈 — 다시 반복을 앞으로
+    되돌리지 말 것) 섹션으로 나눠서: "한 번짜리" 섹션은 날짜 이른 순으로
+    정렬해서 buildTodoRow(다른 화면과 완전히 같은 줄 모양 — 텍스트를 누르면
+    반복/중요/수정 메뉴, 스와이프하면 그 할 일 자체가 삭제됨, excludedDates
+    개념 없음)로, "반복" 섹션은 buildRoutineCard로 그림. 공용 헬퍼
+    (appendRoutineSectionLabel/appendRoutineCardRow/appendRoutineTodoRows)로
+    두 모드가 그리는 코드를 공유 — 새 마크업을 만들지 않고 기존 두 렌더러를
+    그대로 재사용한 것.
+  - **buildRoutineCard: "근무·요일" 카드는 조건 문장 대신 이름을 눌러 펼치는
+    표(2026-07-17 추가)**: 예전엔 이름 밑에 항상 describeRepeatRule()이 만든
+    조건 문장(예: "주간인 화요일마다")이 보였는데, "근무·요일"(type:'shift')
+    방식 카드에서는 이 문장을 없애고 대신 **이름(routine-name)을 누르면 그
+    자리에 실제 근무×요일 표가 펼쳐짐**(다시 누르면 접힘) — buildShiftMatrixPreview(ev)
+    가 편집 화면의 표(.promote-shift-matrix)와 같은 모양으로 보기 전용
+    (칸이 `<div>`, 클릭 핸들러 없음)으로 그림. 편집 화면이 아직 한 번도 안
+    열린 상태에서도 동작해야 해서, 편집 화면 전역(promoteShiftAllNames)에
+    기대지 않는 별도 헬퍼(computeAllShiftNames/gridSelectionForShiftRule)를
+    씀. 이름 탭은 `e.stopPropagation()`으로 카드 전체 탭(→ openRepeatEditor로
+    편집 화면 열기)과 분리됨 — 이름 말고 카드의 나머지 부분(화살표 포함)을
+    누르면 여전히 편집 화면이 열림. **"기간" 등 그 밖의 방식은 그대로**
+    (조건 문장 계속 보임, 이름 눌러도 아무 반응 없음 — 표가 없는 방식이라
+    대상 아님).
   - excludedDates?: [dateStr,...] — 오늘 탭/날짜 상세에서 반복 할일을 왼쪽으로
     쓸어 삭제하면 그 날짜만 여기 추가됨(반복 할일 자체는 안 지워짐).
     반복 할일 전체 삭제는 반드시 "반복 할일" 탭에서만(openRepeatEditor의
@@ -1059,7 +1076,16 @@
 - ★ 중요 표시는 buildTodoRow()에서 반복 할일·한 번짜리 할 일 모두에 똑같이
   보임(item.important). 반복으로 전환할 때도 그대로 이어받는다.
 - 날짜 상세는 "반복 할일 + 한 번짜리 할 일"을 한 목록으로 합쳐서 보여줌
-  (따로 섹션 나누지 않음, renderTodoList).
+  (따로 섹션 나누지 않음, renderTodoList). **맨 앞 숫자로 시각이 인식되면
+  그 시각 순서대로 정렬됨(2026-07-17 추가)** — 오늘 탭 타임라인에서 쓰는
+  parseLeadingTimeFromText를 그대로 재사용하되, 여기는 구역 구분이 없는
+  flat 목록이라 저장된 timeSlot/timelineOrder를 쓰지 않고 렌더링하는 순간에
+  텍스트에서 바로 계산함(repeatItems.concat(oneTimeItems) 후 정렬) — **반복
+  할일도 정렬 대상에 포함**(오늘 탭 타임라인 배치 때는 "타이핑 중엔 인식 안
+  함" 원칙 때문에 반복 할일을 일부러 뺐지만, 그건 저장 시점 얘기고 여기는
+  화면에 뿌릴 때 읽기만 하는 것이라 상관없이 적용됨 — 혼동하지 말 것). 시각이
+  인식된 항목끼리는 이른 시각순으로 먼저, 인식 안 된 항목은 원래 순서(반복
+  먼저 → 한 번짜리, 각자 배열 순서 그대로) 그대로 뒤에 이어붙임.
 - 오늘 탭은 renderTodoList 대신 renderTodayTimeline으로 그림 — 미정(맨 위)·
   오전·오후(~18시)·밤 4구역으로 나눠서 보여줌(위 timeSlot 설명 참고).
   이 구분은 오늘 탭에만 적용, 날짜 상세는 안 바뀜.
