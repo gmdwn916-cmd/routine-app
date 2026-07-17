@@ -1135,32 +1135,15 @@
     .grid-cell.is-holiday .cell-date { color: #ff3b30; }
     .grid-cell.today .cell-date { color: #007aff; }
 
-    /* 근무 표시는 두 모양 중 하나(2026-07-17, 세 번째 재조정으로 원래
-       구도로 되돌림) — **진짜 근무 일괄 수정(같은 batchId)으로 이어진
-       날짜만** 옆 칸까지 늘어난 띠(.cell-shift-band)로 보이고, 그 밖의
-       모든 경우(기본 순환 패턴, D번호 예외, 하루씩 따로 바꾼 날짜 예외)는
-       평범한 근무와 똑같이 칸 안에서만 꽉 차는 독립된 배지(.cell-shift-badge)로
-       보임 — 다시 이어붙지 않음. **중간에 "이름만 같으면 출처 상관없이 항상
-       이어붙임"으로 바꿨던 버전은 폐기됨**(하루씩 따로 "비번"으로 바꾼
-       이틀이 우연히 이름이 같다는 이유만으로 일괄 수정처럼 합쳐 보이는
-       버그가 있었음) — appendShiftIndicator가 어느 모양을 쓸지는 이제
-       오직 batchId 연결 여부로만 정함. */
-    .cell-shift-badge {
-      font-size: 10px;
-      font-weight: 700;
-      height: 16px;
-      line-height: 16px;
-      border-radius: 4px;
-      padding: 0 5px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      width: 100%;
-      box-sizing: border-box;
-    }
-
-    /* 같은 batchId로 이어진 날짜끼리만 하나로 이어진 띠로 표시.
-       칸 자체의 좌우 여백(4px)만큼 옆으로 늘려서 옆 칸 띠와 맞닿게 한다. */
+    /* 근무 표시는 이제 항상 이 하나의 모양만 씀(2026-07-17, 네 번째 재조정 —
+       달력 위젯처럼 보이게 해달라는 요청) — 모서리를 각지게(둥근 부분 없이)
+       하고, 칸 좌우 여백(4px)만큼 옆으로 늘려서 항상 옆 칸과 맞닿게 함(같은
+       batchId로 이어진 날짜든 아니든, 색이 다른 날끼리도 마찬가지로 맞닿아
+       한 줄이 끊김 없이 쭉 이어져 보임). **글자를 실제로 찍을지는 여전히
+       진짜 근무 일괄 수정(같은 batchId)인지로만 정함**(appendShiftIndicator
+       참고) — 그건 이 모양과 별개 문제라 그대로 둠: 괌여행처럼 이어진
+       구간은 첫날에만 글자, 그 밖의 모든 경우(기본 패턴, 하루씩 따로 바꾼
+       날짜 등)는 매 칸 글자를 그대로 씀. */
     .cell-shift-band {
       font-size: 10px;
       font-weight: 700;
@@ -1173,10 +1156,8 @@
       width: calc(100% + 8px);
       margin: 0 -4px;
       box-sizing: border-box;
+      border-radius: 0;
     }
-
-    .cell-shift-band.band-start { border-radius: 5px 0 0 5px; }
-    .cell-shift-band.band-end { border-radius: 0 5px 5px 0; }
 
     .cell-event-bar {
       width: 100%;
@@ -3595,46 +3576,30 @@
     return state.shiftOverrides.find(function (o) { return o.date === dateStr; }) || null;
   }
 
-  // 이어붙일지 말지는 오직 "진짜 근무 일괄 수정으로 이어진 날짜인가"로만
-  // 정함(2026-07-17, 세 번째 재조정 — "이름만 같으면 출처 상관없이 이어붙임"
-  // 버전은 폐기됨: 하루씩 따로 "비번"으로 바꾼 이틀이 우연히 이름이 같다는
-  // 이유만으로 일괄 수정처럼 하나로 합쳐 보이는 버그가 있었음). 근무 일괄
-  // 수정 시트가 만드는 날짜 예외에는 그 시트를 한 번 쓸 때마다 공통 batchId가
-  // 붙어있고(btn-bulk-shift-apply), 앞뒤 날짜의 batchId가 서로 같을 때만
-  // 진짜 일괄 수정으로 봄:
-  //  - 이어진 경우(괌여행 등): 옆 칸까지 늘어난 띠(.cell-shift-band)로 보이고,
-  //    그 구간 첫날에만 글자를 씀(달력 위젯 스타일).
-  //  - 그 밖의 모든 경우(기본 순환 패턴, D번호 예외, "한번만"으로 하루씩
-  //    따로 바꾼 날짜, batchId가 없는 옛 데이터)는 평범한 근무와 똑같이
-  //    독립된 배지(.cell-shift-badge)로 보이고 글자도 항상 씀 — 이름이
-  //    우연히 같아도(예: 비번 비번) 서로 안 이어붙임.
+  // 칸 모양은 항상 똑같이 각지고 좌우로 꽉 차게 이어 붙임(2026-07-17, 네
+  // 번째 재조정 — 달력 위젯처럼 보이게 해달라는 요청, .cell-shift-band CSS
+  // 참고) — 이건 매일 항상 적용되는 모양일 뿐이고, 글자를 실제로 찍을지는
+  // 여전히 별개 기준: "진짜 근무 일괄 수정으로 이어진 날짜인가"(같은
+  // batchId)로만 정함 — 하루씩 따로 바꾼 날짜가 우연히 이름이 같다는
+  // 이유만으로 글자가 생략되는 일이 없도록. 근무 일괄 수정 시트가 만드는
+  // 날짜 예외에는 그 시트를 한 번 쓸 때마다 공통 batchId가 붙어있고
+  // (btn-bulk-shift-apply), 어제도 같은 batchId를 가진 날짜 예외였을 때만
+  // "이어지는 중"으로 보고 글자를 비움(괌여행 등, 구간 첫날에만 글자 — 달력
+  // 위젯 스타일) — 그 밖의 모든 경우(기본 순환 패턴, D번호 예외, "한번만"으로
+  // 하루씩 따로 바꾼 날짜, batchId가 없는 옛 데이터)는 매 칸 글자를 그대로 씀.
   function appendShiftIndicator(cell, cellDateStr, shiftName) {
     const d = parseLocalDate(cellDateStr);
     const prevDateStr = formatDateStr(new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1));
-    const nextDateStr = formatDateStr(new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1));
 
     const todayOv = getDateOverride(cellDateStr);
     const prevOv = getDateOverride(prevDateStr);
-    const nextOv = getDateOverride(nextDateStr);
-    const linksWithPrev = !!(todayOv && todayOv.batchId && prevOv && prevOv.batchId === todayOv.batchId);
-    const linksWithNext = !!(todayOv && todayOv.batchId && nextOv && nextOv.batchId === todayOv.batchId);
+    const isBatchContinuation = !!(todayOv && todayOv.batchId && prevOv && prevOv.batchId === todayOv.batchId);
 
-    if (!linksWithPrev && !linksWithNext) {
-      const shiftEl = document.createElement('div');
-      shiftEl.className = 'cell-shift-badge';
-      shiftEl.textContent = shiftName;
-      applyShiftBadgeColor(shiftEl, shiftName);
-      cell.appendChild(shiftEl);
-      return;
-    }
-
-    const isStart = !linksWithPrev;
-    const isEnd = !linksWithNext;
-    const band = document.createElement('div');
-    band.className = 'cell-shift-band' + (isStart ? ' band-start' : '') + (isEnd ? ' band-end' : '');
-    if (isStart) band.textContent = shiftName;
-    applyShiftBadgeColor(band, shiftName);
-    cell.appendChild(band);
+    const el = document.createElement('div');
+    el.className = 'cell-shift-band';
+    if (!isBatchContinuation) el.textContent = shiftName;
+    applyShiftBadgeColor(el, shiftName);
+    cell.appendChild(el);
   }
 
   // ── 날짜 처리 (로컬 자정 기준) ───────────────────────────
