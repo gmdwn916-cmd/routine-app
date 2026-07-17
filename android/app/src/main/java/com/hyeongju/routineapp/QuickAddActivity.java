@@ -4,7 +4,9 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.view.KeyEvent;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
@@ -42,6 +44,29 @@ public class QuickAddActivity extends Activity {
                 return true;
             }
             return false;
+        });
+
+        // 쉼표(,)를 입력하면 그때까지 쓴 글자를 바로 미배치에 추가하고 입력칸은
+        // 비운 채로 계속 이어서 입력할 수 있게 함(2026-07-18 추가, 웹 쪽
+        // submitQuickAdd의 쉼표 처리와 같은 목적) — "빨래,청소,운동"처럼 쉼표로
+        // 이어 치면 팝업을 안 닫고도 하나씩 바로 쌓임. input.setText()가 이
+        // 리스너를 다시 부르는 걸 막기 위해 그 순간만 리스너를 뗐다 다시 붙임.
+        input.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override public void afterTextChanged(Editable s) {
+                String text = s.toString();
+                if (text.indexOf(',') < 0) return;
+                String[] parts = text.split(",", -1);
+                for (int i = 0; i < parts.length - 1; i++) {
+                    String part = parts[i].trim();
+                    if (!part.isEmpty()) addPendingItem(part);
+                }
+                input.removeTextChangedListener(this);
+                input.setText(parts[parts.length - 1]);
+                input.setSelection(input.getText().length());
+                input.addTextChangedListener(this);
+            }
         });
     }
 

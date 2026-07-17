@@ -6,7 +6,9 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -110,6 +112,28 @@ public class DayQuickViewActivity extends Activity {
                 return true;
             }
             return false;
+        });
+
+        // 쉼표(,)를 입력하면 그때까지 쓴 글자를 바로 이 날짜에 추가하고 입력칸은
+        // 비운 채로 계속 이어서 입력할 수 있게 함(2026-07-18 추가,
+        // QuickAddActivity와 같은 이유).
+        input.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override public void afterTextChanged(Editable s) {
+                if (TextUtils.isEmpty(targetDate)) return;
+                String text = s.toString();
+                if (text.indexOf(',') < 0) return;
+                String[] parts = text.split(",", -1);
+                for (int i = 0; i < parts.length - 1; i++) {
+                    String part = parts[i].trim();
+                    if (!part.isEmpty()) addPendingDatedItem(part, targetDate);
+                }
+                input.removeTextChangedListener(this);
+                input.setText(parts[parts.length - 1]);
+                input.setSelection(input.getText().length());
+                input.addTextChangedListener(this);
+            }
         });
     }
 

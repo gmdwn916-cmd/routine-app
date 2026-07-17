@@ -8,6 +8,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.RelativeSizeSpan;
 import android.widget.RemoteViews;
 
 import androidx.core.content.ContextCompat;
@@ -28,6 +32,20 @@ public class ScheduleWidgetProvider extends AppWidgetProvider {
 
     private static final String ACTION_PREV = "com.hyeongju.routineapp.SCHEDULE_PREV";
     private static final String ACTION_NEXT = "com.hyeongju.routineapp.SCHEDULE_NEXT";
+
+    // 달력 위젯과 같은 값(웹의 --holiday-color) — 자세한 이유는 그쪽 주석 참고.
+    private static final int HOLIDAY_COLOR = 0xFFD9645E;
+
+    private static CharSequence buildDateText(int dayNum, String holidayName) {
+        String numStr = String.valueOf(dayNum);
+        if (holidayName == null || holidayName.isEmpty()) return numStr;
+        SpannableStringBuilder ssb = new SpannableStringBuilder(numStr + " " + holidayName);
+        int start = numStr.length() + 1;
+        int end = ssb.length();
+        ssb.setSpan(new RelativeSizeSpan(0.62f), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        ssb.setSpan(new ForegroundColorSpan(HOLIDAY_COLOR), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        return ssb;
+    }
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -215,22 +233,32 @@ public class ScheduleWidgetProvider extends AppWidgetProvider {
                     if (pageObj != null) {
                         JSONArray days = pageObj.optJSONArray("days");
                         if (days != null) {
+                            // 진짜 근무 일괄 수정(같은 batchId)으로 이어진 날짜만 글자를 첫
+                            // 칸에만 쓰고 나머지는 색만 이어붙임(2026-07-18 추가 — 예전엔
+                            // 이런 구분이 아예 없어서 "괌"처럼 여러 날을 한 번에 바꾼 근무가
+                            // 모든 칸에 그대로 반복 표시되는 문제가 있었음. 달력 위젯·앱
+                            // 화면의 appendShiftIndicator와 같은 기준으로 통일). 줄(=주)이
+                            // 바뀌면 이어짐 판단을 초기화.
+                            String prevBatchId = null;
                             for (int i = 0; i < days.length() && i < 14; i++) {
+                                if (i % 7 == 0) prevBatchId = null;
                                 Object dayObj = days.opt(i);
-                                if (!(dayObj instanceof JSONObject)) continue;
+                                if (!(dayObj instanceof JSONObject)) { prevBatchId = null; continue; }
                                 JSONObject day = (JSONObject) dayObj;
                                 String dateStr = day.optString("date", "");
                                 int dayNum = day.optInt("dayNum", 0);
                                 boolean isToday = day.optBoolean("isToday", false);
                                 String shiftName = day.optString("shiftName", "");
                                 String color = day.optString("color", "");
+                                String batchId = day.optString("batchId", "");
+                                String holidayName = day.optString("holidayName", "");
                                 JSONArray todos = day.optJSONArray("todos");
 
                                 int dateId = idFor(context, "sch_date_" + i);
                                 int shiftId = idFor(context, "sch_shift_" + i);
                                 int cellId = idFor(context, "sch_cell_" + i);
 
-                                views.setTextViewText(dateId, String.valueOf(dayNum));
+                                views.setTextViewText(dateId, buildDateText(dayNum, holidayName));
                                 if (isToday) {
                                     views.setTextColor(dateId, 0xFF007AFF);
                                     // 오늘은 날짜 숫자만이 아니라 그 날 칸 전체에 테두리를 둘러서 표시.
@@ -238,7 +266,10 @@ public class ScheduleWidgetProvider extends AppWidgetProvider {
                                 }
 
                                 if (!shiftName.isEmpty()) {
-                                    views.setTextViewText(shiftId, shiftName);
+                                    boolean continuesBand = !batchId.isEmpty() && batchId.equals(prevBatchId);
+                                    if (!continuesBand) {
+                                        views.setTextViewText(shiftId, shiftName);
+                                    } // 이어지는 칸은 글자 없이 색만(위에서 이미 ""로 비워둔 상태)
                                     if (!color.isEmpty()) {
                                         try {
                                             int base = Color.parseColor(color);
@@ -252,6 +283,7 @@ public class ScheduleWidgetProvider extends AppWidgetProvider {
                                         }
                                     }
                                 }
+                                prevBatchId = batchId.isEmpty() ? null : batchId;
 
                                 if (todos != null) {
                                     for (int t = 0; t < todos.length() && t < MAX_TODOS_PER_CELL; t++) {

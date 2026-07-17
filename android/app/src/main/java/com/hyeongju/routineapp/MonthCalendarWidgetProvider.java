@@ -8,6 +8,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.RelativeSizeSpan;
 import android.widget.RemoteViews;
 
 import androidx.core.content.ContextCompat;
@@ -33,6 +37,25 @@ public class MonthCalendarWidgetProvider extends AppWidgetProvider {
 
     private static final String ACTION_PREV = "com.hyeongju.routineapp.WIDGET_MONTH_PREV";
     private static final String ACTION_NEXT = "com.hyeongju.routineapp.WIDGET_MONTH_NEXT";
+
+    // 공휴일 이름 색(2026-07-18 추가) — 웹의 --holiday-color(#d9645e)와 같은 값.
+    // 채도를 낮춘 톤이라 전체 위젯 색조와 안 튐(원래 쨍한 빨강 #ff3b30이었다가
+    // "전체 톤과 어울리게" 요청으로 낮춤).
+    private static final int HOLIDAY_COLOR = 0xFFD9645E;
+
+    // 날짜 칸의 숫자 뒤에 공휴일 이름을 작게 이어붙임(2026-07-18 추가) — 이
+    // 위젯 레이아웃엔 공휴일 전용 칸이 따로 없어서, 같은 TextView 안에 크기·색이
+    // 다른 부분(Span)을 넣는 방식으로 처리(레이아웃 XML은 안 건드림).
+    private static CharSequence buildDateText(int dayNum, String holidayName) {
+        String numStr = String.valueOf(dayNum);
+        if (holidayName == null || holidayName.isEmpty()) return numStr;
+        SpannableStringBuilder ssb = new SpannableStringBuilder(numStr + " " + holidayName);
+        int start = numStr.length() + 1;
+        int end = ssb.length();
+        ssb.setSpan(new RelativeSizeSpan(0.62f), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        ssb.setSpan(new ForegroundColorSpan(HOLIDAY_COLOR), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        return ssb;
+    }
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -227,30 +250,34 @@ public class MonthCalendarWidgetProvider extends AppWidgetProvider {
 
                         JSONArray days = monthObj.optJSONArray("days");
                         if (days != null) {
-                            // 같은 근무가 옆 칸(같은 줄=같은 주)까지 연속되면 배경 띠는 계속
-                            // 이어붙이되, 글자는 그 연속의 첫 칸에만 씀(괌 여행처럼 기간
-                            // 할일을 이어진 띠 하나로 보여주던 것과 같은 원리) — 줄이 바뀌면
-                            // 다른 주라서 새로 시작(이어짐 판단 초기화).
-                            String prevShiftInRow = null;
+                            // 진짜 근무 일괄 수정(같은 batchId)으로 이어진 날짜만 배경 띠를
+                            // 이어붙이고 글자는 그 구간 첫 칸에만 씀(2026-07-18 수정 — 예전엔
+                            // "이름이 같으면" 이어붙였는데, 그러면 하루씩 따로 바꾼 날짜나
+                            // 기본 패턴이 우연히 같은 이름을 반복할 때도 잘못 합쳐졌음 — 앱의
+                            // appendShiftIndicator와 같은 기준으로 통일). 줄이 바뀌면 다른
+                            // 주라서 새로 시작(이어짐 판단 초기화).
+                            String prevBatchId = null;
                             for (int i = 0; i < days.length() && i < 42; i++) {
-                                if (i % 7 == 0) prevShiftInRow = null;
+                                if (i % 7 == 0) prevBatchId = null;
 
                                 Object dayObj = days.opt(i);
-                                if (!(dayObj instanceof JSONObject)) { prevShiftInRow = null; continue; } // 그 달에 속하지 않는 빈 칸
+                                if (!(dayObj instanceof JSONObject)) { prevBatchId = null; continue; } // 그 달에 속하지 않는 빈 칸
                                 JSONObject day = (JSONObject) dayObj;
                                 String dateStr = day.optString("date", "");
                                 int dayNum = day.optInt("dayNum", 0);
                                 String shiftName = day.optString("shiftName", "");
                                 String color = day.optString("color", "");
+                                String batchId = day.optString("batchId", "");
+                                String holidayName = day.optString("holidayName", "");
 
                                 int dateId = idFor(context, "cell_date_" + i);
                                 int shiftId = idFor(context, "cell_shift_" + i);
                                 int cellId = idFor(context, "cell_container_" + i);
 
-                                views.setTextViewText(dateId, String.valueOf(dayNum));
+                                views.setTextViewText(dateId, buildDateText(dayNum, holidayName));
 
                                 if (!shiftName.isEmpty()) {
-                                    boolean continuesBand = shiftName.equals(prevShiftInRow);
+                                    boolean continuesBand = !batchId.isEmpty() && batchId.equals(prevBatchId);
                                     if (!continuesBand) {
                                         views.setTextViewText(shiftId, shiftName);
                                     } // 이어지는 칸은 글자 없이 배경 띠만(위에서 이미 ""로 비워둔 상태)
@@ -267,7 +294,7 @@ public class MonthCalendarWidgetProvider extends AppWidgetProvider {
                                         }
                                     }
                                 }
-                                prevShiftInRow = shiftName.isEmpty() ? null : shiftName;
+                                prevBatchId = batchId.isEmpty() ? null : batchId;
 
                                 if (dateStr.equals(todayStr)) {
                                     views.setTextColor(dateId, 0xFF007AFF);

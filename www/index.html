@@ -43,6 +43,12 @@
       --divider: #f2f2f7;       /* 목록 구분선 */
       --line: #e3e5e8;          /* 테두리 (헤더/내비/입력/카드) */
       --accent: #34c759;        /* 포인트 초록 */
+      --holiday-color: #d9645e; /* 공휴일 표시(2026-07-18, 채도 낮춤 — 원래 쨍한
+                                    빨강 #ff3b30이었는데 "전체 톤과 안 어울린다"는
+                                    요청으로 회색을 살짝 섞은 톤으로 낮춤. 라이트/
+                                    다크 공통(테마별로 안 바뀜, 다른 곳에서 재정의
+                                    안 함) — 일/토요일 헤더·삭제 버튼 등 다른
+                                    #ff3b30 쓰임은 공휴일과 무관해서 그대로 둠. */
       --check-border: #d1d1d6;  /* 완료 전 체크 원 테두리 */
       --shift-ink: #000;        /* 근무 칩 글자를 섞을 바탕색 */
       --shift-ink-mix: 78%;     /* 근무색을 --shift-ink에 섞는 비율 */
@@ -378,7 +384,7 @@
     .td-holiday-name {
       font-size: 13px;
       font-weight: 700;
-      color: #ff3b30;
+      color: var(--holiday-color);
       margin-top: 2px;
       display: none;
     }
@@ -583,10 +589,10 @@
     .dd-holiday-name {
       font-size: 12px;
       font-weight: 700;
-      color: #ff3b30;
+      color: var(--holiday-color);
     }
 
-    .dd-date-title.is-holiday { color: #ff3b30; }
+    .dd-date-title.is-holiday { color: var(--holiday-color); }
 
     .dd-day-info {
       font-size: 13px;
@@ -1145,7 +1151,7 @@
       overflow: hidden;
     }
 
-    .grid-cell.is-holiday .cell-date { color: #ff3b30; }
+    .grid-cell.is-holiday .cell-date { color: var(--holiday-color); }
     .grid-cell.today .cell-date { color: #007aff; }
 
     /* 공휴일 이름(추석, 추석 연휴 등)을 날짜 숫자 옆에 작게(2026-07-17 추가) —
@@ -1153,7 +1159,7 @@
     .cell-holiday-name {
       font-size: 8px;
       font-weight: 600;
-      color: #ff3b30;
+      color: var(--holiday-color);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -5601,11 +5607,19 @@
       const dayIdx0 = ((diff % state.cycleDays) + state.cycleDays) % state.cycleDays;
       const dateStr = formatDateStr(dateMid);
       const { name: shiftName } = getEffectiveShiftName(dateStr, dayIdx0);
+      const ov = getDateOverride(dateStr);
+      const holiday = getKoreanHoliday(dateStr);
       days.push({
         date: dateStr,
         dayNum: d,
         shiftName: shiftName || '',
         color: getShiftColor(shiftName) || '',
+        // 일괄 수정으로 이어진 날짜인지 위젯이 스스로 판단할 근거(2026-07-18
+        // 추가) — appendShiftIndicator와 같은 기준(같은 batchId를 가진 날짜
+        // 예외끼리만 진짜 이어진 것으로 침). 없으면 빈 문자열.
+        batchId: (ov && ov.batchId) || '',
+        // 공휴일 이름(2026-07-18 추가) — 위젯도 달력 탭과 같은 걸 보여줌.
+        holidayName: holiday ? holiday.name : '',
       });
     }
     while (days.length % 7 !== 0) days.push(null);
@@ -5688,6 +5702,8 @@
         const diff = Math.round((d - baseMid) / 86400000);
         const dayIdx0 = ((diff % state.cycleDays) + state.cycleDays) % state.cycleDays;
         const { name: shiftName } = getEffectiveShiftName(dateStr, dayIdx0);
+        const ov = getDateOverride(dateStr);
+        const holiday = getKoreanHoliday(dateStr);
 
         const undoneRepeat = getRepeatTodosForDate(dateStr).filter(function (ev) { return !isRepeatDoneOn(ev.id, dateStr); });
         const undoneOneTime = getEventsForDate(dateStr).filter(function (ev) { return !ev.done; });
@@ -5699,6 +5715,10 @@
           isToday: dateStr === todayStr,
           shiftName: shiftName || '',
           color: getShiftColor(shiftName) || '',
+          // 달력 위젯과 같은 이유로 추가(2026-07-18) — appendShiftIndicator와
+          // 같은 기준으로 "진짜 일괄 수정으로 이어진 날짜"만 판단하기 위함.
+          batchId: (ov && ov.batchId) || '',
+          holidayName: holiday ? holiday.name : '',
           todos: todos,
         });
       }
@@ -5736,7 +5756,13 @@
     const { name: shiftName } = getEffectiveShiftName(dateStr, dayIdx0);
 
     const DOW_KR = ['일', '월', '화', '수', '목', '금', '토'];
-    const dateLabel = (todayMid.getMonth() + 1) + '월 ' + todayMid.getDate() + '일 ' + DOW_KR[todayMid.getDay()] + '요일';
+    // 오늘이 공휴일이면 날짜 라벨 뒤에 이름을 그대로 붙임(2026-07-18 추가) —
+    // 이 위젯은 라벨을 하나의 문자열로만 받아 그대로 찍기 때문에, 네이티브를
+    // 안 건드리고 여기서 문자열만 조합하면 됨(달력·스케줄 위젯처럼 칸마다
+    // 따로 작게 표시할 자리가 없어서 이 위젯만 라벨에 자연스럽게 이어붙임).
+    const todayHoliday = getKoreanHoliday(dateStr);
+    const dateLabel = (todayMid.getMonth() + 1) + '월 ' + todayMid.getDate() + '일 ' + DOW_KR[todayMid.getDay()] + '요일'
+      + (todayHoliday ? (' ' + todayHoliday.name) : '');
 
     // 위젯에서 체크한 항목은 목록에서 바로 사라지게 함(완료 표시만 하고 계속
     // 보여주던 이전 방식에서 바뀜) — 그래서 애초에 완료된 항목은 payload에도
@@ -6712,9 +6738,10 @@
     }
   }
 
-  function submitQuickAdd() {
-    const input = document.getElementById('quick-add-input');
-    const text = input.value.trim();
+  // 할 일 하나를 실제로 추가하는 부분만 따로 뺌(2026-07-18) — 쉼표로 여러 개를
+  // 한 번에 이어 넣을 때(아래 comma 처리)도 이 함수를 그대로 재사용하기 위함.
+  function addQuickAddItem(text) {
+    text = text.trim();
     if (!text) return;
 
     // 날짜 상세 화면이 열려있거나 오늘 탭을 보고 있으면, 이미 날짜가 정해진
@@ -6728,7 +6755,6 @@
       const newEv = { id: genId('e'), date: targetDateStr, endDate: targetDateStr, text: text };
       applyAutoTimeSlot(newEv);
       state.events.push(newEv);
-      input.value = '';
       saveState();
       renderToday();
       renderGrid();
@@ -6738,14 +6764,35 @@
 
     if (!Array.isArray(state.inbox)) state.inbox = [];
     state.inbox.push({ id: genId('i'), text: text, createdAt: Date.now() });
-    input.value = '';
     saveState();
     renderInboxBadge();
+  }
+
+  function submitQuickAdd() {
+    const input = document.getElementById('quick-add-input');
+    const text = input.value.trim();
+    if (!text) return;
+    addQuickAddItem(text);
+    input.value = '';
   }
 
   document.getElementById('btn-quick-add').addEventListener('click', submitQuickAdd);
   document.getElementById('quick-add-input').addEventListener('keydown', function (e) {
     if (e.key === 'Enter') submitQuickAdd();
+  });
+
+  // 쉼표(,)를 입력하면 그때까지 쓴 글자를 바로 할 일로 추가하고 입력칸은 비운
+  // 채로 계속 이어서 입력할 수 있게 함(2026-07-18 추가) — "빨래,청소,운동"처럼
+  // 쉼표로 이어 치면 그 자리에서 하나씩 바로 추가됨. 붙여넣기로 쉼표가 여러 개
+  // 한 번에 들어와도 전부 처리하고, 맨 마지막 쉼표 뒤 아직 안 끝난 글자만
+  // 입력칸에 남겨둠.
+  document.getElementById('quick-add-input').addEventListener('input', function () {
+    if (this.value.indexOf(',') === -1) return;
+    const parts = this.value.split(',');
+    for (let i = 0; i < parts.length - 1; i++) {
+      addQuickAddItem(parts[i]);
+    }
+    this.value = parts[parts.length - 1];
   });
 
   // 날짜 지정된(배치된) 한 번짜리 할 일을 미배치로 되돌림 — 반복 할일은 애초에
