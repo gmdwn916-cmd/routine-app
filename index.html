@@ -7346,29 +7346,78 @@
   }
 
   // 반복·중요 탭 필터(2026-07-17, 탭 이름을 "반복 할일"→"반복·중요"로 바꾸며
-  // 추가) — 독립 토글 두 개, 기본 둘 다 켜짐. "하나만 걸려도 보이는" OR
-  // 방식이라(교집합이 아니라 합집합), 반복이면서 동시에 중요인 항목은 둘 다
-  // 꺼지지 않는 한 항상 보임.
-  let routineFilterRepeat = true;
-  let routineFilterImportant = true;
+  // 추가) — **"기간"/"근무·요일" 모드 버튼과 같은 배타적 단일 선택**(처음엔
+  // 독립 토글 두 개로 만들어서 둘 다 켤 수 있었는데, "둘 중 하나만 눌리는
+  // 걸로" 요청으로 바꿈 — 항상 둘 중 하나만 켜져 있고, 다른 쪽을 누르면
+  // 그쪽으로 완전히 전환됨). 기본값은 '반복'.
+  let routineFilterMode = 'repeat'; // 'repeat' | 'important'
 
   function renderRoutineFilterButtons() {
-    document.getElementById('routine-filter-repeat').classList.toggle('active', routineFilterRepeat);
-    document.getElementById('routine-filter-important').classList.toggle('active', routineFilterImportant);
+    document.getElementById('routine-filter-repeat').classList.toggle('active', routineFilterMode === 'repeat');
+    document.getElementById('routine-filter-important').classList.toggle('active', routineFilterMode === 'important');
   }
 
   document.getElementById('routine-filter-repeat').addEventListener('click', function () {
-    // 하나는 항상 켜져 있어야 함(둘 다 끄면 목록이 통째로 비어버리는 걸
-    // 막음, 사용자가 직접 확인한 동작) — 마지막 하나 남았을 때는 무시.
-    if (routineFilterRepeat && !routineFilterImportant) return;
-    routineFilterRepeat = !routineFilterRepeat;
+    routineFilterMode = 'repeat';
     renderRoutine();
   });
   document.getElementById('routine-filter-important').addEventListener('click', function () {
-    if (routineFilterImportant && !routineFilterRepeat) return;
-    routineFilterImportant = !routineFilterImportant;
+    routineFilterMode = 'important';
     renderRoutine();
   });
+
+  function appendRoutineSectionLabel(list, text) {
+    const label = document.createElement('div');
+    label.className = 'section-label';
+    if (list.children.length) label.style.marginTop = '18px';
+    label.textContent = text;
+    list.appendChild(label);
+  }
+
+  function appendRoutineCardRow(list, ev) {
+    const card = buildRoutineCard(ev);
+    // 한 번짜리/오늘 탭 할 일과 같은 스와이프 삭제 — 여기서는 반복 할일 자체를 통째로 지움.
+    const wrap = wrapWithSwipeToDelete(card, 'var(--bg)', function () {
+      state.events = state.events.filter(function (e) { return e.id !== ev.id; });
+      saveState();
+      renderRoutine();
+      renderGrid();
+      renderToday();
+      if (detailDateStr !== null) { renderDDTodos(); }
+    });
+    // .routine-card는 모서리가 둥글고(border-radius:12px) margin-bottom으로
+    // 카드 사이 간격을 만드는데, 그 margin이 스와이프 틀(overflow:hidden) 안쪽에
+    // 포함되면서 틀 높이가 카드 자체보다 커짐 — 뒤에 숨은 빨간 삭제 버튼은
+    // top:0/bottom:0로 그 틀 전체 높이를 채우다 보니, margin만큼의 빈 공간에
+    // 카드로 안 가려진 빨간 부분이 남아 보였음(틀에 준 반지름 때문에 둥글게).
+    // 간격을 카드 안쪽 margin이 아니라 틀 바깥쪽 margin으로 옮겨서 근본적으로 해결.
+    card.style.marginBottom = '0';
+    wrap.style.marginBottom = '8px';
+    wrap.style.borderRadius = '12px';
+    // 그림자는 card(overflow:hidden인 wrap의 자식)가 아니라 wrap 자신에 줌 —
+    // 자식의 box-shadow는 부모의 overflow:hidden에 걸려 카드마다 서브픽셀
+    // 오차로 있다 없다 했음. 자기 자신의 그림자는 overflow에 안 잘림.
+    wrap.style.boxShadow = '0 1px 3px rgba(0,0,0,0.07)';
+    list.appendChild(wrap);
+  }
+
+  function appendRoutineTodoRows(list, items) {
+    const ul = document.createElement('ul');
+    ul.className = 'today-items';
+    items.forEach(function (ev) {
+      const li = buildTodoRow('onetime', ev, ev.date, renderRoutine);
+      const wrap = wrapWithSwipeToDelete(li, 'var(--bg)', function () {
+        state.events = state.events.filter(function (e) { return e.id !== ev.id; });
+        saveState();
+        renderRoutine();
+        renderGrid();
+        renderToday();
+        if (detailDateStr !== null) { renderDDTodos(); }
+      });
+      ul.appendChild(wrap);
+    });
+    list.appendChild(ul);
+  }
 
   function renderRoutine() {
     const list = document.getElementById('routine-list');
@@ -7378,101 +7427,48 @@
     }
 
     renderRoutineFilterButtons();
-
-    // 반복 필터·중요 필터 각각이 고른 항목들을 합집합으로 모음(id로 중복
-    // 제거 — 반복이면서 중요인 항목이 둘 다 켜져 있을 때 두 번 안 뜨게).
-    // 한 번짜리(반복 아닌) 중요 할일은 이 앱의 "앞으로만 본다" 원칙대로
-    // 오늘 이후 것만 포함(사용자가 직접 확인).
-    const todayStr = formatDateStr(todayMidnight());
-    const seen = new Set();
-    const combined = [];
-    function addIfNew(ev) {
-      if (seen.has(ev.id)) return;
-      seen.add(ev.id);
-      combined.push(ev);
-    }
-    (state.events || []).forEach(function (e) {
-      if (routineFilterRepeat && e.repeat) { addIfNew(e); return; }
-      if (routineFilterImportant && e.important) {
-        if (e.repeat) { addIfNew(e); return; }
-        if (e.date && e.date >= todayStr) addIfNew(e);
-      }
-    });
-
     list.innerHTML = '';
-    if (combined.length === 0) {
-      list.innerHTML = '<div class="routine-empty">표시할 할일이 없어요.<br>+ 새로 만들기를 눌러 추가해 보세요.</div>';
+
+    if (routineFilterMode === 'repeat') {
+      // '반복' 모드 — 예전 "반복 할일" 탭과 완전히 같음(중요 여부 상관없이
+      // 반복 규칙이 있는 항목 전부), 근무·요일 → 기간 순으로 묶어서 보여줌.
+      const repeatTodos = (state.events || []).filter(function (e) { return !!e.repeat; });
+      if (repeatTodos.length === 0) {
+        list.innerHTML = '<div class="routine-empty">등록된 반복 할일이 없어요.<br>+ 새로 만들기를 눌러 추가해 보세요.</div>';
+        return;
+      }
+      ROUTINE_GROUPS.forEach(function (g) {
+        const items = repeatTodos.filter(function (ev) { return repeatGroupKey(ev.repeat) === g.key; });
+        if (items.length === 0) return;
+        appendRoutineSectionLabel(list, g.label);
+        items.forEach(function (ev) { appendRoutineCardRow(list, ev); });
+      });
       return;
     }
 
-    function appendSectionLabel(text) {
-      const label = document.createElement('div');
-      label.className = 'section-label';
-      if (list.children.length) label.style.marginTop = '18px';
-      label.textContent = text;
-      list.appendChild(label);
-    }
-
-    const repeatItems = combined.filter(function (e) { return !!e.repeat; });
-    ROUTINE_GROUPS.forEach(function (g) {
-      const items = repeatItems.filter(function (ev) { return repeatGroupKey(ev.repeat) === g.key; });
-      if (items.length === 0) return;
-
-      appendSectionLabel(g.label);
-
-      items.forEach(function (ev) {
-        const card = buildRoutineCard(ev);
-        // 한 번짜리/오늘 탭 할 일과 같은 스와이프 삭제 — 여기서는 반복 할일 자체를 통째로 지움.
-        const wrap = wrapWithSwipeToDelete(card, 'var(--bg)', function () {
-          state.events = state.events.filter(function (e) { return e.id !== ev.id; });
-          saveState();
-          renderRoutine();
-          renderGrid();
-          renderToday();
-          if (detailDateStr !== null) { renderDDTodos(); }
-        });
-        // .routine-card는 모서리가 둥글고(border-radius:12px) margin-bottom으로
-        // 카드 사이 간격을 만드는데, 그 margin이 스와이프 틀(overflow:hidden) 안쪽에
-        // 포함되면서 틀 높이가 카드 자체보다 커짐 — 뒤에 숨은 빨간 삭제 버튼은
-        // top:0/bottom:0로 그 틀 전체 높이를 채우다 보니, margin만큼의 빈 공간에
-        // 카드로 안 가려진 빨간 부분이 남아 보였음(틀에 준 반지름 때문에 둥글게).
-        // 간격을 카드 안쪽 margin이 아니라 틀 바깥쪽 margin으로 옮겨서 근본적으로 해결.
-        card.style.marginBottom = '0';
-        wrap.style.marginBottom = '8px';
-        wrap.style.borderRadius = '12px';
-        // 그림자는 card(overflow:hidden인 wrap의 자식)가 아니라 wrap 자신에 줌 —
-        // 자식의 box-shadow는 부모의 overflow:hidden에 걸려 카드마다 서브픽셀
-        // 오차로 있다 없다 했음. 자기 자신의 그림자는 overflow에 안 잘림.
-        wrap.style.boxShadow = '0 1px 3px rgba(0,0,0,0.07)';
-        list.appendChild(wrap);
-      });
+    // '중요' 모드 — 반복이든 한 번짜리든 상관없이 중요 표시된 할 일만.
+    // 한 번짜리는 이 앱의 "앞으로만 본다" 원칙대로 오늘 이후 것만 포함.
+    const todayStr = formatDateStr(todayMidnight());
+    const importantEvents = (state.events || []).filter(function (e) {
+      if (!e.important) return false;
+      if (e.repeat) return true;
+      return !!(e.date && e.date >= todayStr);
     });
-
-    // 한 번짜리 중요 할일(반복 아님) — 근무·요일/기간 같은 반복 방식 묶음이
-    // 없으니 "중요" 섹션 하나로 모아서 날짜 이른 순으로 보여줌. 줄 모양은
-    // 다른 화면(오늘 탭/날짜 상세)과 완전히 같은 buildTodoRow 재사용 —
-    // 여기서도 텍스트를 누르면 (반복/중요/수정) 메뉴가 뜨고, 스와이프하면
-    // 그 할 일 자체가 지워짐(반복 카드 쪽과 달리 excludedDates 개념이 없는
-    // 한 번짜리라 통째로 삭제가 맞음).
-    const onetimeImportant = combined.filter(function (e) { return !e.repeat; })
+    if (importantEvents.length === 0) {
+      list.innerHTML = '<div class="routine-empty">중요 표시된 할 일이 없어요.</div>';
+      return;
+    }
+    const repeatImportant = importantEvents.filter(function (e) { return !!e.repeat; });
+    const onetimeImportant = importantEvents.filter(function (e) { return !e.repeat; })
       .sort(function (a, b) { return (a.date || '').localeCompare(b.date || ''); });
+
+    if (repeatImportant.length) {
+      appendRoutineSectionLabel(list, '반복');
+      repeatImportant.forEach(function (ev) { appendRoutineCardRow(list, ev); });
+    }
     if (onetimeImportant.length) {
-      appendSectionLabel('중요(한 번짜리)');
-      const ul = document.createElement('ul');
-      ul.className = 'today-items';
-      onetimeImportant.forEach(function (ev) {
-        const li = buildTodoRow('onetime', ev, ev.date, renderRoutine);
-        const wrap = wrapWithSwipeToDelete(li, 'var(--bg)', function () {
-          state.events = state.events.filter(function (e) { return e.id !== ev.id; });
-          saveState();
-          renderRoutine();
-          renderGrid();
-          renderToday();
-          if (detailDateStr !== null) { renderDDTodos(); }
-        });
-        ul.appendChild(wrap);
-      });
-      list.appendChild(ul);
+      appendRoutineSectionLabel(list, '한 번짜리');
+      appendRoutineTodoRows(list, onetimeImportant);
     }
   }
 

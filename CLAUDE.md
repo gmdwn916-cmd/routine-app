@@ -859,24 +859,27 @@
       원래 한 번짜리 기록만 보임, 다른 날짜는 영향 없음.
   - **"반복 할일" 탭 → "반복·중요" 탭으로 확장(2026-07-17)**: 하단 탭 이름이
     "반복·중요"로 바뀌고(nav-routine 라벨만 변경, id/switchTab 키는 여전히
-    'routine' 그대로 — 코드 쪽 이름은 안 바꿈), 화면 위쪽에 독립 토글 두 개
-    (routine-filter-repeat/-important, #routine-filter-row)가 생김. 기본
-    둘 다 켜짐. **하나만 걸려도 보이는 합집합 방식**(교집합 아님) — 반복
-    필터가 고른 것 ∪ 중요 필터가 고른 것을 id로 중복 제거해서 합침(반복
-    이면서 동시에 중요인 항목이 두 번 뜨지 않게). **둘 다 끄는 건 막음**
-    (routineFilterRepeat/-Important 클릭 핸들러에서 "마지막 하나 남았으면
-    무시" — 목록이 통째로 비는 상황 자체를 차단, 사용자가 직접 확인한
-    동작). 한 번짜리(반복 아닌) 중요 할일은 이 앱의 "앞으로만 본다" 원칙대로
-    **오늘 이후 것만** 포함(지난 날짜는 안 보임, 사용자가 직접 확인).
-  - renderRoutine()은 이제 두 부분으로 그림 — **반복 항목**은 여전히
-    ROUTINE_GROUPS(근무·요일 → 기간, 카테고리가 아니라 반복 방식 기준
-    — repeatGroupKey(rule)이 분류)로 나눠 buildRoutineCard(카드+화살표,
-    누르면 openRepeatEditor로 규칙 편집)로 그리고, **한 번짜리 중요 할일**은
-    반복 방식 묶음이 없으니 "중요(한 번짜리)" 섹션 하나로 모아 날짜 이른 순
-    정렬 후 buildTodoRow(다른 화면과 완전히 같은 줄 모양 — 텍스트를 누르면
-    반복/중요/수정 메뉴, 스와이프하면 그 할 일 자체가 삭제됨, excludedDates
-    개념 없음)로 그림 — 새 마크업을 만들지 않고 기존 두 렌더러를 그대로
-    재사용한 것.
+    'routine' 그대로 — 코드 쪽 이름은 안 바꿈), 화면 위쪽에 필터 버튼 두 개
+    (routine-filter-repeat/-important, #routine-filter-row)가 생김.
+    **"기간"/"근무·요일" 모드 버튼과 같은 배타적 단일 선택**(routineFilterMode:
+    'repeat'|'important', 기본값 'repeat')**이지, 독립 토글이 아님** — 처음엔
+    둘 다 동시에 켤 수 있는 토글로 만들었다가, 사용자가 "둘 중 하나만
+    눌리는 걸로" 요청해서 항상 정확히 하나만 활성 상태인 방식으로 바꿈(다시
+    동시에 두 개 켜지는 방식으로 되돌리지 말 것). 한 번짜리(반복 아닌) 중요
+    할일은 '중요' 모드에서 이 앱의 "앞으로만 본다" 원칙대로 **오늘 이후
+    것만** 포함(지난 날짜는 안 보임).
+  - renderRoutine()은 routineFilterMode에 따라 완전히 다른 목록을 그림 —
+    **'반복' 모드**는 예전 "반복 할일" 탭과 완전히 같음(중요 여부 상관없이
+    반복 규칙이 있는 항목 전부, ROUTINE_GROUPS로 근무·요일 → 기간 순 묶음,
+    repeatGroupKey(rule)이 분류, buildRoutineCard로 그림 — 카드+화살표,
+    누르면 openRepeatEditor로 규칙 편집). **'중요' 모드**는 반복이든
+    한 번짜리든 상관없이 item.important인 것만 모아서, 반복인 것은
+    "반복" 섹션에 buildRoutineCard로, 한 번짜리인 것은 "한 번짜리" 섹션에
+    buildTodoRow(다른 화면과 완전히 같은 줄 모양 — 텍스트를 누르면 반복/
+    중요/수정 메뉴, 스와이프하면 그 할 일 자체가 삭제됨, excludedDates
+    개념 없음)로 날짜 이른 순 정렬해서 그림. 공용 헬퍼(appendRoutineSectionLabel/
+    appendRoutineCardRow/appendRoutineTodoRows)로 두 모드가 그리는 코드를
+    공유 — 새 마크업을 만들지 않고 기존 두 렌더러를 그대로 재사용한 것.
   - excludedDates?: [dateStr,...] — 오늘 탭/날짜 상세에서 반복 할일을 왼쪽으로
     쓸어 삭제하면 그 날짜만 여기 추가됨(반복 할일 자체는 안 지워짐).
     반복 할일 전체 삭제는 반드시 "반복 할일" 탭에서만(openRepeatEditor의
