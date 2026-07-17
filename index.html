@@ -2229,10 +2229,12 @@
 
     /* ── 팀 달력 ── */
     /* 글씨 없이 그림만 있는 작은 버튼으로(2026-07-17, 사용자 요청 — "눈에
-       덜 띄게 채도 등을 맞춰줘") — 예전엔 보라색(#5e5ce6) 테두리 + 글씨가
-       있는 알약 모양 버튼이라 화면에서 꽤 눈에 띄었는데, 색을 다른 무채색
-       아이콘 버튼(.btn-cal-nav 등)과 같은 중립 톤(var(--surface-2) 배경 +
-       var(--text-2) 아이콘)으로 바꿔서 튀지 않게 함. */
+       덜 띄게 채도 등을 맞춰줘") — 처음엔 다른 무채색 아이콘 버튼과 같은
+       회색 톤으로 완전히 바꿨다가, "기존 보라색 유지하되 너무 쨍하지 않게"
+       요청으로 재조정 — 색상 자체(#5e5ce6)는 그대로 두고 옅은 톤(배경 10%
+       불투명도) + 버튼 전체에 opacity를 살짝 낮춰서 눈에 덜 띄게만 함(테두리·
+       글씨는 여전히 없음, 알약 모양도 되돌리지 않음 — 그 부분은 이번 요청
+       대상 아님). */
     .btn-team-cal {
       display: flex;
       align-items: center;
@@ -2240,16 +2242,17 @@
       width: 32px;
       height: 32px;
       padding: 0;
-      background: var(--surface-2);
+      background: rgba(94,92,230,0.10);
       border: none;
       border-radius: 50%;
-      color: var(--text-2);
+      color: #5e5ce6;
+      opacity: 0.8;
       cursor: pointer;
       font-family: inherit;
       transition: background 0.12s;
       -webkit-tap-highlight-color: transparent;
     }
-    .btn-team-cal:active { background: var(--line); }
+    .btn-team-cal:active { background: rgba(94,92,230,0.18); }
     .btn-team-cal svg, .btn-tcal-go-cal svg {
       width: 16px;
       height: 16px;
@@ -2334,7 +2337,8 @@
       justify-content: flex-end;
       padding: 10px 4px 4px;
     }
-    /* .btn-team-cal과 같은 이유로 같은 방식(무채색, 그림만) 적용 */
+    /* .btn-team-cal과 같은 이유로 같은 방식(보라색 유지, 옅은 톤 + opacity로
+       덜 쨍하게) 적용 */
     .btn-tcal-go-cal {
       display: flex;
       align-items: center;
@@ -2342,16 +2346,17 @@
       width: 32px;
       height: 32px;
       padding: 0;
-      background: var(--surface-2);
+      background: rgba(94,92,230,0.10);
       border: none;
       border-radius: 50%;
-      color: var(--text-2);
+      color: #5e5ce6;
+      opacity: 0.8;
       cursor: pointer;
       font-family: inherit;
       -webkit-tap-highlight-color: transparent;
       transition: background 0.12s;
     }
-    .btn-tcal-go-cal:active { background: var(--line); }
+    .btn-tcal-go-cal:active { background: rgba(94,92,230,0.18); }
     .tcal-cell { cursor: pointer; -webkit-tap-highlight-color: transparent; }
     .tcal-cell:active { opacity: 0.75; }
 
