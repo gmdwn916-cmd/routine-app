@@ -763,25 +763,6 @@
       padding: 4px 0;
     }
 
-    /* ── 일괄 추가 버튼 ── */
-    .btn-bulk-open {
-      display: block;
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 12px;
-      background: var(--surface);
-      border: 1.5px dashed #007aff;
-      border-radius: 10px;
-      font-size: 14px;
-      font-weight: 600;
-      color: #007aff;
-      cursor: pointer;
-      font-family: inherit;
-      transition: background 0.12s;
-    }
-
-    .btn-bulk-open:active { background: rgba(0,122,255,0.12); }
-
     /* ── 일괄 추가 오버레이 ── */
     #bulk-overlay {
       display: none;
@@ -2454,7 +2435,6 @@
 
   <!-- ── 루틴(반복·중요) 탭 ── -->
   <div class="tab-content" id="tab-routine">
-    <button class="btn-bulk-open" id="btn-new-routine">+ 새로 만들기</button>
     <div class="routine-filter-row" id="routine-filter-row">
       <button type="button" class="routine-filter-btn" id="routine-filter-repeat">반복</button>
       <button type="button" class="routine-filter-btn" id="routine-filter-important">중요</button>
@@ -2525,8 +2505,9 @@
         <span id="settings-detail-title" class="settings-detail-title"></span>
       </div>
 
-      <!-- 교대 주기 -->
+      <!-- 내 근무(구 교대 주기, 2026-07-18에 "내 팀 이름" 관리도 여기로 옮겨옴) -->
       <div id="sd-cycle" style="display:none">
+        <div class="card" id="my-team-name-card"></div>
         <div class="card">
           <div class="form-group">
             <label for="input-shift-n">교대 수</label>
@@ -5000,7 +4981,7 @@
     document.getElementById('settings-detail-view').style.display = 'none';
 
     var ITEMS = [
-      { key: 'cycle', icon: SETTINGS_ICONS.cycle, label: '교대 주기', getValue: function() {
+      { key: 'cycle', icon: SETTINGS_ICONS.cycle, label: '내 근무', getValue: function() {
         if (!state || !state.cycleDays || !state.baseDate) return '미설정';
         var n = state.cycleDays % 7 === 0 ? state.cycleDays / 7 : state.cycleDays;
         var suffix = state.cycleDays % 7 === 0 ? '교대' : '일 주기';
@@ -5098,7 +5079,7 @@
     document.getElementById('settings-list-view').style.display = 'none';
     document.getElementById('settings-detail-view').style.display = '';
 
-    var titles = { cycle: '교대 주기', colors: '근무 편집', weekstart: '주 시작 요일', theme: '테마', teams: '팀 근무', alarms: '근무유형별 알람', data: '데이터 백업' };
+    var titles = { cycle: '내 근무', colors: '근무 편집', weekstart: '주 시작 요일', theme: '테마', teams: '팀 근무', alarms: '근무유형별 알람', data: '데이터 백업' };
     document.getElementById('settings-detail-title').textContent = titles[key] || '';
 
     ['sd-cycle','sd-colors','sd-weekstart','sd-theme','sd-teams','sd-alarms','sd-data'].forEach(function(id) {
@@ -5118,6 +5099,13 @@
       }
       document.getElementById('input-base').value = (state && state.baseDate) || '';
       document.getElementById('warn-settings').textContent = '';
+      // "내 팀 이름" 카드도 이 화면을 열 때마다 새로 그림(2026-07-18 추가,
+      // 팀 근무 화면에서 옮겨옴) — 매번 "변경 중" 상태를 리셋해서, 편집
+      // 화면을 보다가 다른 설정으로 갔다 돌아왔을 때도 계속 편집 화면인
+      // 채로 남지 않게 함(날짜 상세·미배치 등 다른 화면들도 다시 열 때
+      // 이런 임시 상태를 항상 먼저 리셋하는 것과 같은 원칙).
+      teamNameEditing = false;
+      if (state) renderMyTeamNameCard();
     } else if (key === 'colors') {
       renderShiftColorSettings();
     } else if (key === 'weekstart') {
@@ -5252,7 +5240,7 @@
   function deleteShiftType(name) {
     if (isBaseShiftPatternName(name)) {
       renderShiftColorSettings();
-      document.getElementById('shift-color-warn').textContent = '이 근무는 기본 교대 근무라 지울 수 없어요. "교대 주기" 설정에서 근무 순서를 바꿔주세요.';
+      document.getElementById('shift-color-warn').textContent = '이 근무는 기본 교대 근무라 지울 수 없어요. "내 근무" 설정에서 근무 순서를 바꿔주세요.';
       return;
     }
     // 실제로 날짜·자리에 쓰이고 있는 이름이면 지웠을 때 그 날짜들이 전부
@@ -7047,7 +7035,7 @@
 
   function startInboxPlacement(inboxId) {
     if (!state || !state.cycleDays || !state.baseDate) {
-      alert('먼저 설정 탭에서 교대 주기를 설정해 주세요.');
+      alert('먼저 설정 탭에서 "내 근무"를 설정해 주세요.');
       return;
     }
     const onYearTab = document.getElementById('tab-year').classList.contains('active');
@@ -7135,7 +7123,7 @@
     const el = document.getElementById('promote-shift-matrix');
     el.innerHTML = '';
     if (promoteShiftAllNames.length === 0) {
-      el.innerHTML = '<div class="promote-shift-matrix-empty">설정된 근무유형이 없어요. 설정 탭에서 교대 주기를 먼저 만들어 주세요.</div>';
+      el.innerHTML = '<div class="promote-shift-matrix-empty">설정된 근무유형이 없어요. 설정 탭 "내 근무"에서 근무 순서를 먼저 만들어 주세요.</div>';
       return;
     }
     const DOW_KR = ['일', '월', '화', '수', '목', '금', '토'];
@@ -7729,26 +7717,34 @@
     }, { passive: true });
   }
 
-  function renderTeamSettings() {
-    var card = document.getElementById('team-settings-card');
+  // "내 팀 이름"을 만들고 바꾸는 카드(2026-07-18, 원래 "팀 근무" 화면 안에
+  // 있었는데 "설정 - 내 근무"(구 교대 주기) 화면으로 옮겨옴 — 사용자 요청,
+  // 내 팀 이름도 "내 근무"를 이루는 정보라 교대 주기 설정과 한 화면에 있는
+  // 게 더 맞다고 판단됨). teamNameEditing은 "변경" 버튼을 눌러 이름 입력
+  // 화면을 보고 있는 중인지 — state.myTeamName 자체는 실제로 새 이름을
+  // 확정할 때만 바뀌고, 이 화면을 보여줄지는 이 플래그로만 판단(예전엔
+  // "변경" 버튼을 누르면 이름을 바로 빈 값으로 지우고 저장까지 해버려서,
+  // 입력칸에 기존 이름("2팀" 등)이 안 보이고 취소할 방법도 없었음 — 이제는
+  // 확정 전까지 state를 안 건드리고, 입력칸에 기존 이름을 미리 채워두고,
+  // 확정 안 하고 나가는 "뒤로"도 생김).
+  var teamNameEditing = false;
+
+  function renderMyTeamNameCard() {
+    var card = document.getElementById('my-team-name-card');
     if (!card) return;
     card.innerHTML = '';
+    if (!state) return;
 
-    if (!state || !state.cycleDays || !state.baseDate) {
-      card.innerHTML = '<div style="font-size:14px;color:var(--text-2);padding:4px 0;">교대 주기 설정을 먼저 완료해 주세요.</div>';
-      return;
-    }
-
-    // 내 팀 이름 미설정 → 입력 화면
-    if (!state.myTeamName) {
+    if (!state.myTeamName || teamNameEditing) {
       var label0 = document.createElement('div');
       label0.style.cssText = 'font-size:15px;font-weight:600;color:var(--text-1);margin-bottom:12px;';
-      label0.textContent = '내 팀 이름을 알려주세요';
+      label0.textContent = state.myTeamName ? '내 팀 이름 바꾸기' : '내 팀 이름을 알려주세요';
       card.appendChild(label0);
       var nameRow0 = document.createElement('div');
       nameRow0.style.cssText = 'display:flex;gap:8px;';
       var nameInput0 = document.createElement('input');
       nameInput0.type = 'text'; nameInput0.maxLength = 10; nameInput0.placeholder = '예: 2팀, A조';
+      nameInput0.value = state.myTeamName || '';
       nameInput0.style.cssText = 'flex:1;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;font-size:14px;font-family:inherit;background:var(--surface-2);color:var(--text-1);outline:none;';
       var nameBtn0 = document.createElement('button');
       nameBtn0.textContent = '설정';
@@ -7757,12 +7753,62 @@
         var v = nameInput0.value.trim();
         if (!v) return;
         state.myTeamName = v;
+        teamNameEditing = false;
         saveState();
-        renderTeamSettings();
+        renderMyTeamNameCard();
       });
       nameRow0.appendChild(nameInput0);
       nameRow0.appendChild(nameBtn0);
       card.appendChild(nameRow0);
+
+      // 뒤로(취소) — 이미 이름이 있는 상태에서 "변경"을 누른 경우에만 보여줌
+      // (처음 설정하는 중엔 취소하고 돌아갈 곳 자체가 없음).
+      if (state.myTeamName) {
+        var backBtn0 = document.createElement('button');
+        backBtn0.textContent = '뒤로';
+        backBtn0.style.cssText = 'margin-top:10px;background:none;border:none;font-size:13px;color:var(--text-2);cursor:pointer;font-family:inherit;padding:4px 0;display:block;';
+        backBtn0.addEventListener('click', function() {
+          teamNameEditing = false;
+          renderMyTeamNameCard();
+        });
+        card.appendChild(backBtn0);
+      }
+      return;
+    }
+
+    // 이름이 이미 있고 편집 중이 아니면, 이름 + "변경" 버튼만 짧게 보여줌.
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;';
+    var nameLabel = document.createElement('div');
+    nameLabel.style.cssText = 'font-size:15px;font-weight:600;color:var(--text-1);';
+    nameLabel.textContent = '내 팀: ' + state.myTeamName;
+    var changeBtn = document.createElement('button');
+    changeBtn.textContent = '변경';
+    changeBtn.style.cssText = 'background:none;border:none;font-size:13px;color:#007aff;cursor:pointer;font-family:inherit;padding:4px 0;font-weight:600;';
+    changeBtn.addEventListener('click', function() {
+      teamNameEditing = true;
+      renderMyTeamNameCard();
+    });
+    row.appendChild(nameLabel);
+    row.appendChild(changeBtn);
+    card.appendChild(row);
+  }
+
+  function renderTeamSettings() {
+    var card = document.getElementById('team-settings-card');
+    if (!card) return;
+    card.innerHTML = '';
+
+    if (!state || !state.cycleDays || !state.baseDate) {
+      card.innerHTML = '<div style="font-size:14px;color:var(--text-2);padding:4px 0;">"내 근무" 설정을 먼저 완료해 주세요.</div>';
+      return;
+    }
+
+    // 내 팀 이름은 이제 설정 탭 "내 근무"에서만 만들고 바꿈(위
+    // renderMyTeamNameCard 참고) — 여기서는 아직 안 정해져 있으면 안내만
+    // 보여줌(2026-07-18, 예전엔 여기서 바로 입력받았음).
+    if (!state.myTeamName) {
+      card.innerHTML = '<div style="font-size:14px;color:var(--text-2);padding:4px 0;">먼저 설정 탭 "내 근무"에서 내 팀 이름을 입력해 주세요.</div>';
       return;
     }
 
@@ -7896,15 +7942,6 @@
       tableWrap.appendChild(makeRow(team.name, i, team.offsetDays, false));
     });
     card.appendChild(tableWrap);
-
-    // 내 팀 이름 변경
-    var changeBtn = document.createElement('button');
-    changeBtn.textContent = '내 팀 이름 변경';
-    changeBtn.style.cssText = 'margin-top:10px;background:none;border:none;font-size:12px;color:var(--text-3);cursor:pointer;font-family:inherit;padding:4px 0;display:block;';
-    changeBtn.addEventListener('click', function() {
-      state.myTeamName = ''; saveState(); renderTeamSettings();
-    });
-    card.appendChild(changeBtn);
   }
 
   // ── 팀 달력 ──────────────────────────────────────────────
@@ -8385,7 +8422,7 @@
       // 반복 규칙이 있는 항목 전부), 근무·요일 → 기간 순으로 묶어서 보여줌.
       const repeatTodos = (state.events || []).filter(function (e) { return !!e.repeat; });
       if (repeatTodos.length === 0) {
-        list.innerHTML = '<div class="routine-empty">등록된 반복 할일이 없어요.<br>+ 새로 만들기를 눌러 추가해 보세요.</div>';
+        list.innerHTML = '<div class="routine-empty">등록된 반복 할일이 없어요.<br>할 일을 누르면 나오는 메뉴에서 "반복"을 눌러 만들어 보세요.</div>';
         return;
       }
       ROUTINE_GROUPS.forEach(function (g) {
@@ -8425,11 +8462,6 @@
       repeatImportant.forEach(function (ev) { appendRoutineCardRow(list, ev); });
     }
   }
-
-  // D-index 다중 선택 그리드 (사용처 없음 — 남아있는 참조 정리용)
-  document.getElementById('btn-new-routine').addEventListener('click', function () {
-    openRepeatEditor({});
-  });
 
   // ── 초기화 ───────────────────────────────────────────────
   state = loadState();
