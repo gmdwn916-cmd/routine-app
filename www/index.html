@@ -1331,16 +1331,22 @@
 
     /* ── 근무 순서 칸(2026-07-18) — 쉼표로 구분해 한 줄에 쓰던 방식 대신,
        이름 하나 쓰고 "확인"을 누르면 칸(칩)이 생기고 입력칸이 다시
-       비워지는 방식으로 바꿈. ── */
+       비워지는 방식으로 바꿈. 칩이 늘어나도 줄바꿈하지 않고 한 줄에서
+       옆으로 밀어 보게 함(2026-07-18 재조정, 사용자 요청) — flex-wrap 대신
+       overflow-x:auto + 칩마다 flex-shrink:0(안 그러면 넘칠 때 칩들이
+       찌그러짐). ── */
     .pattern-chip-list {
       display: flex;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
       gap: 6px;
       margin-bottom: 8px;
     }
     .pattern-chip {
       display: inline-flex;
       align-items: center;
+      flex-shrink: 0;
       gap: 4px;
       padding: 6px 6px 6px 12px;
       background: var(--surface-2);
@@ -1348,6 +1354,7 @@
       font-size: 14px;
       font-weight: 600;
       color: var(--text-1);
+      white-space: nowrap;
     }
     .pattern-chip-remove {
       width: 18px;
@@ -1371,8 +1378,8 @@
       gap: 8px;
     }
     .pattern-chip-input-row input[type="text"] {
-      width: auto;
-      flex: 1;
+      width: 4.5em;
+      flex: none;
     }
     .pattern-chip-input-row button {
       padding: 0 16px;
