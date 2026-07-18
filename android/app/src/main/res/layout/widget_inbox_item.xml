@@ -10,7 +10,10 @@
     android:paddingLeft="4dp"
     android:paddingRight="4dp">
 
+    <!-- 2026-07-18: 빈 줄(FILLER_COUNT)에서 이 점을 숨기려면 id가 필요해서 추가함
+         (InboxWidgetService.getViewAt() 참고). -->
     <TextView
+        android:id="@+id/inbox_item_bullet"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"

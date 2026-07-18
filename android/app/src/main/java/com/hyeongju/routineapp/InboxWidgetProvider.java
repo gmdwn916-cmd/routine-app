@@ -8,8 +8,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
-import android.os.Build;
-import android.util.TypedValue;
 import android.widget.RemoteViews;
 
 import androidx.core.content.ContextCompat;
@@ -63,21 +61,14 @@ public class InboxWidgetProvider extends AppWidgetProvider {
         return context.getResources().getIdentifier(name, "id", context.getPackageName());
     }
 
-    // 목록 줄 하나의 대략적인 높이(dp) — widget_inbox_item.xml의
-    // paddingTop/Bottom(7+7=14dp) + 글자(14sp) 기준. 오늘 위젯과 같은 이유로
-    // 살짝 작게 잡음(TodayWidgetProvider.TODAY_ROW_HEIGHT_DP 참고).
-    private static final int INBOX_ROW_HEIGHT_DP = 30;
-
+    // **버그(2026-07-18, 도입 당일 되돌림)**: 오늘 위젯과 똑같은 이유로 시도했던
+    // widget_inbox_v31.xml + setViewLayoutHeight 방식(자세한 경위는
+    // TodayWidgetProvider.updateOne()의 2026-07-18 기록 참고)이 항목이 많을
+    // 때 목록 스크롤이 안 되고 그 아래 있던 inbox_list_filler·"+" 버튼까지
+    // 위젯 화면 밖으로 밀려나는 회귀를 일으켜서 되돌림 — widget_inbox_v31.xml
+    // 삭제, inbox_list는 다시 weight=1로 통일. 같은 방식으로 재시도하지 말 것.
     private static void updateOne(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
-        // 목록 안쪽 빈 여백을 눌러도 반응 없던 문제(오늘 위젯과 동일한 원인,
-        // 2026-07-18) 수정 — API 31(안드로이드 12) 이상에서만
-        // setViewLayoutHeight로 목록(inbox_list) 높이를 실제 항목 수만큼만
-        // 정확히 지정하고, 그 아래 남는 진짜 여백은 별도 뷰(inbox_list_filler)가
-        // 차지해서 항상 눌리게 함 — 그 미만 기기는 예전 그대로인 widget_inbox.xml
-        // (inbox_list가 weight=1로 남은 공간을 전부 차지)을 그대로 씀.
-        boolean useV31Layout = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S;
-        RemoteViews views = new RemoteViews(context.getPackageName(),
-            useV31Layout ? R.layout.widget_inbox_v31 : R.layout.widget_inbox);
+        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_inbox);
 
         Intent openIntent = new Intent(context, MainActivity.class);
         // 위젯마다 다른 action을 붙여서 서로 다른 PendingIntent로 구분되게 함(달력
@@ -155,26 +146,14 @@ public class InboxWidgetProvider extends AppWidgetProvider {
 
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         String raw = prefs.getString(KEY_INBOX_DATA, null);
-        int count = 0;
         if (raw != null) {
             try {
                 JSONObject obj = new JSONObject(raw);
-                count = obj.optInt("count", 0);
+                int count = obj.optInt("count", 0);
                 views.setTextViewText(idFor(context, "inbox_count"), count > 0 ? String.valueOf(count) + "개" : "");
             } catch (Exception e) {
                 // 데이터가 깨져 있으면 위에서 이미 비워둔 빈 헤더로 둠
             }
-        }
-
-        // inbox_list_filler 계산용(2026-07-18) — 오늘 위젯과 같은 방식으로
-        // 목록 높이를 실제 항목 수에 맞춤(v31 레이아웃에서만 의미 있음).
-        // 오늘 위젯과 달리 이 목록(InboxRemoteViewsFactory)엔 빈 줄 하나를
-        // 더 채우는 로직 자체가 없어서(getCount()가 항상 실제 항목 수 그대로),
-        // +1 없이 count를 그대로 씀.
-        if (useV31Layout) {
-            views.setViewLayoutHeight(idFor(context, "inbox_list"),
-                count * INBOX_ROW_HEIGHT_DP, TypedValue.COMPLEX_UNIT_DIP);
-            views.setOnClickPendingIntent(idFor(context, "inbox_list_filler"), openPending);
         }
 
         appWidgetManager.updateAppWidget(appWidgetId, views);
