@@ -790,18 +790,28 @@
       padding: 4px 0;
     }
 
-    /* ── 일괄 추가 오버레이 ── */
+    /* ── 일괄 추가 오버레이 ── 열고 닫힐 때 부드럽게(2026-07-18,
+       #day-detail-overlay와 같은 방식). */
     #bulk-overlay {
-      display: none;
+      display: flex;
       position: fixed;
       inset: 0;
       background: rgba(0,0,0,0.4);
       z-index: 40;
       align-items: flex-end;
       justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.22s ease, visibility 0s linear 0.22s;
     }
 
-    #bulk-overlay.open { display: flex; }
+    #bulk-overlay.open {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transition: opacity 0.22s ease;
+    }
 
     #bulk-panel {
       background: var(--bg);
@@ -812,7 +822,10 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      transform: translateY(24px);
+      transition: transform 0.22s ease;
     }
+    #bulk-overlay.open #bulk-panel { transform: translateY(0); }
 
     #bulk-panel-top {
       flex-shrink: 0;
@@ -2007,18 +2020,30 @@
       margin-right: 6px;
       margin-top: 2px;
     }
-    /* ── 인박스 / 반복 승격 / 기간 수정 오버레이(공통 바텀시트 패턴) ── */
+    /* ── 인박스 / 반복 승격 / 기간 수정 오버레이(공통 바텀시트 패턴) ──
+       열고 닫힐 때 부드럽게(2026-07-18, 날짜 상세에 먼저 시범 적용해본 뒤
+       확대 — #day-detail-overlay와 같은 방식: display:none 대신
+       visibility+opacity+pointer-events, 패널은 translateY 슬라이드업). */
     #inbox-overlay, #promote-overlay, #period-edit-overlay, #bulk-shift-overlay, #shift-picker-overlay {
-      display: none;
+      display: flex;
       position: fixed;
       inset: 0;
       background: rgba(0,0,0,0.4);
       z-index: 45;
       align-items: flex-end;
       justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.22s ease, visibility 0s linear 0.22s;
     }
 
-    #inbox-overlay.open, #promote-overlay.open, #period-edit-overlay.open, #bulk-shift-overlay.open, #shift-picker-overlay.open { display: flex; }
+    #inbox-overlay.open, #promote-overlay.open, #period-edit-overlay.open, #bulk-shift-overlay.open, #shift-picker-overlay.open {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transition: opacity 0.22s ease;
+    }
 
     #inbox-panel, #promote-panel, #period-edit-panel, #bulk-shift-panel, #shift-picker-panel {
       background: var(--bg);
@@ -2028,6 +2053,16 @@
       max-height: 80vh;
       overflow-y: auto;
       padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 0));
+      transform: translateY(24px);
+      transition: transform 0.22s ease;
+    }
+
+    #inbox-overlay.open #inbox-panel,
+    #promote-overlay.open #promote-panel,
+    #period-edit-overlay.open #period-edit-panel,
+    #bulk-shift-overlay.open #bulk-shift-panel,
+    #shift-picker-overlay.open #shift-picker-panel {
+      transform: translateY(0);
     }
 
     #inbox-panel h2, #promote-panel h2, #period-edit-panel h2, #bulk-shift-panel h2, #shift-picker-panel h2 {
@@ -2424,15 +2459,27 @@
       margin-top: 8px;
     }
 
+    /* 열고 닫힐 때 부드럽게(2026-07-18) — 이 화면은 반투명 배경 위에 뜨는
+       바텀시트가 아니라 꽉 찬 새 화면(다른 팀 근무 확인)이라, 슬라이드업
+       대신 페이드만 줌(바텀시트 패턴과 다른 화면이라 다르게 취급). */
     #team-cal-overlay {
-      display: none;
+      display: flex;
       position: fixed;
       inset: 0;
       background: var(--bg);
       z-index: 50;
       flex-direction: column;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.2s ease, visibility 0s linear 0.2s;
     }
-    #team-cal-overlay.open { display: flex; }
+    #team-cal-overlay.open {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transition: opacity 0.2s ease;
+    }
 
     .tcal-header {
       background: var(--surface);
@@ -2515,17 +2562,27 @@
     .tcal-cell { cursor: pointer; -webkit-tap-highlight-color: transparent; }
     .tcal-cell:active { opacity: 0.75; }
 
-    /* ── 팀 달력 날짜 상세 ── */
+    /* ── 팀 달력 날짜 상세 ── 열고 닫힐 때 부드럽게(2026-07-18,
+       #day-detail-overlay와 같은 방식). */
     #tcal-date-detail-overlay {
-      display: none;
+      display: flex;
       position: fixed;
       inset: 0;
       background: rgba(0,0,0,0.45);
       z-index: 55;
       align-items: flex-end;
       justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.22s ease, visibility 0s linear 0.22s;
     }
-    #tcal-date-detail-overlay.open { display: flex; }
+    #tcal-date-detail-overlay.open {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transition: opacity 0.22s ease;
+    }
     #tcal-date-detail-panel {
       background: var(--bg);
       width: 100%;
@@ -2533,8 +2590,11 @@
       border-radius: 20px 20px 0 0;
       padding: 22px 20px calc(44px + env(safe-area-inset-bottom, 0));
       max-height: 78vh;
+      transform: translateY(24px);
+      transition: transform 0.22s ease;
       overflow-y: auto;
     }
+    #tcal-date-detail-overlay.open #tcal-date-detail-panel { transform: translateY(0); }
     .tcal-dd-title {
       font-size: 20px;
       font-weight: 800;

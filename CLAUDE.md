@@ -101,22 +101,27 @@
      아무거나 눌러 다른 화면으로 넘어가면 자동으로 닫힘(switchTab() 맨 앞에서
      closeDayDetail() 항상 호출). 패널 안쪽 탭은 안 닫힘. 닫기 버튼을 다시
      만들지 말 것.
-   - **열고 닫힐 때 애니메이션(2026-07-18, 최종 디자인 점검 — 시범 적용)**:
+   - **열고 닫힐 때 애니메이션(2026-07-18, 최종 디자인 점검)**:
      예전엔 `display:none`↔`flex`로 순간이동하듯 나타났다 사라졌는데, 배경은
      페이드(opacity+visibility, `transition: opacity 0.22s ease` — 닫을 때만
      `visibility` 전환에 0.22s 지연을 줘서 배경이 다 흐려진 뒤 완전히 사라짐),
      패널은 아래에서 살짝 밀려 올라오는 슬라이드(`transform: translateY(24px)
      → 0`)를 추가함. JS 쪽은 그대로(`classList.add/remove('open')`만 씀,
-     변경 없음) — CSS만 바꿈. **다섯 개 팝업이 한 규칙을 공유하는 미배치·
-     반복편집기·기간수정·근무일괄수정·근무선택(`#inbox-overlay,
-     #promote-overlay, #period-edit-overlay, #bulk-shift-overlay,
-     #shift-picker-overlay` 공유 규칙) 등 나머지 화면은 이번엔 일부러 안
-     건드림** — 앱을 가장 자주 여닫는 이 화면 하나에 먼저 적용해 실제
-     기기에서 확인해본 뒤 나머지로 넓히기로 함(사용자가 "1~2곳만 먼저"로
-     요청). 확인 후 문제없으면 같은 패턴(`display:none` 대신 `visibility+
-     opacity+pointer-events`, 패널에 `translateY` 슬라이드)을 나머지 오버레이
-     에도 넓힐 것 — 그때까지는 나머지 화면들은 예전처럼 "뚝" 나타남/사라짐이
-     정상(버그 아님).
+     변경 없음) — CSS만 바꿈. **처음엔 이 화면(가장 자주 여닫는 화면) 하나에만
+     시범 적용해서 실제 기기로 확인한 뒤, 문제없어서 같은 날 나머지 바텀시트형
+     오버레이 전체로 넓힘**: 미배치·반복편집기·기간수정·근무일괄수정·근무선택
+     (`#inbox-overlay, #promote-overlay, #period-edit-overlay,
+     #bulk-shift-overlay, #shift-picker-overlay` 공유 규칙), 일괄 추가
+     (`#bulk-overlay`), 팀 달력 날짜 상세(`#tcal-date-detail-overlay`) — 전부
+     같은 패턴(`visibility+opacity+pointer-events` + 패널 `translateY`
+     슬라이드). **다른 팀 근무 확인 화면(`#team-cal-overlay`)만 다르게 처리** —
+     이건 반투명 배경 위에 뜨는 바텀시트가 아니라 꽉 찬 새 화면(배경 자체가
+     `var(--bg)`)이라 슬라이드업이 안 어울려서, 페이드만 줌(슬라이드 없음).
+     **온보딩(`#onboard-overlay`)은 일부러 안 건드림** — 설치 후 딱 한 번만
+     보는 첫 화면이라 애니메이션 투자 대비 효용이 낮다고 판단해 제외(다시
+     검토하려면 사용자에게 먼저 확인할 것). 앞으로 새 팝업/오버레이를 만들
+     때도 이 패턴(바텀시트면 페이드+슬라이드, 꽉 찬 새 화면이면 페이드만)을
+     기본으로 쓸 것.
 3) 배치: 항목당 남은 질문은 하나만(넣기의 OX가 첫 갈림길이므로).
    - 반복 X → "언제?" : 근무가 보이는 달력에서 날짜 하나 지정.
    - 반복 O → "어떤 날마다?" : 버튼 2개만 제공("기간" / "근무·요일") — 예전에
@@ -907,10 +912,25 @@
   아이콘은 `@drawable/widget_check_on`/`widget_check_off`를 직접 참조해서
   써서 그 드로어블 자체를 고치면 자동으로 같이 반영됨(따로 갱신 불필요)** —
   반면 텍스트로 하드코딩된 부분(글자·정렬 등)은 실제 레이아웃이 바뀔 때마다
-  이 파일들도 같이 봐야 함, 자동 동기화 안 됨. **`drawable-nodpi`의 정적
-  PNG(previewImage)는 이번엔 손 안 댐** — 렌더링 도구(sharp/headless
-  Chrome)로 다시 그려야 하는 별도 작업이라 이번 CSS/XML 다듬기 범위 밖으로
-  남겨둠, 필요해지면 별도로 진행할 것.
+  이 파일들도 같이 봐야 함, 자동 동기화 안 됨.
+- **`drawable-nodpi`의 정적 PNG(previewImage)도 갱신함(2026-07-18, 최종
+  위젯 디자인 점검 마무리)** — `widget_preview_today.png`가 특히 심하게
+  낡아 있었음(이미 없어진 카테고리 아이콘 이모지가 할 일 앞에 남아있던
+  것, 체크 완료 항목을 취소선으로 계속 보여주고 있던 것 — 실제로는
+  체크하면 바로 사라짐, 체크 원이 옛날 큰 크기+파란색이던 것, "+"가
+  텍스트였던 것 — 전부 이미 지운/바뀐 기능이나 예전 모습). `widget_preview_
+  inbox.png`는 "+" 아이콘만 텍스트→벡터로 다름. `widget_preview_month_
+  calendar.png`/`widget_preview_schedule.png`/`widget_preview_quick_add.png`는
+  살펴본 결과 이미 충분히 최신이라 안 건드림. **만드는 방법**: 이 프로젝트에
+  `sharp`/`puppeteer`/`playwright` 등 렌더링 패키지가 설치돼 있지 않아서,
+  로컬에 이미 깔려 있는 크롬을 커맨드라인에서 바로 헤드리스로 띄우는
+  방식을 씀 — 실제 위젯 모습과 맞춘 HTML/CSS 파일을 만들고
+  (`--window-size`를 기존 PNG와 같은 픽셀 크기로 맞춤, 예: 오늘 위젯
+  500x360) `chrome.exe --headless=new --no-sandbox --screenshot=출력경로.png
+  --window-size=W,H 파일경로.html`로 스크린샷 → 그 PNG를 그대로
+  drawable-nodpi에 덮어씀(별도 크롭 없이 window-size를 원본과 똑같이
+  맞추면 크기가 정확히 일치함). npm 패키지 설치가 필요 없어서 이 환경에서
+  가장 간단했음 — 다음에 또 만들 일이 있으면 같은 방식을 재사용할 것.
 
 ## 용어 (통일 — 혼동 금지)
 - 할 일 = state.events[] 전체. 반복이 꺼져 있으면 한 번짜리(특정 날짜),
