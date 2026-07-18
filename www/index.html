@@ -1329,6 +1329,65 @@
 
     .form-group input:focus { border-color: #007aff; }
 
+    /* ── 근무 순서 칸(2026-07-18) — 쉼표로 구분해 한 줄에 쓰던 방식 대신,
+       이름 하나 쓰고 "확인"을 누르면 칸(칩)이 생기고 입력칸이 다시
+       비워지는 방식으로 바꿈. ── */
+    .pattern-chip-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .pattern-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 6px 6px 12px;
+      background: var(--surface-2);
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-1);
+    }
+    .pattern-chip-remove {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: none;
+      background: var(--line);
+      color: var(--text-2);
+      font-size: 12px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      font-family: inherit;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .pattern-chip-input-row {
+      display: flex;
+      gap: 8px;
+    }
+    .pattern-chip-input-row input[type="text"] {
+      width: auto;
+      flex: 1;
+    }
+    .pattern-chip-input-row button {
+      padding: 0 16px;
+      background: #007aff;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .pattern-chip-input-row button:active { opacity: 0.7; }
+
     /* ── Buttons ── */
     .btn {
       padding: 14px;
@@ -2505,17 +2564,25 @@
         <span id="settings-detail-title" class="settings-detail-title"></span>
       </div>
 
-      <!-- 내 근무(구 교대 주기, 2026-07-18에 "내 팀 이름" 관리도 여기로 옮겨옴) -->
+      <!-- 내 근무(구 교대 주기, 2026-07-18에 "내 팀 이름"도 같은 칸·같은
+           저장 방식으로 여기 들어옴) -->
       <div id="sd-cycle" style="display:none">
-        <div class="card" id="my-team-name-card"></div>
         <div class="card">
+          <div class="form-group">
+            <label for="input-my-team-name">내 팀 이름</label>
+            <input type="text" id="input-my-team-name" maxlength="10" placeholder="예: 2팀, A조">
+          </div>
           <div class="form-group">
             <label for="input-shift-n">교대 수</label>
             <input type="number" id="input-shift-n" min="1" max="52" placeholder="예: 4" inputmode="numeric">
           </div>
           <div class="form-group">
-            <label for="input-pattern">근무 순서</label>
-            <input type="text" id="input-pattern" placeholder="예: 주간, 야간, 비번, 휴무">
+            <label>근무 순서</label>
+            <div id="pattern-chip-list" class="pattern-chip-list"></div>
+            <div class="pattern-chip-input-row">
+              <input type="text" id="input-pattern-chip" maxlength="10" placeholder="근무 이름을 입력…">
+              <button type="button" id="btn-pattern-chip-add">확인</button>
+            </div>
           </div>
           <div class="form-group">
             <label for="input-base">Day 1 시작 날짜</label>
@@ -5075,6 +5142,49 @@
     });
   }
 
+  // "근무 순서"를 쉼표로 구분한 한 줄 대신 칸(칩) 여러 개로 관리(2026-07-18
+  // 추가) — 이름 하나를 쓰고 "확인"을 누르면 칩이 되고 입력칸이 다시
+  // 비워져서 바로 다음 이름을 이어 쓸 수 있음. 저장(btn-save-settings)은
+  // 이 배열을 그대로 씀 — 더 이상 comma-split 안 함.
+  let patternChips = [];
+
+  function renderPatternChips() {
+    const list = document.getElementById('pattern-chip-list');
+    list.innerHTML = '';
+    patternChips.forEach(function (name, i) {
+      const chip = document.createElement('span');
+      chip.className = 'pattern-chip';
+      const label = document.createElement('span');
+      label.textContent = name;
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'pattern-chip-remove';
+      removeBtn.textContent = '×';
+      removeBtn.addEventListener('click', function () {
+        patternChips.splice(i, 1);
+        renderPatternChips();
+      });
+      chip.appendChild(label);
+      chip.appendChild(removeBtn);
+      list.appendChild(chip);
+    });
+  }
+
+  function addPatternChip() {
+    const input = document.getElementById('input-pattern-chip');
+    const v = input.value.trim();
+    if (!v) return;
+    patternChips.push(v);
+    input.value = '';
+    renderPatternChips();
+    input.focus();
+  }
+
+  document.getElementById('btn-pattern-chip-add').addEventListener('click', addPatternChip);
+  document.getElementById('input-pattern-chip').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); addPatternChip(); }
+  });
+
   function openSettingsDetail(key) {
     document.getElementById('settings-list-view').style.display = 'none';
     document.getElementById('settings-detail-view').style.display = '';
@@ -5088,24 +5198,21 @@
     document.getElementById('sd-' + key).style.display = '';
 
     if (key === 'cycle') {
+      // "내 팀 이름"도 이제 이 화면의 다른 칸(교대 수 등)과 같은 자리·같은
+      // 저장 방식으로 관리(2026-07-18, 원래 "팀 근무" 화면에 있던 걸 여기로
+      // 옮긴 뒤 한 번 더 요청받아 통합 — 별도 카드+변경/뒤로 버튼이 아니라
+      // 그냥 이 화면의 form-group 중 하나, "저장" 버튼 하나로 같이 저장됨).
+      document.getElementById('input-my-team-name').value = (state && state.myTeamName) || '';
       var cd = state && state.cycleDays;
       var n = (cd && cd % 7 === 0) ? cd / 7 : '';
       document.getElementById('input-shift-n').value = n;
-      if (n) {
-        var patternNames = state.days.slice(0, n).map(function(d) { return d.shiftType.name; }).filter(Boolean);
-        document.getElementById('input-pattern').value = patternNames.join(', ');
-      } else {
-        document.getElementById('input-pattern').value = '';
-      }
+      // 근무 순서를 칩 배열로 채움(2026-07-18, comma-join 문자열 대신) —
+      // 이 화면을 열 때마다 저장된 값 기준으로 새로 채움.
+      patternChips = n ? state.days.slice(0, n).map(function(d) { return d.shiftType.name; }).filter(Boolean) : [];
+      document.getElementById('input-pattern-chip').value = '';
+      renderPatternChips();
       document.getElementById('input-base').value = (state && state.baseDate) || '';
       document.getElementById('warn-settings').textContent = '';
-      // "내 팀 이름" 카드도 이 화면을 열 때마다 새로 그림(2026-07-18 추가,
-      // 팀 근무 화면에서 옮겨옴) — 매번 "변경 중" 상태를 리셋해서, 편집
-      // 화면을 보다가 다른 설정으로 갔다 돌아왔을 때도 계속 편집 화면인
-      // 채로 남지 않게 함(날짜 상세·미배치 등 다른 화면들도 다시 열 때
-      // 이런 임시 상태를 항상 먼저 리셋하는 것과 같은 원칙).
-      teamNameEditing = false;
-      if (state) renderMyTeamNameCard();
     } else if (key === 'colors') {
       renderShiftColorSettings();
     } else if (key === 'weekstart') {
@@ -6284,17 +6391,21 @@
 
   document.getElementById('btn-save-settings').addEventListener('click', function () {
     const n = parseInt(document.getElementById('input-shift-n').value, 10);
-    const patternRaw = document.getElementById('input-pattern').value;
     const baseDate = document.getElementById('input-base').value;
+    const teamName = document.getElementById('input-my-team-name').value.trim();
     const warn = document.getElementById('warn-settings');
 
     if (!n || n < 1 || n > 52) { warn.textContent = '교대 수를 1~52 사이로 입력해 주세요.'; return; }
-    const pattern = patternRaw.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+    // 쉼표로 구분한 한 줄 대신 칩으로 쌓아둔 배열을 그대로 씀(2026-07-18).
+    const pattern = patternChips.slice();
     if (pattern.length === 0) { warn.textContent = '근무 순서를 최소 1개 입력해 주세요.'; return; }
     if (!baseDate) { warn.textContent = '시작 날짜를 선택해 주세요.'; return; }
     warn.textContent = '';
 
+    // applyShiftPattern이 state가 아예 없을 때(첫 설정) 만들어주므로, 내 팀
+    // 이름은 그 뒤에 반영(먼저 하면 state가 없어 오류가 남).
     applyShiftPattern(n, pattern, baseDate);
+    state.myTeamName = teamName;
     saveState();
     renderToday();
     renderGrid();
@@ -7717,83 +7828,6 @@
     }, { passive: true });
   }
 
-  // "내 팀 이름"을 만들고 바꾸는 카드(2026-07-18, 원래 "팀 근무" 화면 안에
-  // 있었는데 "설정 - 내 근무"(구 교대 주기) 화면으로 옮겨옴 — 사용자 요청,
-  // 내 팀 이름도 "내 근무"를 이루는 정보라 교대 주기 설정과 한 화면에 있는
-  // 게 더 맞다고 판단됨). teamNameEditing은 "변경" 버튼을 눌러 이름 입력
-  // 화면을 보고 있는 중인지 — state.myTeamName 자체는 실제로 새 이름을
-  // 확정할 때만 바뀌고, 이 화면을 보여줄지는 이 플래그로만 판단(예전엔
-  // "변경" 버튼을 누르면 이름을 바로 빈 값으로 지우고 저장까지 해버려서,
-  // 입력칸에 기존 이름("2팀" 등)이 안 보이고 취소할 방법도 없었음 — 이제는
-  // 확정 전까지 state를 안 건드리고, 입력칸에 기존 이름을 미리 채워두고,
-  // 확정 안 하고 나가는 "뒤로"도 생김).
-  var teamNameEditing = false;
-
-  function renderMyTeamNameCard() {
-    var card = document.getElementById('my-team-name-card');
-    if (!card) return;
-    card.innerHTML = '';
-    if (!state) return;
-
-    if (!state.myTeamName || teamNameEditing) {
-      var label0 = document.createElement('div');
-      label0.style.cssText = 'font-size:15px;font-weight:600;color:var(--text-1);margin-bottom:12px;';
-      label0.textContent = state.myTeamName ? '내 팀 이름 바꾸기' : '내 팀 이름을 알려주세요';
-      card.appendChild(label0);
-      var nameRow0 = document.createElement('div');
-      nameRow0.style.cssText = 'display:flex;gap:8px;';
-      var nameInput0 = document.createElement('input');
-      nameInput0.type = 'text'; nameInput0.maxLength = 10; nameInput0.placeholder = '예: 2팀, A조';
-      nameInput0.value = state.myTeamName || '';
-      nameInput0.style.cssText = 'flex:1;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;font-size:14px;font-family:inherit;background:var(--surface-2);color:var(--text-1);outline:none;';
-      var nameBtn0 = document.createElement('button');
-      nameBtn0.textContent = '설정';
-      nameBtn0.style.cssText = 'padding:10px 16px;background:#007aff;color:#fff;border:none;border-radius:10px;font-size:14px;font-family:inherit;cursor:pointer;font-weight:600;';
-      nameBtn0.addEventListener('click', function() {
-        var v = nameInput0.value.trim();
-        if (!v) return;
-        state.myTeamName = v;
-        teamNameEditing = false;
-        saveState();
-        renderMyTeamNameCard();
-      });
-      nameRow0.appendChild(nameInput0);
-      nameRow0.appendChild(nameBtn0);
-      card.appendChild(nameRow0);
-
-      // 뒤로(취소) — 이미 이름이 있는 상태에서 "변경"을 누른 경우에만 보여줌
-      // (처음 설정하는 중엔 취소하고 돌아갈 곳 자체가 없음).
-      if (state.myTeamName) {
-        var backBtn0 = document.createElement('button');
-        backBtn0.textContent = '뒤로';
-        backBtn0.style.cssText = 'margin-top:10px;background:none;border:none;font-size:13px;color:var(--text-2);cursor:pointer;font-family:inherit;padding:4px 0;display:block;';
-        backBtn0.addEventListener('click', function() {
-          teamNameEditing = false;
-          renderMyTeamNameCard();
-        });
-        card.appendChild(backBtn0);
-      }
-      return;
-    }
-
-    // 이름이 이미 있고 편집 중이 아니면, 이름 + "변경" 버튼만 짧게 보여줌.
-    var row = document.createElement('div');
-    row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;';
-    var nameLabel = document.createElement('div');
-    nameLabel.style.cssText = 'font-size:15px;font-weight:600;color:var(--text-1);';
-    nameLabel.textContent = '내 팀: ' + state.myTeamName;
-    var changeBtn = document.createElement('button');
-    changeBtn.textContent = '변경';
-    changeBtn.style.cssText = 'background:none;border:none;font-size:13px;color:#007aff;cursor:pointer;font-family:inherit;padding:4px 0;font-weight:600;';
-    changeBtn.addEventListener('click', function() {
-      teamNameEditing = true;
-      renderMyTeamNameCard();
-    });
-    row.appendChild(nameLabel);
-    row.appendChild(changeBtn);
-    card.appendChild(row);
-  }
-
   function renderTeamSettings() {
     var card = document.getElementById('team-settings-card');
     if (!card) return;
@@ -7804,8 +7838,8 @@
       return;
     }
 
-    // 내 팀 이름은 이제 설정 탭 "내 근무"에서만 만들고 바꿈(위
-    // renderMyTeamNameCard 참고) — 여기서는 아직 안 정해져 있으면 안내만
+    // 내 팀 이름은 이제 설정 탭 "내 근무"의 다른 칸(교대 수 등)과 같은
+    // 자리에서만 만들고 바꿈 — 여기서는 아직 안 정해져 있으면 안내만
     // 보여줌(2026-07-18, 예전엔 여기서 바로 입력받았음).
     if (!state.myTeamName) {
       card.innerHTML = '<div style="font-size:14px;color:var(--text-2);padding:4px 0;">먼저 설정 탭 "내 근무"에서 내 팀 이름을 입력해 주세요.</div>';
