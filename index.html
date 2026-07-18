@@ -43,6 +43,13 @@
       --divider: #f2f2f7;       /* 목록 구분선 */
       --line: #e3e5e8;          /* 테두리 (헤더/내비/입력/카드) */
       --accent: #34c759;        /* 포인트 초록 */
+      --accent-blue: #007aff;   /* 포인트 파랑(2026-07-18, 변수로 승격 — 버튼·
+                                    포커스 테두리·오늘 강조 등 60곳 가까이
+                                    #007aff가 직접 박혀 있어서 변수 하나로
+                                    모음. 라이트/다크 공통, 다른 곳에서 재정의
+                                    안 함 — 근무유형 색 프리셋(SHIFT_COLOR_
+                                    PRESETS)에 우연히 같은 값이 있는 건 이
+                                    변수와 무관한 별개 데이터라 그대로 둠). */
       --holiday-color: #d9645e; /* 공휴일 표시(2026-07-18, 채도 낮춤 — 원래 쨍한
                                     빨강 #ff3b30이었는데 "전체 톤과 안 어울린다"는
                                     요청으로 회색을 살짝 섞은 톤으로 낮춤. 라이트/
@@ -254,7 +261,7 @@
 
     #btn-quick-add {
       border: none;
-      background: #007aff;
+      background: var(--accent-blue);
       color: #fff;
       font-size: 20px;
       font-weight: 600;
@@ -272,8 +279,8 @@
        되돌리기) 붙는 강조 표시. */
     #btn-inbox-open.drop-hover {
       background: rgba(0,122,255,0.15);
-      border-color: #007aff;
-      color: #007aff;
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
       transform: scale(1.15);
     }
 
@@ -344,7 +351,7 @@
     .card {
       background: var(--surface);
       border: 1px solid var(--line);
-      border-radius: 14px;
+      border-radius: var(--radius-card);
       padding: 18px 16px;
       margin-bottom: 12px;
       box-shadow: var(--shadow-card);
@@ -437,12 +444,13 @@
     .today-items .item-text { color: var(--todo-text-color, var(--text-1)); }
 
     /* ── 오늘 탭 리디자인 (여기 규칙은 오늘 탭에만 적용, 달력 상세는 기존 유지) ── */
-    #tab-today .card {
-      background: var(--surface);
-      border: 1px solid var(--line);
-      border-radius: var(--radius-card);
-      box-shadow: var(--shadow-card);
-    }
+    /* (2026-07-18) 예전엔 여기서 .card의 배경·테두리·모서리·그림자를 전부 다시
+       지정했는데, 기본 .card 규칙이 border-radius를 14px로 하드코딩해뒀던
+       탓에 오늘 탭 카드만 16px(var(--radius-card))로 미묘하게 다르게 보였음
+       (다른 탭 카드와 나란히 보면 모서리 둥글기가 살짝 어긋남) — 기본 .card
+       쪽을 var(--radius-card)로 고쳐서 이제 완전히 같아졌으므로, 내용이 겹치는
+       이 재정의 블록은 삭제함(다시 필요해지면 .card와 실제로 달라야 하는
+       속성만 여기 추가할 것). */
     #tab-today .today-hero { padding: 20px 18px; }
     #tab-today .today-hero.has-shift {
       background: color-mix(in srgb, var(--shift-color) var(--tint-weak), var(--surface));
@@ -531,8 +539,16 @@
        날짜 상세를 보면서도 그 바가 계속 보이고 눌려야, 그 자리에 바로 입력해
        이 날짜에 추가하거나 할 일을 꾹 눌러 드래그해서 미배치 버튼에 놓을 수
        있음(둘 다 날짜 상세가 떠 있는 채로 하는 동작이라 바가 가려지면 안 됨). */
+    /* 열고 닫힐 때 부드럽게(2026-07-18, 최종 디자인 점검 — "뚝" 나타났다
+       사라지던 것 중 가장 자주 여닫는 이 화면에 먼저 시험 적용). display:none은
+       트랜지션 자체가 안 먹혀서(있다/없다만 있고 중간 상태가 없음),
+       visibility+opacity 조합으로 바꿈 — 닫힌 상태에서도 visibility:hidden
+       (화면 밖 요소 취급, 탭도 안 되고 스크린리더도 건너뜀) +
+       pointer-events:none(트랜지션 진행 중에도 뒤 화면 탭이 항상 바로 먹히게)
+       이라 기존 display:none과 실질적으로 똑같이 안전함. 닫을 때만
+       `visibility` 전환에 0.22s 지연을 줘서(열 때는 지연 없음) 배경이 다
+       흐려진 뒤에야 완전히 사라지게 함 — 흔히 쓰는 모달 페이드 패턴. */
     #day-detail-overlay {
-      display: none;
       position: fixed;
       top: 0;
       left: 0;
@@ -545,11 +561,21 @@
       bottom: calc(var(--bottom-fixed-height, 156px) + var(--keyboard-inset, 0px));
       background: rgba(0,0,0,0.4);
       z-index: 40;
+      display: flex;
       align-items: flex-end;
       justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.22s ease, visibility 0s linear 0.22s;
     }
 
-    #day-detail-overlay.open { display: flex; }
+    #day-detail-overlay.open {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transition: opacity 0.22s ease;
+    }
 
     #day-detail-panel {
       background: var(--bg);
@@ -561,7 +587,11 @@
          같은 이유는 #day-detail-overlay 쪽 주석 참고). */
       max-height: min(80vh, calc(100vh - var(--bottom-fixed-height, 156px)));
       overflow-y: auto;
+      /* 배경 페이드와 같이, 패널 자체는 아래에서 살짝 밀려 올라오게(슬라이드업). */
+      transform: translateY(24px);
+      transition: transform 0.22s ease;
     }
+    #day-detail-overlay.open #day-detail-panel { transform: translateY(0); }
 
     .dd-header { margin-bottom: 16px; }
 
@@ -607,7 +637,7 @@
     .btn-dd-change-shift-inline {
       font-size: 11px;
       font-weight: 600;
-      color: #007aff;
+      color: var(--accent-blue);
       background: none;
       border: 1px solid rgba(0,122,255,0.4);
       border-radius: 10px;
@@ -659,7 +689,7 @@
 
     .btn-dd-edit {
       font-size: 12px;
-      color: #007aff;
+      color: var(--accent-blue);
       background: none;
       border: none;
       padding: 0;
@@ -674,7 +704,7 @@
       color: inherit;
       background: transparent;
       border: none;
-      border-bottom: 1px solid #007aff;
+      border-bottom: 1px solid var(--accent-blue);
       outline: none;
       padding: 0;
       min-width: 0;
@@ -819,7 +849,7 @@
       -webkit-appearance: none;
     }
 
-    .bulk-input-row input:focus { border-color: #007aff; }
+    .bulk-input-row input:focus { border-color: var(--accent-blue); }
 
 
     .bulk-grid-label {
@@ -854,13 +884,13 @@
     .bulk-day-cell:active { background: var(--surface-2); }
 
     .bulk-day-cell.today {
-      border-color: #007aff;
+      border-color: var(--accent-blue);
       background: rgba(0,122,255,0.12);
     }
 
     .bulk-day-cell.selected {
       background: rgba(0,122,255,0.12);
-      border-color: #007aff;
+      border-color: var(--accent-blue);
     }
 
     .bulk-cell-top-row {
@@ -886,7 +916,7 @@
     }
 
     .bulk-day-cell.today .bulk-cell-date-num,
-    .bulk-day-cell.selected .bulk-cell-date-num { color: #007aff; }
+    .bulk-day-cell.selected .bulk-cell-date-num { color: var(--accent-blue); }
 
     .bulk-cell-dow {
       font-size: 7px;
@@ -904,7 +934,7 @@
     }
 
     .bulk-day-cell.today .bulk-cell-dnum,
-    .bulk-day-cell.selected .bulk-cell-dnum { color: #007aff; }
+    .bulk-day-cell.selected .bulk-cell-dnum { color: var(--accent-blue); }
 
     .bulk-cell-shift {
       font-size: 9px;
@@ -962,7 +992,7 @@
       background: var(--surface-2);
       border-radius: 50%;
       font-size: 22px;
-      color: #007aff;
+      color: var(--accent-blue);
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -995,7 +1025,7 @@
     .year-month-box:active { background: var(--surface-2); }
 
     .year-month-box.inbox-drop-hover, .grid-cell.inbox-drop-hover {
-      box-shadow: inset 0 0 0 2px #007aff;
+      box-shadow: inset 0 0 0 2px var(--accent-blue);
       background: rgba(0,122,255,0.14);
     }
 
@@ -1038,7 +1068,7 @@
       padding: 6px 0 4px;
     }
 
-    .grid-header-cell.sat { color: #007aff; }
+    .grid-header-cell.sat { color: var(--accent-blue); }
     .grid-header-cell.sun { color: #ff3b30; }
 
     .form-group select {
@@ -1054,7 +1084,7 @@
       -webkit-appearance: none;
       transition: border-color 0.15s;
     }
-    .form-group select:focus { border-color: #007aff; }
+    .form-group select:focus { border-color: var(--accent-blue); }
 
     .day-grid {
       display: grid;
@@ -1095,7 +1125,7 @@
        음수로 줘서 안쪽으로 당기면 모양은 그대로인데 높이는 안 늘어남. */
     .grid-cell.today {
       background: rgba(0,122,255,0.12);
-      outline: 1.5px solid #007aff;
+      outline: 1.5px solid var(--accent-blue);
       outline-offset: -1.5px;
     }
 
@@ -1130,7 +1160,7 @@
     }
 
     .grid-cell.is-holiday .cell-date { color: var(--holiday-color); }
-    .grid-cell.today .cell-date { color: #007aff; }
+    .grid-cell.today .cell-date { color: var(--accent-blue); }
 
     /* 공휴일 이름(추석, 추석 연휴 등)을 날짜 숫자 옆에 작게(2026-07-17 추가) —
        getKoreanHoliday()가 이미 계산해두는 이름(대체공휴일 포함)을 그대로 씀. */
@@ -1232,7 +1262,7 @@
       display: flex;
       align-items: center;
       background: var(--surface);
-      border-radius: 12px;
+      border-radius: var(--radius-row);
       padding: 14px 16px;
       margin-bottom: 8px;
       cursor: pointer;
@@ -1273,7 +1303,7 @@
       background: none;
       border: none;
       font-size: 17px;
-      color: #007aff;
+      color: var(--accent-blue);
       cursor: pointer;
       padding: 4px 0;
       font-family: inherit;
@@ -1324,7 +1354,7 @@
       -webkit-appearance: none;
     }
 
-    .form-group input:focus { border-color: #007aff; }
+    .form-group input:focus { border-color: var(--accent-blue); }
 
     /* ── 근무 순서 칸(2026-07-18) — 쉼표로 구분해 한 줄에 쓰던 방식 대신,
        이름 하나 쓰고 "확인"을 누르면 칸(칩)이 생기고 입력칸이 다시
@@ -1354,6 +1384,7 @@
       white-space: nowrap;
     }
     .pattern-chip-remove {
+      position: relative;
       width: 22px;
       height: 22px;
       border-radius: 50%;
@@ -1371,6 +1402,15 @@
       -webkit-tap-highlight-color: transparent;
       flex-shrink: 0;
     }
+    /* 시각적 크기(22px)는 그대로 두고, 손가락으로 누르는 실제 반응 영역만
+       보이지 않게 넓힘(2026-07-18, 애플 최소 터치 영역 44pt 권장 기준
+       참고) — 칩끼리 간격(6px)을 넘지 않는 선에서만 넓혀서 옆 칩의 삭제
+       버튼과 안 겹치게 함. */
+    .pattern-chip-remove::before {
+      content: '';
+      position: absolute;
+      inset: -8px;
+    }
     .pattern-chip-input-row {
       display: flex;
       gap: 8px;
@@ -1381,7 +1421,7 @@
     }
     .pattern-chip-input-row button {
       padding: 0 16px;
-      background: #007aff;
+      background: var(--accent-blue);
       color: #fff;
       border: none;
       border-radius: 10px;
@@ -1408,7 +1448,7 @@
 
     .btn:active { opacity: 0.7; }
 
-    .btn-primary { background: #007aff; color: #fff; }
+    .btn-primary { background: var(--accent-blue); color: #fff; }
     .btn-secondary { background: var(--surface-2); color: var(--text-1); }
 
     .btn-row { display: flex; gap: 10px; }
@@ -1466,7 +1506,7 @@
       transition: background 0.2s;
     }
 
-    .onboard-dot.active { background: #007aff; }
+    .onboard-dot.active { background: var(--accent-blue); }
 
     .onboard-step {
       display: none;
@@ -1514,7 +1554,7 @@
       text-align: center;
     }
 
-    .onboard-big-input:focus { border-color: #007aff; }
+    .onboard-big-input:focus { border-color: var(--accent-blue); }
 
     .onboard-unit {
       font-size: 18px;
@@ -1544,7 +1584,7 @@
       margin-bottom: 20px;
     }
 
-    .ob-pattern-input:focus { border-color: #007aff; }
+    .ob-pattern-input:focus { border-color: var(--accent-blue); }
 
     .ob-pattern-hint {
       font-size: 12px;
@@ -1568,7 +1608,7 @@
       margin-bottom: 8px;
     }
 
-    .onboard-date-input:focus { border-color: #007aff; }
+    .onboard-date-input:focus { border-color: var(--accent-blue); }
 
     .onboard-btn-row {
       display: flex;
@@ -1580,7 +1620,7 @@
     .btn-ob-next {
       flex: 1;
       padding: 16px;
-      background: #007aff;
+      background: var(--accent-blue);
       color: #fff;
       border: none;
       border-radius: 14px;
@@ -1618,7 +1658,7 @@
       padding: 14px 16px;
       margin-bottom: 8px;
       background: var(--surface);
-      border-radius: 12px;
+      border-radius: var(--radius-row);
       box-shadow: var(--shadow-card);
     }
     .shift-color-row-top {
@@ -1646,7 +1686,7 @@
       font-weight: 600;
       color: var(--text-1);
       font-family: inherit;
-      border: 1.5px solid #007aff;
+      border: 1.5px solid var(--accent-blue);
       border-radius: 8px;
       padding: 4px 8px;
       background: var(--surface-2);
@@ -1671,7 +1711,7 @@
       width: 100%;
       padding: 12px 14px;
       border-radius: 12px;
-      border: 1.5px solid #007aff;
+      border: 1.5px solid var(--accent-blue);
       background: var(--surface-2);
       color: var(--text-1);
       font-size: 14px;
@@ -1694,13 +1734,14 @@
     }
     .shift-color-swatches {
       display: flex;
-      gap: 5px;
+      gap: 8px;
       flex: 1;
       flex-wrap: wrap;
     }
     .shift-color-swatch {
-      width: 26px;
-      height: 26px;
+      position: relative;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
       cursor: pointer;
       border: none;
@@ -1709,13 +1750,21 @@
       transition: transform 0.1s;
       -webkit-tap-highlight-color: transparent;
     }
+    /* 시각적 크기(28px)는 유지하고, 촘촘히 나열된 색 중 정확히 원하는 것을
+       고르기 쉽도록 실제 반응 영역만 살짝 넓힘(2026-07-18) — 8px 간격을
+       넘지 않는 선에서만 넓혀서 옆 색상과 안 겹치게 함. */
+    .shift-color-swatch::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+    }
     .shift-color-swatch.active {
       box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--text-1);
     }
     .shift-color-swatch:active { transform: scale(0.88); }
     .shift-color-input {
-      width: 30px;
-      height: 30px;
+      width: 32px;
+      height: 32px;
       border: 1.5px solid var(--line);
       border-radius: 50%;
       padding: 2px;
@@ -1741,11 +1790,11 @@
        그대로 두고, 이 알람 시각 칸만 별도 클래스로 분리함. */
     .shift-alarm-time-input {
       width: 40px;
-      padding: 6px 2px;
+      padding: 9px 2px;
       border: 1.5px solid var(--line);
       border-radius: 10px;
       background: var(--surface-2);
-      color: #007aff;
+      color: var(--accent-blue);
       font-weight: 700;
       font-size: 15px;
       font-family: inherit;
@@ -1759,7 +1808,7 @@
       -webkit-appearance: none;
       margin: 0;
     }
-    .shift-alarm-time-input:focus { border-color: #007aff; }
+    .shift-alarm-time-input:focus { border-color: var(--accent-blue); }
     .shift-alarm-toggle {
       border: 1.5px solid var(--line);
       background: none;
@@ -1875,7 +1924,7 @@
 
     .routine-card {
       background: var(--surface);
-      border-radius: 12px;
+      border-radius: var(--radius-row);
       padding: 14px 16px;
       margin-bottom: 8px;
       display: flex;
@@ -1884,6 +1933,10 @@
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
       transition: background 0.12s;
+      /* 같은 역할의 다른 카드(settings-menu-item, shift-color-row 등)는 전부
+         옅은 그림자가 있는데 이 카드만 빠져 있었음(2026-07-18 최종 점검에서
+         발견) — 통일. */
+      box-shadow: var(--shadow-card);
     }
 
     .routine-card:active { background: var(--surface-2); }
@@ -2021,6 +2074,7 @@
        동그란 배지 모양으로 통일(예전엔 배경 없는 "×" 글자만 있어서 화면마다
        삭제 버튼 생김새가 서로 달랐음). */
     .inbox-item-del {
+      position: relative;
       width: 22px;
       height: 22px;
       border-radius: 50%;
@@ -2037,6 +2091,13 @@
       font-family: inherit;
       flex-shrink: 0;
       -webkit-tap-highlight-color: transparent;
+    }
+    /* 근무 순서 칩의 삭제 버튼과 같은 이유로 시각적 크기는 유지하고 실제
+       반응 영역만 넓힘(2026-07-18). */
+    .inbox-item-del::before {
+      content: '';
+      position: absolute;
+      inset: -8px;
     }
 
     .inbox-empty {
@@ -2077,8 +2138,8 @@
     }
 
     .promote-weekday-chip.selected {
-      background: #007aff;
-      border-color: #007aff;
+      background: var(--accent-blue);
+      border-color: var(--accent-blue);
       color: #fff;
     }
 
@@ -2121,8 +2182,8 @@
     }
 
     .promote-shift-cell.selected {
-      background: #007aff;
-      border-color: #007aff;
+      background: var(--accent-blue);
+      border-color: var(--accent-blue);
     }
 
     .promote-shift-matrix-empty {
@@ -2156,7 +2217,7 @@
       border: 1.5px solid var(--line);
       border-radius: 10px;
       background: var(--surface-2);
-      color: #007aff;
+      color: var(--accent-blue);
       font-weight: 700;
       font-size: 16px;
       text-align: center;
@@ -2402,7 +2463,7 @@
     }
     .tcal-cell.today {
       background: rgba(0,122,255,0.12);
-      border: 1.5px solid #007aff;
+      border: 1.5px solid var(--accent-blue);
     }
     .tcal-cell.other-month { opacity: 0.35; }
     .tcal-cell-date {
@@ -2413,7 +2474,7 @@
       margin-bottom: 2px;
       padding: 0 1px;
     }
-    .tcal-cell.today .tcal-cell-date { color: #007aff; }
+    .tcal-cell.today .tcal-cell-date { color: var(--accent-blue); }
     .tcal-team-row {
       font-size: 6.5px;
       line-height: 1.4;
@@ -2486,7 +2547,7 @@
       justify-content: space-between;
       padding: 14px 16px;
       background: var(--surface);
-      border-radius: 12px;
+      border-radius: var(--radius-row);
       margin-bottom: 8px;
       box-shadow: var(--shadow-card);
     }
@@ -2995,6 +3056,11 @@
   // 채도를 낮춘 전용 색으로 바꿈. buildTodoRow/appendEventIndicators/
   // buildRoutineCard 셋 다 이 상수를 씀 — 다시 var(--accent)로 되돌리지 말 것.
   const REPEAT_TEXT_COLOR = '#5fa475';
+  // 포인트 파랑(2026-07-18, 상수로 승격) — JS에서 인라인 스타일 문자열을
+  // 직접 만드는 몇 곳(토·일 헤더 색, "오늘" 강조 등)에 흩어져 있던 '#007aff'를
+  // 이 상수로 모음. CSS 쪽은 --accent-blue 변수로 이미 모아둠 — 이 둘의 값을
+  // 같이 바꿔야 진짜 브랜드 색이 바뀜(다시 리터럴 '#007aff'를 새로 쓰지 말 것).
+  const ACCENT_BLUE = '#007aff';
   function hexToRgb(hex) {
     return [parseInt(hex.slice(1,3),16), parseInt(hex.slice(3,5),16), parseInt(hex.slice(5,7),16)].join(',');
   }
@@ -5520,7 +5586,7 @@
     if (shiftNames.length === 0) {
       const empty = document.createElement('div');
       empty.className = 'shift-color-empty';
-      empty.textContent = '등록된 근무유형이 없습니다. 아래에서 추가해 보세요.';
+      empty.textContent = '등록된 근무유형이 없어요. 아래에서 추가해 보세요.';
       card.appendChild(empty);
     }
 
@@ -6103,7 +6169,7 @@
       });
     }
     if (shiftNames.length === 0) {
-      card.innerHTML = '<div class="shift-color-empty">등록된 근무유형이 없습니다.</div>';
+      card.innerHTML = '<div class="shift-color-empty">등록된 근무유형이 없어요.</div>';
       return;
     }
     if (!state.shiftAlarms) state.shiftAlarms = {};
@@ -7288,7 +7354,7 @@
       h.className = 'promote-shift-matrix-header';
       h.textContent = DOW_KR[wd];
       // 달력 탭과 같은 주말 표시(토=파랑, 일=빨강)
-      if (wd === 6) h.style.color = '#007aff';
+      if (wd === 6) h.style.color = ACCENT_BLUE;
       else if (wd === 0) h.style.color = '#ff3b30';
       el.appendChild(h);
     });
@@ -7928,7 +7994,7 @@
     dates.forEach(function(d) {
       var th = document.createElement('div');
       th.style.cssText = 'padding:3px 1px;font-size:11px;text-align:center;overflow:hidden;color:' +
-        (d.isToday ? '#007aff' : 'var(--text-2)') + ';font-weight:' + (d.isToday ? '700' : '500') + ';';
+        (d.isToday ? ACCENT_BLUE : 'var(--text-2)') + ';font-weight:' + (d.isToday ? '700' : '500') + ';';
       th.textContent = d.label;  // "오늘" 텍스트 제거 — 파란색으로 구분
       hdr.appendChild(th);
     });
@@ -7980,7 +8046,7 @@
       dates.forEach(function(d) {
         var sc = document.createElement('div');
         sc.style.cssText = 'padding:6px 1px;text-align:center;font-size:11px;overflow:hidden;' +
-          (d.isToday ? 'color:#007aff;font-weight:700;' : 'color:var(--text-1);');
+          (d.isToday ? ('color:' + ACCENT_BLUE + ';font-weight:700;') : 'color:var(--text-1);');
         sc.textContent = shiftAt(isMyTeam ? 0 : offsetDays, d.dateStr);
         shiftCells.push(sc);
         tr.appendChild(sc);
@@ -8275,7 +8341,7 @@
       const h = document.createElement('div');
       h.className = 'promote-shift-matrix-header';
       h.textContent = DOW_KR[wd];
-      if (wd === 6) h.style.color = '#007aff';
+      if (wd === 6) h.style.color = ACCENT_BLUE;
       else if (wd === 0) h.style.color = '#ff3b30';
       wrap.appendChild(h);
     });
