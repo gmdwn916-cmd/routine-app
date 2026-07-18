@@ -59,6 +59,13 @@ public class ScheduleWidgetProvider extends AppWidgetProvider {
             refreshAll(context);
             return;
         }
+        // 휴대폰 시스템 다크/라이트 설정이 바뀌면 앱을 안 열어도 위젯을 새로
+        // 그림(2026-07-18 추가) — WidgetThemeHelper.isDarkMode()가 매번 다시
+        // 판단하므로 refreshAll()만 다시 부르면 됨.
+        if (Intent.ACTION_CONFIGURATION_CHANGED.equals(action)) {
+            refreshAll(context);
+            return;
+        }
         super.onReceive(context, intent);
     }
 
@@ -237,11 +244,15 @@ public class ScheduleWidgetProvider extends AppWidgetProvider {
                             // 칸에만 쓰고 나머지는 색만 이어붙임(2026-07-18 추가 — 예전엔
                             // 이런 구분이 아예 없어서 "괌"처럼 여러 날을 한 번에 바꾼 근무가
                             // 모든 칸에 그대로 반복 표시되는 문제가 있었음. 달력 위젯·앱
-                            // 화면의 appendShiftIndicator와 같은 기준으로 통일). 줄(=주)이
-                            // 바뀌면 이어짐 판단을 초기화.
+                            // 화면의 appendShiftIndicator와 같은 기준으로 통일). **줄(주)이
+                            // 바뀔 때 강제로 초기화하지 않음(2026-07-18 재수정)** — days
+                            // 배열은 항상 날짜순이라 배열의 바로 앞 칸이 곧 "어제"이므로,
+                            // 토요일에서 일요일로(줄이 바뀌는 지점) 넘어가며 이어진 일괄
+                            // 수정도 배열 인덱스만 보면 그대로 이어짐 — 줄마다 초기화하면
+                            // 그 경계에서만 이름이 다시 튀어나오는 버그가 있었음(앱 화면은
+                            // 이런 "줄" 개념 자체가 없어서 이 버그가 없었음).
                             String prevBatchId = null;
                             for (int i = 0; i < days.length() && i < 14; i++) {
-                                if (i % 7 == 0) prevBatchId = null;
                                 Object dayObj = days.opt(i);
                                 if (!(dayObj instanceof JSONObject)) { prevBatchId = null; continue; }
                                 JSONObject day = (JSONObject) dayObj;

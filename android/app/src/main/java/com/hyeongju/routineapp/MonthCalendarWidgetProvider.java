@@ -68,6 +68,13 @@ public class MonthCalendarWidgetProvider extends AppWidgetProvider {
             refreshAll(context);
             return;
         }
+        // 휴대폰 시스템 다크/라이트 설정이 바뀌면 앱을 안 열어도 위젯을 새로
+        // 그림(2026-07-18 추가) — WidgetThemeHelper.isDarkMode()가 매번 다시
+        // 판단하므로 refreshAll()만 다시 부르면 됨.
+        if (Intent.ACTION_CONFIGURATION_CHANGED.equals(action)) {
+            refreshAll(context);
+            return;
+        }
         super.onReceive(context, intent);
     }
 
@@ -254,12 +261,17 @@ public class MonthCalendarWidgetProvider extends AppWidgetProvider {
                             // 이어붙이고 글자는 그 구간 첫 칸에만 씀(2026-07-18 수정 — 예전엔
                             // "이름이 같으면" 이어붙였는데, 그러면 하루씩 따로 바꾼 날짜나
                             // 기본 패턴이 우연히 같은 이름을 반복할 때도 잘못 합쳐졌음 — 앱의
-                            // appendShiftIndicator와 같은 기준으로 통일). 줄이 바뀌면 다른
-                            // 주라서 새로 시작(이어짐 판단 초기화).
+                            // appendShiftIndicator와 같은 기준으로 통일). **줄(주)이 바뀔 때
+                            // 강제로 초기화하지 않음(2026-07-18 재수정)** — days 배열은 항상
+                            // 날짜순이라 배열의 바로 앞 칸이 곧 "어제"이므로, 토요일에서
+                            // 일요일로(줄이 바뀌는 지점) 넘어가며 이어진 일괄 수정도 배열
+                            // 인덱스만 보면 그대로 이어짐 — 줄마다 초기화하면 그 경계에서만
+                            // 이름이 다시 튀어나오는 버그가 있었음(앱 화면은 이런 "줄" 개념
+                            // 자체가 없이 실제 어제 날짜만 보므로 이 버그가 없었음). 그 달에
+                            // 안 속하는 빈 칸(null)을 만나면 거기서만 진짜로 끊긴 것이므로
+                            // 그때만 초기화.
                             String prevBatchId = null;
                             for (int i = 0; i < days.length() && i < 42; i++) {
-                                if (i % 7 == 0) prevBatchId = null;
-
                                 Object dayObj = days.opt(i);
                                 if (!(dayObj instanceof JSONObject)) { prevBatchId = null; continue; } // 그 달에 속하지 않는 빈 칸
                                 JSONObject day = (JSONObject) dayObj;

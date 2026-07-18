@@ -42,6 +42,12 @@
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <!-- 휴대폰 시스템 다크/라이트 설정이 바뀌는 순간 위젯을 새로
+                     그리기 위함(2026-07-18 추가) — 앱을 안 열고 위젯만 떠있는
+                     상태에서 시스템 테마가 바뀌면 이전까지는 앱을 열기 전까지
+                     위젯이 예전 밝기 그대로 남아있었음(색이 안 맞아 리스트가
+                     제대로 안 보이는 신고 원인). -->
+                <action android:name="android.intent.action.CONFIGURATION_CHANGED" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
@@ -64,6 +70,12 @@
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <!-- 휴대폰 시스템 다크/라이트 설정이 바뀌는 순간 위젯을 새로
+                     그리기 위함(2026-07-18 추가) — 앱을 안 열고 위젯만 떠있는
+                     상태에서 시스템 테마가 바뀌면 이전까지는 앱을 열기 전까지
+                     위젯이 예전 밝기 그대로 남아있었음(색이 안 맞아 리스트가
+                     제대로 안 보이는 신고 원인). -->
+                <action android:name="android.intent.action.CONFIGURATION_CHANGED" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
@@ -77,6 +89,12 @@
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <!-- 휴대폰 시스템 다크/라이트 설정이 바뀌는 순간 위젯을 새로
+                     그리기 위함(2026-07-18 추가) — 앱을 안 열고 위젯만 떠있는
+                     상태에서 시스템 테마가 바뀌면 이전까지는 앱을 열기 전까지
+                     위젯이 예전 밝기 그대로 남아있었음(색이 안 맞아 리스트가
+                     제대로 안 보이는 신고 원인). -->
+                <action android:name="android.intent.action.CONFIGURATION_CHANGED" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
@@ -101,6 +119,12 @@
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <!-- 휴대폰 시스템 다크/라이트 설정이 바뀌는 순간 위젯을 새로
+                     그리기 위함(2026-07-18 추가) — 앱을 안 열고 위젯만 떠있는
+                     상태에서 시스템 테마가 바뀌면 이전까지는 앱을 열기 전까지
+                     위젯이 예전 밝기 그대로 남아있었음(색이 안 맞아 리스트가
+                     제대로 안 보이는 신고 원인). -->
+                <action android:name="android.intent.action.CONFIGURATION_CHANGED" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
@@ -129,6 +153,12 @@
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <!-- 휴대폰 시스템 다크/라이트 설정이 바뀌는 순간 위젯을 새로
+                     그리기 위함(2026-07-18 추가) — 앱을 안 열고 위젯만 떠있는
+                     상태에서 시스템 테마가 바뀌면 이전까지는 앱을 열기 전까지
+                     위젯이 예전 밝기 그대로 남아있었음(색이 안 맞아 리스트가
+                     제대로 안 보이는 신고 원인). -->
+                <action android:name="android.intent.action.CONFIGURATION_CHANGED" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"

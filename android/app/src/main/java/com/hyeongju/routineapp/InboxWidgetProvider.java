@@ -33,6 +33,18 @@ public class InboxWidgetProvider extends AppWidgetProvider {
         }
     }
 
+    // 휴대폰 시스템 다크/라이트 설정이 바뀌면 앱을 안 열어도 위젯을 새로
+    // 그림(2026-07-18 추가) — WidgetThemeHelper.isDarkMode()가 매번 다시
+    // 판단하므로 refreshAll()만 다시 부르면 됨(목록도 같이 새로고침됨).
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        if (Intent.ACTION_CONFIGURATION_CHANGED.equals(intent.getAction())) {
+            refreshAll(context);
+            return;
+        }
+        super.onReceive(context, intent);
+    }
+
     // WidgetBridgePlugin이 새 데이터를 받았을 때 즉시 다시 그리기 위해 호출.
     public static void refreshAll(Context context) {
         AppWidgetManager mgr = AppWidgetManager.getInstance(context);

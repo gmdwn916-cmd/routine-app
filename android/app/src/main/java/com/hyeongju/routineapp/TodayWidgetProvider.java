@@ -43,12 +43,20 @@ public class TodayWidgetProvider extends AppWidgetProvider {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        if (ACTION_TOGGLE.equals(intent.getAction())) {
+        String action = intent.getAction();
+        if (ACTION_TOGGLE.equals(action)) {
             if (intent.getBooleanExtra(EXTRA_OPEN_APP, false)) {
                 openAppToToday(context);
             } else {
                 handleToggle(context, intent);
             }
+            return;
+        }
+        // 휴대폰 시스템 다크/라이트 설정이 바뀌면 앱을 안 열어도 위젯을 새로
+        // 그림(2026-07-18 추가) — WidgetThemeHelper.isDarkMode()가 매번 다시
+        // 판단하므로 refreshAll()만 다시 부르면 됨(목록도 같이 새로고침됨).
+        if (Intent.ACTION_CONFIGURATION_CHANGED.equals(action)) {
+            refreshAll(context);
             return;
         }
         super.onReceive(context, intent);

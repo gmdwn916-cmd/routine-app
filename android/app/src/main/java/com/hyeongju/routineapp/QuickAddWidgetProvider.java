@@ -16,6 +16,18 @@ public class QuickAddWidgetProvider extends AppWidgetProvider {
         }
     }
 
+    // 휴대폰 시스템 다크/라이트 설정이 바뀌면 앱을 안 열어도 위젯을 새로
+    // 그림(2026-07-18 추가) — WidgetThemeHelper.isDarkMode()가 매번 다시
+    // 판단하므로 refreshAll()만 다시 부르면 됨.
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        if (Intent.ACTION_CONFIGURATION_CHANGED.equals(intent.getAction())) {
+            refreshAll(context);
+            return;
+        }
+        super.onReceive(context, intent);
+    }
+
     // 이 위젯은 앱과 주고받는 데이터가 없어서 다른 위젯들처럼 setXXXData를 통해
     // 다시 그려질 계기가 없었음 — 그래서 라이트/다크 설정을 바꿔도 앱을 다시
     // 열어도 최초 배치 때 색이 그대로 남는 버그가 있었음. WidgetBridgePlugin이

@@ -5031,9 +5031,21 @@
       { key: 'data', icon: SETTINGS_ICONS.data, label: '데이터 백업', getValue: function() { return ''; }},
     ];
 
+    // 항목 개수가 늘면서 한 줄로 쭉 나열돼 있으면 찾기 번거로워져서, 성격별로
+    // 묶어 작은 소제목만 얹음(2026-07-18, 사용자 요청 — 항목을 접었다 펼치는
+    // 식으로 화면을 더 나누진 않음, 7개 정도는 그 정도까진 필요 없다고 판단).
+    // 각 묶음의 순서는 그대로 두고 라벨만 새로 추가하는 것이라, 여기 순서만
+    // 바꾸면 화면에 보이는 순서도 그대로 따라감(항목 정의 자체는 안 건드림).
+    var GROUPS = [
+      { label: '근무', keys: ['cycle', 'colors', 'alarms'] },
+      { label: '화면', keys: ['weekstart', 'theme'] },
+      { label: '기타', keys: ['teams', 'data'] },
+    ];
+
     var listEl = document.getElementById('settings-list-view');
     listEl.innerHTML = '';
-    ITEMS.forEach(function(item) {
+
+    function appendSettingsRow(item) {
       var row = document.createElement('div');
       row.className = 'settings-menu-item';
 
@@ -5064,6 +5076,21 @@
 
       row.addEventListener('click', function() { openSettingsDetail(item.key); });
       listEl.appendChild(row);
+    }
+
+    GROUPS.forEach(function(group) {
+      var groupItems = group.keys.map(function(k) {
+        return ITEMS.find(function(it) { return it.key === k; });
+      }).filter(Boolean);
+      if (groupItems.length === 0) return;
+
+      var label = document.createElement('div');
+      label.className = 'section-label';
+      if (listEl.children.length) label.style.marginTop = '18px';
+      label.textContent = group.label;
+      listEl.appendChild(label);
+
+      groupItems.forEach(appendSettingsRow);
     });
   }
 
@@ -5226,6 +5253,19 @@
     if (isBaseShiftPatternName(name)) {
       renderShiftColorSettings();
       document.getElementById('shift-color-warn').textContent = '이 근무는 기본 교대 근무라 지울 수 없어요. "교대 주기" 설정에서 근무 순서를 바꿔주세요.';
+      return;
+    }
+    // 실제로 날짜·자리에 쓰이고 있는 이름이면 지웠을 때 그 날짜들이 전부
+    // 되돌아간다는 걸 먼저 확인받음(2026-07-18 추가) — 스와이프 한 번으로
+    // 바로 지워지는데, "괌여행"처럼 여러 날짜에 걸친 걸 지우면 그 모든
+    // 날짜가 한꺼번에 원래 근무표로 돌아가서 되돌리기 번거로움(앱의 다른
+    // 삭제·덮어쓰기 동작들도 이 정도 무게면 항상 확인창을 씀). 어디에도
+    // 안 쓰이는 이름(예: "+ 근무 추가"로 만들어놓고 실제로는 아무 날짜에도
+    // 안 쓴 것)은 지워도 날짜가 안 바뀌니 조용히 바로 지움.
+    const usedInDates = (state.shiftOverrides || []).some(function (o) { return o.shiftName === name; })
+      || (state.dayOverrides || []).some(function (o) { return o.shiftName === name; });
+    if (usedInDates && !confirm('"' + name + '"으로 바뀐 날짜가 있어요. 지우면 그 날짜들이 전부 원래 근무표로 되돌아가요. 지울까요?')) {
+      renderShiftColorSettings();
       return;
     }
     if (Array.isArray(state.shiftOverrides)) {
