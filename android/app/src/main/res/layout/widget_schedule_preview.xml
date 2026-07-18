@@ -87,7 +87,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:orientation="vertical"
-            android:gravity="center"
+            android:gravity="top|center_horizontal"
             android:paddingTop="2dp"
             android:paddingBottom="4dp">
             <TextView
@@ -115,7 +115,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:orientation="vertical"
-            android:gravity="center"
+            android:gravity="top|center_horizontal"
             android:paddingTop="2dp"
             android:paddingBottom="4dp"
             android:background="@drawable/widget_today_cell_border">
@@ -154,7 +154,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:orientation="vertical"
-            android:gravity="center"
+            android:gravity="top|center_horizontal"
             android:paddingTop="2dp"
             android:paddingBottom="4dp">
             <TextView
@@ -182,7 +182,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:orientation="vertical"
-            android:gravity="center"
+            android:gravity="top|center_horizontal"
             android:paddingTop="2dp"
             android:paddingBottom="4dp">
             <TextView
@@ -210,7 +210,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:orientation="vertical"
-            android:gravity="center"
+            android:gravity="top|center_horizontal"
             android:paddingTop="2dp"
             android:paddingBottom="4dp">
             <TextView
@@ -238,7 +238,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:orientation="vertical"
-            android:gravity="center"
+            android:gravity="top|center_horizontal"
             android:paddingTop="2dp"
             android:paddingBottom="4dp">
             <TextView
@@ -266,7 +266,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:orientation="vertical"
-            android:gravity="center"
+            android:gravity="top|center_horizontal"
             android:paddingTop="2dp"
             android:paddingBottom="4dp">
             <TextView
@@ -301,7 +301,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:orientation="vertical"
-            android:gravity="center"
+            android:gravity="top|center_horizontal"
             android:paddingTop="2dp"
             android:paddingBottom="4dp">
             <TextView
@@ -329,7 +329,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:orientation="vertical"
-            android:gravity="center"
+            android:gravity="top|center_horizontal"
             android:paddingTop="2dp"
             android:paddingBottom="4dp">
             <TextView
@@ -357,7 +357,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:orientation="vertical"
-            android:gravity="center"
+            android:gravity="top|center_horizontal"
             android:paddingTop="2dp"
             android:paddingBottom="4dp">
             <TextView
@@ -385,7 +385,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:orientation="vertical"
-            android:gravity="center"
+            android:gravity="top|center_horizontal"
             android:paddingTop="2dp"
             android:paddingBottom="4dp">
             <TextView
@@ -413,7 +413,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:orientation="vertical"
-            android:gravity="center"
+            android:gravity="top|center_horizontal"
             android:paddingTop="2dp"
             android:paddingBottom="4dp">
             <TextView
@@ -441,7 +441,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:orientation="vertical"
-            android:gravity="center"
+            android:gravity="top|center_horizontal"
             android:paddingTop="2dp"
             android:paddingBottom="4dp">
             <TextView
@@ -469,7 +469,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:orientation="vertical"
-            android:gravity="center"
+            android:gravity="top|center_horizontal"
             android:paddingTop="2dp"
             android:paddingBottom="4dp">
             <TextView

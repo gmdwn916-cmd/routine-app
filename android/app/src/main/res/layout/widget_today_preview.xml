@@ -83,13 +83,13 @@
             android:text="🥋 아침 운동" />
     </LinearLayout>
 
-    <TextView
+    <!-- 2026-07-18: 실제 위젯이 "+" 텍스트에서 벡터 아이콘으로 바뀐 것과
+         맞춤(이 미리보기는 정적 XML이라 자동 반영 안 되므로 직접 갱신). -->
+    <ImageView
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:gravity="center"
-        android:textStyle="bold"
-        android:textSize="30sp"
-        android:textColor="#007AFF"
-        android:text="+" />
+        android:padding="14dp"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_widget_add" />
 
 </LinearLayout>

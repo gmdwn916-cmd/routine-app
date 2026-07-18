@@ -85,13 +85,12 @@
             android:text="책 반납하기" />
     </LinearLayout>
 
-    <TextView
+    <!-- 2026-07-18: 실제 위젯과 맞춤(위 today_preview.xml과 같은 이유). -->
+    <ImageView
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:gravity="center"
-        android:textStyle="bold"
-        android:textSize="30sp"
-        android:textColor="#007AFF"
-        android:text="+" />
+        android:padding="14dp"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_widget_add" />
 
 </LinearLayout>
