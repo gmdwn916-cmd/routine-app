@@ -86,13 +86,19 @@
     <!-- 2026-07-18: 텍스트 "+" 글자 대신 위젯1(빠른 할일 추가)과 같은 벡터
          십자가 아이콘(ic_widget_add)으로 통일 — 위젯마다 "+"이 그림 아이콘
          (위젯1)/글자(이 위젯, 미배치 위젯)로 서로 다르게 생겨 보이던 것을
-         정리함. -->
+         정리함. **scaleType은 centerInside가 아니라 fitCenter를 씀** —
+         이 버튼 자리(56dp 높이, 위젯 전체 너비)가 위젯1의 아주 작은 아이콘
+         칸보다 훨씬 커서, centerInside(아이콘 원래 크기 24dp보다 절대 안
+         키움)를 쓰면 넓은 자리 안에 조그맣게 떠 있어서 "버튼이 사라진 것
+         같다"는 신고가 있었음 — fitCenter는 비율은 그대로 유지하면서
+         (옆으로 안 늘어남, 위젯1과 같은 이유) 남는 자리를 실제로 채우게
+         키워줘서 버튼이 잘 보임. -->
     <ImageView
         android:id="@+id/today_add_button"
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:padding="14dp"
-        android:scaleType="centerInside"
+        android:padding="12dp"
+        android:scaleType="fitCenter"
         android:src="@drawable/ic_widget_add"
         android:contentDescription="할 일 추가" />
 

@@ -76,13 +76,14 @@
         android:layout_weight="1" />
 
     <!-- 2026-07-18: widget_inbox.xml과 같은 이유로 텍스트 "+" 대신 벡터
-         십자가 아이콘으로 통일. -->
+         십자가 아이콘으로 통일, scaleType=fitCenter인 이유도 widget_inbox.xml
+         주석 참고. -->
     <ImageView
         android:id="@+id/inbox_add_button"
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:padding="14dp"
-        android:scaleType="centerInside"
+        android:padding="12dp"
+        android:scaleType="fitCenter"
         android:src="@drawable/ic_widget_add"
         android:contentDescription="미배치 항목 추가" />
 

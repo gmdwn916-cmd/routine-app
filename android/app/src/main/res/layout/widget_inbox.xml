@@ -57,13 +57,16 @@
          부모 LinearLayout 안의 형제라, 이 뷰가 차지하는 고정 높이를 뺀
          나머지만 weight=1인 목록·빈 문구 쪽으로 감). -->
     <!-- 2026-07-18: 텍스트 "+" 글자 대신 위젯1(빠른 할일 추가)과 같은 벡터
-         십자가 아이콘(ic_widget_add)으로 통일. -->
+         십자가 아이콘(ic_widget_add)으로 통일. scaleType=fitCenter인 이유는
+         widget_today.xml 주석 참고("버튼이 사라진 것 같다" 신고로
+         centerInside에서 바꿈 — 이 넓은 버튼 자리에선 centerInside가
+         아이콘을 원래 크기(24dp)보다 안 키워서 너무 작아 보였음). -->
     <ImageView
         android:id="@+id/inbox_add_button"
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:padding="14dp"
-        android:scaleType="centerInside"
+        android:padding="12dp"
+        android:scaleType="fitCenter"
         android:src="@drawable/ic_widget_add"
         android:contentDescription="미배치 항목 추가" />
 
