@@ -223,6 +223,16 @@ public class MonthCalendarWidgetProvider extends AppWidgetProvider {
             views.setInt(idFor(context, "cell_container_" + i), "setBackgroundColor", 0x00000000);
         }
         views.setTextViewText(idFor(context, "widget_month_label"), "");
+        // 버그(수정 완료, 2026-07-18) — 이 글자색만 XML 기본값(@color/widget_
+        // text_primary, 휴대폰 "시스템" 다크/라이트만 따라감)에 계속 의존하고
+        // 있어서, 앱 안 설정(설정 탭 "테마")에서 다크를 강제로 골랐는데
+        // 시스템 자체는 아직 라이트일 때 배경(WidgetThemeHelper.isDarkMode()
+        // 기준, 앞줄 참고)은 어둡게 바뀌는데 이 글자만 밝은 배경 기준 색(거의
+        // 검정)으로 남아 어두운 배경 위에서 안 보이는 문제가 있었음 — 다른
+        // 텍스트(cell_date_i 등)는 이미 primaryText(WidgetThemeHelper.
+        // primaryTextColor(), 앱 테마 우선)를 쓰고 있었는데 이 라벨만 빠져
+        // 있었음. 명시적으로 지정해서 고침.
+        views.setTextColor(idFor(context, "widget_month_label"), primaryText);
 
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         String raw = prefs.getString(KEY_MONTH_DATA, null);
