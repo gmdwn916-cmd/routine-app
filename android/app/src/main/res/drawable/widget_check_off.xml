@@ -4,9 +4,11 @@
     android:height="20dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
+    <!-- 2026-07-18: 앱 화면 체크 원 테두리를 2px→1.5px로 줄인 것과 맞춤(같은
+         컴포넌트 취급). -->
     <path
         android:fillColor="@android:color/transparent"
         android:strokeColor="#8E8E93"
-        android:strokeWidth="2"
+        android:strokeWidth="1.5"
         android:pathData="M12,2 C6.48,2 2,6.48 2,12 C2,17.52 6.48,22 12,22 C17.52,22 22,17.52 22,12 C22,6.48 17.52,2 12,2 Z" />
 </vector>

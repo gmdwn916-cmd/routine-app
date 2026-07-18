@@ -83,14 +83,17 @@
          위젯과 같은 패턴) — 목록(today_list)은 위에서 이 자리만큼을 자동으로
          빼고 채워짐(같은 부모 LinearLayout 안의 형제라 weight=1인 목록·빈
          문구 쪽이 이 고정 높이를 뺀 나머지를 차지). -->
-    <TextView
+    <!-- 2026-07-18: 텍스트 "+" 글자 대신 위젯1(빠른 할일 추가)과 같은 벡터
+         십자가 아이콘(ic_widget_add)으로 통일 — 위젯마다 "+"이 그림 아이콘
+         (위젯1)/글자(이 위젯, 미배치 위젯)로 서로 다르게 생겨 보이던 것을
+         정리함. -->
+    <ImageView
         android:id="@+id/today_add_button"
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:gravity="center"
-        android:textStyle="bold"
-        android:textSize="30sp"
-        android:textColor="#007AFF"
-        android:text="+" />
+        android:padding="14dp"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_widget_add"
+        android:contentDescription="할 일 추가" />
 
 </LinearLayout>

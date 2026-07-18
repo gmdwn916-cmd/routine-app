@@ -56,14 +56,15 @@
          (inbox_list)은 위에서 이 자리만큼을 자동으로 빼고 채워짐(둘 다 같은
          부모 LinearLayout 안의 형제라, 이 뷰가 차지하는 고정 높이를 뺀
          나머지만 weight=1인 목록·빈 문구 쪽으로 감). -->
-    <TextView
+    <!-- 2026-07-18: 텍스트 "+" 글자 대신 위젯1(빠른 할일 추가)과 같은 벡터
+         십자가 아이콘(ic_widget_add)으로 통일. -->
+    <ImageView
         android:id="@+id/inbox_add_button"
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:gravity="center"
-        android:textStyle="bold"
-        android:textSize="30sp"
-        android:textColor="#007AFF"
-        android:text="+" />
+        android:padding="14dp"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_widget_add"
+        android:contentDescription="미배치 항목 추가" />
 
 </LinearLayout>
