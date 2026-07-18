@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- widget_today.xml과 완전히 같지만(같은 뷰 id 재사용), 안드로이드 12(API 31)
+     이상 기기에서만 쓰는 버전 — 목록(today_list)의 빈 밑공간을 눌러도 반응이
+     없던 문제(2026-07-18)를 여기서만 고침. today_list가 weight=1로 남은
+     공간을 전부 차지하면, 실제 항목이 적을 때 목록 박스 안에 빈 여백이
+     생기는데 그 여백은 ListView 자신이 차지한 영역이라 탭해도 ListView가
+     통째로 삼켜버려서 아무 반응이 없었음(항목이 있는 줄만 반응). 고침:
+     today_list는 실제 항목 개수만큼만(Java에서 setViewLayoutHeight로 정확히
+     계산해 지정) 차지하게 하고, 그 아래 남는 진짜 여백은 별도의
+     today_list_filler(목록에 안 속한 일반 뷰)가 차지 — 이 뷰는 목록이 아니라
+     평범한 뷰라서 직접 PendingIntent를 걸 수 있고(위젯 머리글과 같은 방식),
+     그래서 항상 확실하게 반응함. API 31 미만 기기는 setViewLayoutHeight를
+     못 써서 이 레이아웃 대신 예전 그대로인 widget_today.xml을 계속 씀(그
+     기기들은 이 문제가 그대로 남지만 기존과 같은 동작이라 더 나빠지지는
+     않음) — TodayWidgetProvider.updateOne()의 분기 참고. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_today_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/widget_background"
+    android:padding="8dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingBottom="4dp">
+        <TextView
+            android:id="@+id/today_date"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textStyle="bold"
+            android:textColor="@color/widget_text_primary"
+            android:textSize="18sp" />
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <ImageView
+                android:id="@+id/today_shift_bg"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignLeft="@id/today_shift"
+                android:layout_alignTop="@id/today_shift"
+                android:layout_alignRight="@id/today_shift"
+                android:layout_alignBottom="@id/today_shift"
+                android:scaleType="fitXY"
+                android:src="@drawable/widget_badge_base_light" />
+            <TextView
+                android:id="@+id/today_shift"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingLeft="8dp"
+                android:paddingRight="8dp"
+                android:paddingTop="3dp"
+                android:paddingBottom="3dp"
+                android:textStyle="bold"
+                android:textSize="13sp" />
+        </RelativeLayout>
+    </LinearLayout>
+
+    <!-- 높이는 XML 기본값(자리만 차지)이고, 실제 값은 매번 Java의
+         setViewLayoutHeight()가 항목 개수에 맞춰 정확히 다시 지정함 — weight
+         없음(today_list_filler 쪽이 남는 공간을 전부 가져가야 하므로). -->
+    <ListView
+        android:id="@+id/today_list"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:divider="@null"
+        android:dividerHeight="0dp"
+        android:scrollbars="none" />
+
+    <TextView
+        android:id="@+id/today_empty"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:textColor="@color/widget_text_secondary"
+        android:textSize="13sp"
+        android:text="오늘 할 일이 없어요" />
+
+    <!-- today_list가 실제 항목 수만큼만 차지하고 남기는 진짜 빈 공간을 이
+         뷰가 차지함 — 목록(ListView) 소속이 아닌 평범한 뷰라서 직접
+         PendingIntent를 걸 수 있고, 그래서 이 빈 공간을 눌러도 항상 확실히
+         오늘 탭이 열림(TodayWidgetProvider.updateOne() 참고). -->
+    <TextView
+        android:id="@+id/today_list_filler"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <TextView
+        android:id="@+id/today_add_button"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:gravity="center"
+        android:textStyle="bold"
+        android:textSize="30sp"
+        android:textColor="#007AFF"
+        android:text="+" />
+
+</LinearLayout>

@@ -9,6 +9,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Build;
+import android.util.TypedValue;
 import android.view.View;
 import android.widget.RemoteViews;
 
@@ -173,8 +175,25 @@ public class TodayWidgetProvider extends AppWidgetProvider {
         return context.getResources().getIdentifier(name, "id", context.getPackageName());
     }
 
+    // 목록 줄 하나의 대략적인 높이(dp) — widget_today_item.xml의
+    // paddingTop/Bottom(6+6=12dp) + 내용물(체크 아이콘 20dp) 기준. 실측이
+    // 아니라 어림값이라, 살짝 더 크게 잡기보다 살짝 작게 잡음(더 크게 잡으면
+    // 목록 안쪽에 빈 여백이 남아 이번에 고치려는 것과 같은 종류의 "눌러도
+    // 반응 없는 빈틈"이 다시 생기지만, 작게 잡으면 마지막 한 줄만 살짝 스크롤이
+    // 필요해지는 정도라 훨씬 무해함).
+    private static final int TODAY_ROW_HEIGHT_DP = 30;
+
     private static void updateOne(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
-        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_today);
+        // 목록 안쪽 빈 여백을 눌러도 반응 없던 문제(2026-07-18) 수정 —
+        // API 31(안드로이드 12) 이상에서만 setViewLayoutHeight로 목록
+        // (today_list) 높이를 실제 항목 수만큼만 정확히 지정하고, 그 아래
+        // 남는 진짜 여백은 별도 뷰(today_list_filler)가 차지해서 항상 눌리게
+        // 함 — 이 계산을 지원 못 하는 그 미만 기기는 예전 그대로인
+        // widget_today.xml(today_list가 weight=1로 남은 공간을 전부 차지,
+        // 그 안 빈 여백은 예전처럼 안 눌릴 수 있음)을 그대로 씀.
+        boolean useV31Layout = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S;
+        RemoteViews views = new RemoteViews(context.getPackageName(),
+            useV31Layout ? R.layout.widget_today_v31 : R.layout.widget_today);
 
         Intent openIntent = new Intent(context, MainActivity.class);
         // 위젯마다 다른 action을 붙여서 서로 다른 PendingIntent로 구분되게 함(달력
@@ -238,11 +257,24 @@ public class TodayWidgetProvider extends AppWidgetProvider {
         // (아래 참고, 이건 근무 계산이 아니라 단순 오늘 날짜라 네이티브에서
         // 계산해도 되는 예외).
         String todayDate = "";
+        // today_list_filler 계산용(2026-07-18) — 목록에 실제로 보일 항목
+        // 개수를 여기서도 한 번 더 셈(TodayRemoteViewsFactory.onDataSetChanged와
+        // 같은 기준: done이 아닌 것만). 위 TODAY_ROW_HEIGHT_DP와 곱해서 목록
+        // 높이를 정확히 지정하는 데 씀.
+        int visibleItemCount = 0;
         if (raw != null) {
             try {
                 JSONObject obj = new JSONObject(raw);
                 views.setTextViewText(idFor(context, "today_date"), obj.optString("dateLabel", ""));
                 todayDate = obj.optString("date", "");
+
+                JSONArray itemsArr = obj.optJSONArray("items");
+                if (itemsArr != null) {
+                    for (int i = 0; i < itemsArr.length(); i++) {
+                        JSONObject it = itemsArr.optJSONObject(i);
+                        if (it != null && !it.optBoolean("done", false)) visibleItemCount++;
+                    }
+                }
 
                 String shiftName = obj.optString("shiftName", "");
                 String color = obj.optString("color", "");
@@ -271,6 +303,19 @@ public class TodayWidgetProvider extends AppWidgetProvider {
             } catch (Exception e) {
                 // 데이터가 깨져 있으면 위에서 이미 비워둔 빈 헤더로 둠
             }
+        }
+
+        // today_list 높이를 실제 항목 수만큼만 지정하고, 남는 진짜 여백은
+        // today_list_filler가 차지해서 항상 눌리게 함(2026-07-18) — v31
+        // 레이아웃에서만 존재하는 뷰라 이 분기 안에서만 다룸(예전 레이아웃에는
+        // today_list_filler 자체가 없어서 손댈 필요도 없음).
+        if (useV31Layout) {
+            // TodayRemoteViewsFactory의 FILLER_COUNT(1)과 맞춰 목록 자체
+            // 안에도 빈 줄 하나가 더 있음 — 그만큼 높이에도 포함.
+            int rowsForHeight = visibleItemCount + 1;
+            views.setViewLayoutHeight(idFor(context, "today_list"),
+                rowsForHeight * TODAY_ROW_HEIGHT_DP, TypedValue.COMPLEX_UNIT_DIP);
+            views.setOnClickPendingIntent(idFor(context, "today_list_filler"), openPending);
         }
 
         // 맨 밑의 큼지막한 + 버튼(2026-07-16 추가, 같은 날 재수정) — 처음엔
