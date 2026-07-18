@@ -4,8 +4,14 @@
     android:height="20dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
+    <!-- 2026-07-18: 앱 화면에서 할 일을 체크하면 초록(포인트 초록색 변수)으로
+         채워지는데 이 위젯만 파랑(#007AFF)으로 고정돼 있어서 같은 "완료"
+         상태가 화면·위젯에서 다르게 보이던 문제를 고침. 앱의 라이트 테마
+         포인트 초록 값과 맞춤(다크 테마 값은 #32d158로 미세하게 다르지만,
+         이 원 위엔 흰 체크만 얹혀서 두 테마 배경 어디서도 무난히 보이므로
+         이 위젯도 다른 static 색상들처럼 테마 구분 없이 값 하나로 통일). -->
     <path
-        android:fillColor="#007AFF"
+        android:fillColor="#34C759"
         android:pathData="M12,2 C6.48,2 2,6.48 2,12 C2,17.52 6.48,22 12,22 C17.52,22 22,17.52 22,12 C22,6.48 17.52,2 12,2 Z" />
     <path
         android:fillColor="@android:color/transparent"
