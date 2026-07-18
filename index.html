@@ -464,9 +464,6 @@
       background: var(--accent);
       border-color: var(--accent);
     }
-    #tab-today .today-events-toggle { border-color: var(--line); color: var(--text-2); }
-    #tab-today .today-events-toggle.is-on { border-color: var(--accent); color: var(--accent); }
-    #tab-today .today-events-empty-msg { color: var(--text-3); }
 
     /* ── 오늘 탭 타임라인(미정/오전/오후/밤) ── */
     .timeline-section { margin-bottom: 18px; }
@@ -742,9 +739,9 @@
     .today-events-header .section-label { margin-bottom: 0; }
 
     .today-events-toggle {
-      border: 1.5px solid #e5e5ea;
+      border: 1.5px solid var(--line);
       background: none;
-      color: #8e8e93;
+      color: var(--text-2);
       font-size: 11px;
       font-family: inherit;
       padding: 3px 8px;
@@ -753,13 +750,13 @@
       white-space: nowrap;
     }
     .today-events-toggle.is-on {
-      border-color: #007aff;
-      color: #007aff;
+      border-color: var(--accent);
+      color: var(--accent);
     }
 
     .today-events-empty-msg {
       font-size: 13px;
-      color: #aeaeb2;
+      color: var(--text-3);
       padding: 4px 0;
     }
 
@@ -1239,7 +1236,7 @@
       padding: 14px 16px;
       margin-bottom: 8px;
       cursor: pointer;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+      box-shadow: var(--shadow-card);
       -webkit-tap-highlight-color: transparent;
       gap: 12px;
       transition: background 0.12s;
@@ -1614,7 +1611,7 @@
       margin-bottom: 8px;
       background: var(--surface);
       border-radius: 12px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+      box-shadow: var(--shadow-card);
     }
     .shift-color-row-top {
       display: flex;
@@ -1705,7 +1702,7 @@
       -webkit-tap-highlight-color: transparent;
     }
     .shift-color-swatch.active {
-      box-shadow: 0 0 0 2px #fff, 0 0 0 4px #1c1c1e;
+      box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--text-1);
     }
     .shift-color-swatch:active { transform: scale(0.88); }
     .shift-color-input {
@@ -2472,7 +2469,7 @@
       background: var(--surface);
       border-radius: 12px;
       margin-bottom: 8px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      box-shadow: var(--shadow-card);
     }
     .tcal-dd-team-name {
       font-size: 16px;
