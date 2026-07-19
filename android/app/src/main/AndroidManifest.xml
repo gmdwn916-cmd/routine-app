@@ -193,4 +193,9 @@
          같은 원리) -->
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- 오늘 탭 날씨(2026-07-19 추가) — @capacitor/geolocation이 필요로 함.
+         GPS 하드웨어를 강제하는 <uses-feature>는 일부러 안 넣음(없어도 대략
+         위치는 잡히고, 넣으면 GPS 없는 기기에는 설치 자체가 막히므로). -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 </manifest>

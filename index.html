@@ -3333,6 +3333,13 @@
      이 false), 설치된 안드로이드 앱 안에서만 실제 알람 예약이 동작함. -->
 <script src="capacitor.js"></script>
 <script src="local-notifications.js"></script>
+<!-- @capacitor/geolocation의 plugin.js는 @capacitor/synapse의 exposeSynapse()를
+     즉시 부르는데, 이 프로젝트는 각 플러그인을 번들러 없이 전역 변수로만
+     이어붙이는 방식(위 주석 참고)이라 그 실제 패키지를 따로 안 가져오고,
+     여기서 필요한 최소한(no-op exposeSynapse)만 흉내내는 자리표시자를 둠 —
+     Synapse는 OutSystems 저작도구 연동용이라 이 앱에서는 안 씀. -->
+<script>window.synapse = { exposeSynapse: function () {} };</script>
+<script src="geolocation.js"></script>
 
 <script>
   // 카테고리 기본값 — 사용자가 설정 탭에서 직접 추가·수정·삭제 가능(state.categories).
@@ -4944,14 +4951,14 @@
     refreshTimelineEmptyStates(containerEl);
   }
 
-  // ── 오늘 탭 날씨(2026-07-19 추가) ──────────────────────────
-  // "슬쩍 보고 닫는" 수준의 부가 정보라 위치 권한 없이, 사용자가 한 번
-  // 골라둔 지역(state.weatherRegion, 기본값 서울) 기준으로만 보여줌 —
-  // 기기 위치 권한을 새로 요청하면(안드로이드 매니페스트 권한 추가,
-  // 웹뷰 권한 프롬프트 처리 등) 이 작은 기능치고 배보다 배꼽이 커짐.
-  // 날씨 API는 API 키가 필요 없는 Open-Meteo(무료, CORS 지원)를 씀 —
-  // 이 앱은 서버 없는 정적 파일이라 키가 있으면 코드에 그대로 노출되므로,
-  // 키 자체가 필요 없는 서비스가 이 프로젝트 구조에 맞음.
+  // ── 오늘 탭 날씨(2026-07-19 추가, 같은 날 위치 권한 기반으로 재구성) ──
+  // 기기 위치 권한(@capacitor/geolocation, 웹에서는 브라우저 위치 권한으로
+  // 자동 대체됨)을 받아 실제 좌표로 날씨를 가져옴. 지역 목록은 위치 권한이
+  // 없거나 거부됐을 때의 대체용 + 수동으로 다른 지역을 보고 싶을 때 쓰는
+  // 오버라이드로만 남겨둠(state.weatherRegion이 있으면 GPS보다 우선).
+  // 표시는 "지역 기온° 아이콘+상태"만(해/흐림/비/눈 네 가지로만 단순화 —
+  // 사용자 요청) — 비/눈은 지금 당장 오고 있을 때, 또는 지금부터 오늘
+  // 자정까지 강수확률이 30% 이상인 시간이 있을 때만 표시.
   const WEATHER_REGIONS = [
     { id: 'seoul', name: '서울', lat: 37.5665, lon: 126.9780 },
     { id: 'busan', name: '부산', lat: 35.1796, lon: 129.0756 },
@@ -4971,84 +4978,140 @@
     { id: 'gyeongnam', name: '경남(창원)', lat: 35.2280, lon: 128.6811 },
     { id: 'jeju', name: '제주', lat: 33.4996, lon: 126.5312 },
   ];
+  const WEATHER_RAIN_CODES = [51,53,55,56,57,61,63,65,66,67,80,81,82,95,96,99];
+  const WEATHER_SNOW_CODES = [71,73,75,77,85,86];
 
-  function getWeatherRegion() {
-    const id = (state && state.weatherRegion) || 'seoul';
-    return WEATHER_REGIONS.find(function (r) { return r.id === id; }) || WEATHER_REGIONS[0];
+  function nearestWeatherRegionName(lat, lon) {
+    let best = WEATHER_REGIONS[0], bestDist = Infinity;
+    WEATHER_REGIONS.forEach(function (r) {
+      const d = Math.pow(r.lat - lat, 2) + Math.pow(r.lon - lon, 2);
+      if (d < bestDist) { bestDist = d; best = r; }
+    });
+    return best.name;
   }
 
-  // WMO 날씨 코드(Open-Meteo 표준) → 이모지 + 짧은 한글 설명
-  function weatherCodeInfo(code) {
-    const map = {
-      0: ['☀️', '맑음'], 1: ['🌤️', '대체로 맑음'], 2: ['⛅', '구름 조금'], 3: ['☁️', '흐림'],
-      45: ['🌫️', '안개'], 48: ['🌫️', '안개'],
-      51: ['🌦️', '이슬비'], 53: ['🌦️', '이슬비'], 55: ['🌦️', '이슬비'],
-      56: ['🌧️', '어는 이슬비'], 57: ['🌧️', '어는 이슬비'],
-      61: ['🌧️', '비'], 63: ['🌧️', '비'], 65: ['🌧️', '비'],
-      66: ['🌧️', '어는 비'], 67: ['🌧️', '어는 비'],
-      71: ['❄️', '눈'], 73: ['❄️', '눈'], 75: ['❄️', '눈'], 77: ['🌨️', '싸락눈'],
-      80: ['🌦️', '소나기'], 81: ['🌦️', '소나기'], 82: ['🌧️', '강한 소나기'],
-      85: ['🌨️', '눈 소나기'], 86: ['🌨️', '눈 소나기'],
-      95: ['⛈️', '뇌우'], 96: ['⛈️', '뇌우'], 99: ['⛈️', '뇌우'],
-    };
-    return map[code] || ['', ''];
+  // 현재 코드가 이미 비/눈이면 그대로, 아니면 지금부터 오늘 남은 시간
+  // 중 강수확률 30% 이상인 시간이 있는지로 판단(그 시간대 코드로 비/눈 구분).
+  function classifyTodayWeather(currentCode, hourly, nowIdx) {
+    if (WEATHER_SNOW_CODES.indexOf(currentCode) !== -1) return { key: 'snow', label: '눈', icon: '❄️' };
+    if (WEATHER_RAIN_CODES.indexOf(currentCode) !== -1) return { key: 'rain', label: '비', icon: '🌧️' };
+    let maxProb = 0, maxProbCode = null;
+    for (let i = nowIdx; i < hourly.time.length; i++) {
+      const p = hourly.precipitation_probability[i];
+      if (typeof p === 'number' && p > maxProb) { maxProb = p; maxProbCode = hourly.weather_code[i]; }
+    }
+    if (maxProb >= 30) {
+      if (WEATHER_SNOW_CODES.indexOf(maxProbCode) !== -1) return { key: 'snow', label: '눈', icon: '❄️' };
+      return { key: 'rain', label: '비', icon: '🌧️' };
+    }
+    if (currentCode === 0) return { key: 'sun', label: '해', icon: '☀️' };
+    return { key: 'cloudy', label: '흐림', icon: '☁️' };
   }
 
-  // 지역별로 캐시(메모리에만, 새로고침되면 초기화되지만 이 정도 기능엔 충분) —
-  // 같은 지역을 20분 안에 다시 요청하면 네트워크 호출 없이 재사용.
-  let weatherCache = null; // { regionId, fetchedAt, temp, code }
-  const WEATHER_CACHE_MS = 20 * 60 * 1000;
-
-  function fetchWeatherForRegion(region) {
-    const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + region.lat +
-      '&longitude=' + region.lon + '&current=temperature_2m,weather_code&timezone=Asia%2FSeoul';
+  function fetchWeatherForCoords(lat, lon) {
+    const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon +
+      '&current=temperature_2m,weather_code&hourly=precipitation_probability,weather_code&forecast_days=1&timezone=Asia%2FSeoul';
     return fetch(url).then(function (res) {
       if (!res.ok) throw new Error('weather fetch failed');
       return res.json();
     }).then(function (data) {
+      const nowPrefix = String(data.current.time).slice(0, 13);
+      let nowIdx = data.hourly.time.findIndex(function (t) { return String(t).slice(0, 13) === nowPrefix; });
+      if (nowIdx === -1) nowIdx = 0;
+      const cls = classifyTodayWeather(data.current.weather_code, data.hourly, nowIdx);
       return {
-        regionId: region.id,
-        fetchedAt: Date.now(),
         temp: Math.round(data.current.temperature_2m),
-        code: data.current.weather_code,
+        key: cls.key, label: cls.label, icon: cls.icon,
       };
     });
   }
 
+  // 위치 권한(네이티브: @capacitor/geolocation이 안드로이드 권한 다이얼로그를
+  // 띄움 / 웹: 브라우저 자체 위치 권한 프롬프트로 자동 대체) — 한 세션 안에서
+  // 거부되면(gpsDeniedThisSession) 매번 다시 시도하지 않고 조용히 대체 지역으로.
+  let gpsCoordsCache = null; // { lat, lon, fetchedAt }
+  let gpsDeniedThisSession = false;
+  const GPS_CACHE_MS = 20 * 60 * 1000;
+
+  function requestGpsCoords() {
+    const plugin = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Geolocation;
+    if (!plugin) return Promise.reject(new Error('geolocation plugin not available'));
+    const isNative = !!(window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+    const permStep = isNative
+      ? plugin.checkPermissions().then(function (p) {
+          if (p.location === 'granted') return p;
+          return plugin.requestPermissions();
+        })
+      : Promise.resolve(null);
+    return permStep.then(function (p) {
+      if (isNative && p && p.location !== 'granted') throw new Error('location permission denied');
+      return plugin.getCurrentPosition();
+    }).then(function (pos) {
+      return { lat: pos.coords.latitude, lon: pos.coords.longitude };
+    });
+  }
+
+  // 수동으로 골라둔 지역(state.weatherRegion)이 있으면 GPS보다 그게 우선.
+  function resolveWeatherLocation() {
+    if (state && state.weatherRegion) {
+      const region = WEATHER_REGIONS.find(function (r) { return r.id === state.weatherRegion; }) || WEATHER_REGIONS[0];
+      return Promise.resolve({ lat: region.lat, lon: region.lon, name: region.name });
+    }
+    if (gpsCoordsCache && (Date.now() - gpsCoordsCache.fetchedAt) < GPS_CACHE_MS) {
+      return Promise.resolve({ lat: gpsCoordsCache.lat, lon: gpsCoordsCache.lon, name: nearestWeatherRegionName(gpsCoordsCache.lat, gpsCoordsCache.lon) });
+    }
+    if (gpsDeniedThisSession) {
+      const fallback = WEATHER_REGIONS[0];
+      return Promise.resolve({ lat: fallback.lat, lon: fallback.lon, name: fallback.name });
+    }
+    return requestGpsCoords().then(function (coords) {
+      gpsCoordsCache = { lat: coords.lat, lon: coords.lon, fetchedAt: Date.now() };
+      return { lat: coords.lat, lon: coords.lon, name: nearestWeatherRegionName(coords.lat, coords.lon) };
+    }).catch(function () {
+      gpsDeniedThisSession = true;
+      const fallback = WEATHER_REGIONS[0];
+      return { lat: fallback.lat, lon: fallback.lon, name: fallback.name };
+    });
+  }
+
+  // 지역+좌표 조합으로 캐시(메모리에만, 새로고침되면 초기화되지만 이 정도
+  // 기능엔 충분) — 20분 안에 다시 요청하면 네트워크 호출 없이 재사용.
+  let weatherCache = null; // { name, temp, key, label, icon, fetchedAt }
+
   function updateTodayWeatherUI() {
     const el = document.getElementById('td-weather');
     if (!el) return;
-    const region = getWeatherRegion();
 
-    function render(cache) {
-      if (!cache || cache.regionId !== region.id) { el.textContent = ''; return; }
-      const [icon, label] = weatherCodeInfo(cache.code);
+    function render(c) {
+      if (!c) { el.textContent = ''; return; }
       el.innerHTML = '';
-      const iconSpan = document.createElement('span');
-      iconSpan.textContent = icon;
       const nameSpan = document.createElement('span');
-      nameSpan.textContent = region.name + (label ? ' ' + label : '');
+      nameSpan.textContent = c.name;
       const tempSpan = document.createElement('span');
       tempSpan.className = 'td-weather-temp';
-      tempSpan.textContent = cache.temp + '°';
-      el.appendChild(iconSpan);
+      tempSpan.textContent = c.temp + '°';
+      const iconSpan = document.createElement('span');
+      iconSpan.textContent = c.icon + ' ' + c.label;
       el.appendChild(nameSpan);
       el.appendChild(tempSpan);
+      el.appendChild(iconSpan);
     }
 
-    if (weatherCache && weatherCache.regionId === region.id && (Date.now() - weatherCache.fetchedAt) < WEATHER_CACHE_MS) {
+    if (weatherCache && (Date.now() - weatherCache.fetchedAt) < GPS_CACHE_MS) {
       render(weatherCache);
       return;
     }
-    // 이전 지역 캐시라도 있으면 새로 받아오는 동안 빈 화면 대신 그대로 보여줌
+    // 이전 값이라도 있으면 새로 받아오는 동안 빈 화면 대신 그대로 보여줌
     render(weatherCache);
-    fetchWeatherForRegion(region).then(function (result) {
-      weatherCache = result;
-      // 그 사이 다른 지역으로 바뀌었을 수도 있으니 항상 최신 지역 기준으로 다시 그림
-      if (getWeatherRegion().id === result.regionId) render(result);
+    resolveWeatherLocation().then(function (loc) {
+      return fetchWeatherForCoords(loc.lat, loc.lon).then(function (w) {
+        weatherCache = Object.assign({ name: loc.name, fetchedAt: Date.now() }, w);
+        render(weatherCache);
+      });
     }).catch(function () {
-      // 오프라인 등으로 실패해도 이 부가 기능 하나 때문에 오늘 탭 전체가
-      // 어색해지면 안 되므로 조용히 무시(이전 캐시가 있었으면 그대로 남음).
+      // 위치 권한 거부·오프라인 등으로 실패해도 이 부가 기능 하나 때문에
+      // 오늘 탭 전체가 어색해지면 안 되므로 조용히 무시(이전 캐시가
+      // 있었으면 그대로 남음).
     });
   }
 
@@ -5056,10 +5119,34 @@
     document.getElementById('weather-region-overlay').classList.remove('open');
   }
 
+  // 위치 권한이 없거나 거부됐을 때의 대체 + "다른 지역 보기" 수동 오버라이드.
+  // 맨 위 "현재 위치(자동)"를 고르면 오버라이드를 지우고 GPS로 되돌아감.
   function openWeatherRegionPicker() {
     const list = document.getElementById('weather-region-list');
     list.innerHTML = '';
-    const current = getWeatherRegion();
+
+    const autoItem = document.createElement('button');
+    autoItem.type = 'button';
+    autoItem.className = 'shift-picker-item';
+    const autoLabel = document.createElement('span');
+    autoLabel.textContent = '현재 위치(자동)';
+    autoItem.appendChild(autoLabel);
+    if (!state.weatherRegion) {
+      const check = document.createElement('span');
+      check.className = 'weather-region-item-check';
+      check.textContent = '✓';
+      autoItem.appendChild(check);
+    }
+    autoItem.addEventListener('click', function () {
+      delete state.weatherRegion;
+      saveState();
+      gpsDeniedThisSession = false;
+      weatherCache = null;
+      closeWeatherRegionPicker();
+      updateTodayWeatherUI();
+    });
+    list.appendChild(autoItem);
+
     WEATHER_REGIONS.forEach(function (region) {
       const item = document.createElement('button');
       item.type = 'button';
@@ -5067,7 +5154,7 @@
       const label = document.createElement('span');
       label.textContent = region.name;
       item.appendChild(label);
-      if (region.id === current.id) {
+      if (state.weatherRegion === region.id) {
         const check = document.createElement('span');
         check.className = 'weather-region-item-check';
         check.textContent = '✓';
@@ -5076,6 +5163,7 @@
       item.addEventListener('click', function () {
         state.weatherRegion = region.id;
         saveState();
+        weatherCache = null;
         closeWeatherRegionPicker();
         updateTodayWeatherUI();
       });
