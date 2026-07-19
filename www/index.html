@@ -2146,7 +2146,7 @@
        열고 닫힐 때 부드럽게(2026-07-18, 날짜 상세에 먼저 시범 적용해본 뒤
        확대 — #day-detail-overlay와 같은 방식: display:none 대신
        visibility+opacity+pointer-events, 패널은 translateY 슬라이드업). */
-    #inbox-overlay, #promote-overlay, #period-edit-overlay, #bulk-shift-overlay, #shift-picker-overlay, #weather-region-overlay {
+    #inbox-overlay, #promote-overlay, #period-edit-overlay, #bulk-shift-overlay, #shift-picker-overlay, #weather-region-overlay, #bulk-action-choice-overlay, #bulk-todo-overlay {
       display: flex;
       position: fixed;
       inset: 0;
@@ -2160,14 +2160,14 @@
       transition: opacity 0.22s ease, visibility 0s linear 0.22s;
     }
 
-    #inbox-overlay.open, #promote-overlay.open, #period-edit-overlay.open, #bulk-shift-overlay.open, #shift-picker-overlay.open, #weather-region-overlay.open {
+    #inbox-overlay.open, #promote-overlay.open, #period-edit-overlay.open, #bulk-shift-overlay.open, #shift-picker-overlay.open, #weather-region-overlay.open, #bulk-action-choice-overlay.open, #bulk-todo-overlay.open {
       opacity: 1;
       visibility: visible;
       pointer-events: auto;
       transition: opacity 0.22s ease;
     }
 
-    #inbox-panel, #promote-panel, #period-edit-panel, #bulk-shift-panel, #shift-picker-panel, #weather-region-panel {
+    #inbox-panel, #promote-panel, #period-edit-panel, #bulk-shift-panel, #shift-picker-panel, #weather-region-panel, #bulk-action-choice-panel, #bulk-todo-panel {
       background: var(--bg);
       width: 100%;
       max-width: 480px;
@@ -2184,11 +2184,13 @@
     #period-edit-overlay.open #period-edit-panel,
     #bulk-shift-overlay.open #bulk-shift-panel,
     #shift-picker-overlay.open #shift-picker-panel,
-    #weather-region-overlay.open #weather-region-panel {
+    #weather-region-overlay.open #weather-region-panel,
+    #bulk-action-choice-overlay.open #bulk-action-choice-panel,
+    #bulk-todo-overlay.open #bulk-todo-panel {
       transform: translateY(0);
     }
 
-    #inbox-panel h2, #promote-panel h2, #period-edit-panel h2, #bulk-shift-panel h2, #shift-picker-panel h2, #weather-region-panel h2 {
+    #inbox-panel h2, #promote-panel h2, #period-edit-panel h2, #bulk-shift-panel h2, #shift-picker-panel h2, #weather-region-panel h2, #bulk-action-choice-panel h2, #bulk-todo-panel h2 {
       font-size: 16px;
       font-weight: 700;
       color: var(--text-1);
@@ -3126,6 +3128,38 @@
     <div class="btn-row" style="padding-top:8px">
       <button class="btn btn-secondary" id="btn-bulk-shift-cancel">취소</button>
       <button class="btn btn-primary" id="btn-bulk-shift-apply">적용</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 달력 드래그 선택 후 "근무 수정/할일 추가" 선택(2026-07-19 추가) ── -->
+<div id="bulk-action-choice-overlay">
+  <div id="bulk-action-choice-panel">
+    <h2 id="bulk-action-choice-count"></h2>
+    <div class="btn-row" style="padding-top:8px">
+      <button class="btn btn-secondary" id="btn-bulk-action-shift">근무 수정</button>
+      <button class="btn btn-secondary" id="btn-bulk-action-todo">할일 추가</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 할일 일괄 추가 바텀시트(2026-07-19 추가) — 근무 일괄 수정과 형식은
+     같지만(입력칸+색 스와치+취소/적용), 근무와 헷갈리지 않게 팔레트를
+     CATEGORY_COLOR_PRESETS로 다르게 쓰고 결과물도 이어진 근무 띠가 아니라
+     양끝이 둥근 기간 할 일 띠(cell-period-band)로 그려져 구조적으로도
+     구별됨. ── -->
+<div id="bulk-todo-overlay">
+  <div id="bulk-todo-panel">
+    <h2>할일 일괄 추가</h2>
+    <div class="form-group">
+      <label id="bulk-todo-count"></label>
+      <input type="text" id="bulk-todo-input" placeholder="할 일 내용…" maxlength="40">
+    </div>
+    <div class="shift-color-swatches" id="bulk-todo-swatches"></div>
+    <div class="onboard-warn" id="bulk-todo-warn"></div>
+    <div class="btn-row" style="padding-top:8px">
+      <button class="btn btn-secondary" id="btn-bulk-todo-cancel">취소</button>
+      <button class="btn btn-primary" id="btn-bulk-todo-apply">적용</button>
     </div>
   </div>
 </div>
@@ -5314,6 +5348,10 @@
       const ev = periodEvents[0];
       const band = document.createElement('div');
       band.className = 'cell-period-band';
+      // 달력 드래그로 만든 기간 할 일은 그때 고른 색을 가짐(2026-07-19 추가) —
+      // 없으면(예전 방식으로 만들어졌거나 색을 안 고른 경우) 원래 고정
+      // 보라색 그대로.
+      if (ev.color) band.style.background = ev.color;
       if (ev.date === cellDateStr) { band.classList.add('band-start'); band.textContent = ev.text; }
       if (ev.endDate === cellDateStr) band.classList.add('band-end');
       cell.appendChild(band);
@@ -5328,7 +5366,7 @@
       sortedSingle.slice(0, 3).forEach(function (ev) {
         const evEl = document.createElement('div');
         evEl.className = 'cell-event-item';
-        evEl.textContent = ev.text;
+        evEl.textContent = '• ' + ev.text;
         // 달력 칸의 할 일 글자색도 buildTodoRow와 같은 규칙을 씀(2026-07-16
         // — "모든 페이지에서 적용해달라"는 요청으로 확장, 예전엔 .cell-event-item
         // 이 항상 고정 주황이었음). ev.repeat 필드 존재 여부로 반복 여부를 판단
@@ -5566,7 +5604,7 @@
         document.removeEventListener('touchcancel', onEnd);
         if (activated) {
           bulkShiftDragging = false;
-          openBulkShiftSheet();
+          openBulkActionChoice();
         }
       }
 
@@ -5681,9 +5719,125 @@
 
   document.getElementById('btn-bulk-shift-cancel').addEventListener('click', closeBulkShiftSheet);
   document.getElementById('bulk-shift-overlay').addEventListener('click', function (e) {
+    // 이 오버레이는 이제 "근무 수정/할일 추가" 선택 화면(아래
+    // bulk-action-choice-overlay)의 버튼을 눌러야만 열리므로, 드래그 직후의
+    // 가짜 클릭 방지(bulkShiftSuppressClick)는 그 선택 화면 쪽으로 옮김 —
+    // 여기는 평소 오버레이처럼 배경 탭으로만 닫힘.
+    if (e.target === this) closeBulkShiftSheet();
+  });
+
+  // ── 드래그 직후 "근무 수정 / 할일 추가" 선택(2026-07-19 추가) ──
+  // 근무 일괄 수정 드래그(setupBulkShiftLongPress)를 그대로 재사용하되,
+  // 손을 뗀 시점에는 어느 쪽을 할지 아직 모르므로, 이 작은 선택 화면을 먼저
+  // 띄우고 고른 뒤에야 각자의 시트(bulk-shift-overlay / bulk-todo-overlay)로
+  // 이어짐 — 선택하지 않고 배경을 탭하면 선택한 날짜 범위 자체를 취소함.
+  function openBulkActionChoice() {
+    if (bulkShiftSelectedDates.size === 0) return;
+    document.getElementById('bulk-action-choice-count').textContent = bulkShiftSelectedDates.size + '개 날짜 선택됨';
+    document.getElementById('bulk-action-choice-overlay').classList.add('open');
+  }
+
+  function closeBulkActionChoice() {
+    document.getElementById('bulk-action-choice-overlay').classList.remove('open');
+  }
+
+  // 취소(배경 탭) — 아무 것도 안 고르고 닫으면 선택 자체를 지움(달력을
+  // 원래 상태로 되돌림).
+  function cancelBulkActionChoice() {
+    closeBulkActionChoice();
+    bulkShiftSelectedDates = new Set();
+    bulkShiftLastRangeKey = '';
+    renderGrid();
+  }
+
+  document.getElementById('bulk-action-choice-overlay').addEventListener('click', function (e) {
     // 손을 뗀 직후 화면이 만들어내는 가짜 클릭이 배경을 눌러 창을 즉시 닫아버리는 것 방지
     if (bulkShiftSuppressClick) { bulkShiftSuppressClick = false; return; }
-    if (e.target === this) closeBulkShiftSheet();
+    if (e.target === this) cancelBulkActionChoice();
+  });
+
+  document.getElementById('btn-bulk-action-shift').addEventListener('click', function () {
+    closeBulkActionChoice();
+    openBulkShiftSheet();
+  });
+  document.getElementById('btn-bulk-action-todo').addEventListener('click', function () {
+    closeBulkActionChoice();
+    openBulkTodoSheet();
+  });
+
+  // ── 할일 일괄 추가(2026-07-19 추가) ──
+  // 근무 일괄 수정 시트와 형식은 같지만(입력칸+색 스와치+취소/적용), 근무
+  // 색과 안 겹치도록 CATEGORY_COLOR_PRESETS(카테고리 전용 팔레트, 이미
+  // 있던 상수 재사용)를 써서 팔레트 자체가 다르고, 결과물도 근무처럼 옆
+  // 칸과 맞닿는 각진 띠가 아니라 기간(멀티데이) 할 일과 완전히 같은,
+  // 양끝이 둥근 알약 모양 띠(cell-period-band)로 그려져 구조적으로도
+  // 구별됨. 선택한 날짜 범위 그대로 date~endDate를 잡은 새 한 번짜리
+  // 할 일 하나를 만듦(하루만 골랐으면 그냥 평소의 하루짜리 할 일이 됨).
+  let bulkTodoSelectedColor = CATEGORY_COLOR_PRESETS[0];
+
+  function renderBulkTodoSwatches() {
+    const wrap = document.getElementById('bulk-todo-swatches');
+    wrap.innerHTML = '';
+    CATEGORY_COLOR_PRESETS.forEach(function (preset) {
+      const swatch = document.createElement('button');
+      swatch.type = 'button';
+      swatch.className = 'shift-color-swatch' + (preset === bulkTodoSelectedColor ? ' active' : '');
+      swatch.style.background = preset;
+      swatch.title = preset;
+      swatch.addEventListener('click', function () {
+        bulkTodoSelectedColor = preset;
+        renderBulkTodoSwatches();
+      });
+      wrap.appendChild(swatch);
+    });
+    const colorInput = document.createElement('input');
+    colorInput.type = 'color';
+    colorInput.className = 'shift-color-input';
+    colorInput.value = bulkTodoSelectedColor;
+    colorInput.title = '직접 선택';
+    colorInput.addEventListener('change', function () {
+      bulkTodoSelectedColor = colorInput.value;
+      renderBulkTodoSwatches();
+    });
+    wrap.appendChild(colorInput);
+  }
+
+  function openBulkTodoSheet() {
+    if (bulkShiftSelectedDates.size === 0) return;
+    document.getElementById('bulk-todo-count').textContent = bulkShiftSelectedDates.size + '개 날짜 선택됨';
+    document.getElementById('bulk-todo-input').value = '';
+    document.getElementById('bulk-todo-warn').textContent = '';
+    bulkTodoSelectedColor = CATEGORY_COLOR_PRESETS[0];
+    renderBulkTodoSwatches();
+    document.getElementById('bulk-todo-overlay').classList.add('open');
+    document.getElementById('bulk-todo-input').focus();
+  }
+
+  function closeBulkTodoSheet() {
+    document.getElementById('bulk-todo-overlay').classList.remove('open');
+    bulkShiftSelectedDates = new Set();
+    bulkShiftLastRangeKey = '';
+    renderGrid();
+  }
+
+  document.getElementById('btn-bulk-todo-cancel').addEventListener('click', closeBulkTodoSheet);
+  document.getElementById('bulk-todo-overlay').addEventListener('click', function (e) {
+    if (e.target === this) closeBulkTodoSheet();
+  });
+
+  document.getElementById('btn-bulk-todo-apply').addEventListener('click', function () {
+    const text = document.getElementById('bulk-todo-input').value.trim();
+    const warn = document.getElementById('bulk-todo-warn');
+    if (!text) { warn.textContent = '내용을 입력해 주세요.'; return; }
+    const dates = Array.from(bulkShiftSelectedDates).sort();
+    const start = dates[0];
+    const end = dates[dates.length - 1];
+    if (!Array.isArray(state.events)) state.events = [];
+    state.events.push({ id: genId('ev'), text: text, date: start, endDate: end, color: bulkTodoSelectedColor, done: false });
+    saveState();
+    closeBulkTodoSheet();
+    renderToday();
+    pushAllWidgets();
   });
 
   document.getElementById('btn-bulk-shift-apply').addEventListener('click', function () {
