@@ -144,22 +144,15 @@
       display: flex;
       flex-direction: column;
       background: var(--bg);
-    }
-
-    /* ── Header ── */
-    header {
-      background: var(--surface);
-      padding: 52px 20px 14px;
-      border-bottom: 1px solid var(--line);
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-
-    header h1 {
-      font-size: 20px;
-      font-weight: 700;
-      color: var(--text-1);
+      /* 2026-07-19: 상단 "교대근무 루틴" 헤더를 없애면서(하단 탭 바가 이미
+         지금 어느 화면인지 알려주고 있어서 중복이라는 사용자 지적으로 제거)
+         그 헤더가 대신 맡고 있던 상단 안전영역(상태표시줄/노치) 확보 역할을
+         여기로 옮김 — 헤더의 padding-top(52px)은 사실 안전영역용이 아니라
+         그냥 큼직한 여백이었지만, 결과적으로 상태표시줄과 안 겹치게 해주고
+         있었음. env(safe-area-inset-top)이 실제 상태표시줄 높이를 정확히
+         알려주므로 그걸 씀(웹처럼 안전영역 개념이 없는 환경에서는 0으로
+         처리돼 여백이 아예 없어짐 — 필요하면 나중에 최소값을 더 줄 것). */
+      padding-top: env(safe-area-inset-top, 0px);
     }
 
     /* 미배치 항목을 배치할 달/날짜를 고르는 중임을 알려주는 얇은 띠(연간/달력
@@ -2658,9 +2651,6 @@
 </head>
 <body>
 <div id="app">
-  <header>
-    <h1>교대근무 루틴</h1>
-  </header>
   <div id="placement-hint-bar">
     <span id="placement-hint-text"></span>
     <button type="button" id="btn-placement-cancel">취소</button>
