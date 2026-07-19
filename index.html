@@ -418,6 +418,29 @@
       flex-shrink: 0;
     }
 
+    /* 오늘 탭 날씨 표시(2026-07-19 추가) — 눌러서 지역을 바꿀 수 있는 것도
+       겸하는 버튼이라 태그 자체를 button으로 씀. 데이터가 아직 없을 때(로딩
+       중·실패)는 그냥 빈 채로 둬서(추가 안내 문구 없이) 눈에 안 띄게 함 —
+       "슬쩍 보고 닫는" 수준의 부가 정보라 실패해도 화면이 어색해지지 않아야
+       함. */
+    .td-weather {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 10px;
+      padding: 0;
+      border: none;
+      background: none;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-2);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .td-weather:empty { display: none; }
+    .td-weather-temp { color: var(--text-1); font-weight: 700; }
+
     .section-label {
       font-size: 11px;
       font-weight: 600;
@@ -2123,7 +2146,7 @@
        열고 닫힐 때 부드럽게(2026-07-18, 날짜 상세에 먼저 시범 적용해본 뒤
        확대 — #day-detail-overlay와 같은 방식: display:none 대신
        visibility+opacity+pointer-events, 패널은 translateY 슬라이드업). */
-    #inbox-overlay, #promote-overlay, #period-edit-overlay, #bulk-shift-overlay, #shift-picker-overlay {
+    #inbox-overlay, #promote-overlay, #period-edit-overlay, #bulk-shift-overlay, #shift-picker-overlay, #weather-region-overlay {
       display: flex;
       position: fixed;
       inset: 0;
@@ -2137,14 +2160,14 @@
       transition: opacity 0.22s ease, visibility 0s linear 0.22s;
     }
 
-    #inbox-overlay.open, #promote-overlay.open, #period-edit-overlay.open, #bulk-shift-overlay.open, #shift-picker-overlay.open {
+    #inbox-overlay.open, #promote-overlay.open, #period-edit-overlay.open, #bulk-shift-overlay.open, #shift-picker-overlay.open, #weather-region-overlay.open {
       opacity: 1;
       visibility: visible;
       pointer-events: auto;
       transition: opacity 0.22s ease;
     }
 
-    #inbox-panel, #promote-panel, #period-edit-panel, #bulk-shift-panel, #shift-picker-panel {
+    #inbox-panel, #promote-panel, #period-edit-panel, #bulk-shift-panel, #shift-picker-panel, #weather-region-panel {
       background: var(--bg);
       width: 100%;
       max-width: 480px;
@@ -2160,11 +2183,12 @@
     #promote-overlay.open #promote-panel,
     #period-edit-overlay.open #period-edit-panel,
     #bulk-shift-overlay.open #bulk-shift-panel,
-    #shift-picker-overlay.open #shift-picker-panel {
+    #shift-picker-overlay.open #shift-picker-panel,
+    #weather-region-overlay.open #weather-region-panel {
       transform: translateY(0);
     }
 
-    #inbox-panel h2, #promote-panel h2, #period-edit-panel h2, #bulk-shift-panel h2, #shift-picker-panel h2 {
+    #inbox-panel h2, #promote-panel h2, #period-edit-panel h2, #bulk-shift-panel h2, #shift-picker-panel h2, #weather-region-panel h2 {
       font-size: 16px;
       font-weight: 700;
       color: var(--text-1);
@@ -2459,6 +2483,14 @@
       font-size: 13px;
       color: var(--text-2);
       padding: 12px 0;
+    }
+    /* 날씨 지역 선택 팝업도 .shift-picker-item을 그대로 재사용(2026-07-19) —
+       색 스와치 대신 선택된 지역에만 체크 표시. */
+    .weather-region-item-check {
+      margin-left: auto;
+      color: var(--accent-blue);
+      font-weight: 700;
+      flex-shrink: 0;
     }
     .shift-picker-new-form {
       display: flex;
@@ -2757,6 +2789,7 @@
           </div>
           <div class="today-dnum" id="td-dnum"></div>
         </div>
+        <button type="button" class="td-weather" id="td-weather" aria-label="오늘 날씨, 눌러서 지역 변경"></button>
       </div>
       <div class="card" id="td-events-card">
         <div class="today-events-header">
@@ -3102,6 +3135,14 @@
   <div id="shift-picker-panel">
     <h2>근무 선택</h2>
     <div id="shift-picker-list"></div>
+  </div>
+</div>
+
+<!-- ── 오늘 탭 날씨 지역 선택 팝업(2026-07-19 추가) ── -->
+<div id="weather-region-overlay">
+  <div id="weather-region-panel">
+    <h2>날씨 지역 선택</h2>
+    <div id="weather-region-list"></div>
   </div>
 </div>
 
@@ -4903,6 +4944,151 @@
     refreshTimelineEmptyStates(containerEl);
   }
 
+  // ── 오늘 탭 날씨(2026-07-19 추가) ──────────────────────────
+  // "슬쩍 보고 닫는" 수준의 부가 정보라 위치 권한 없이, 사용자가 한 번
+  // 골라둔 지역(state.weatherRegion, 기본값 서울) 기준으로만 보여줌 —
+  // 기기 위치 권한을 새로 요청하면(안드로이드 매니페스트 권한 추가,
+  // 웹뷰 권한 프롬프트 처리 등) 이 작은 기능치고 배보다 배꼽이 커짐.
+  // 날씨 API는 API 키가 필요 없는 Open-Meteo(무료, CORS 지원)를 씀 —
+  // 이 앱은 서버 없는 정적 파일이라 키가 있으면 코드에 그대로 노출되므로,
+  // 키 자체가 필요 없는 서비스가 이 프로젝트 구조에 맞음.
+  const WEATHER_REGIONS = [
+    { id: 'seoul', name: '서울', lat: 37.5665, lon: 126.9780 },
+    { id: 'busan', name: '부산', lat: 35.1796, lon: 129.0756 },
+    { id: 'daegu', name: '대구', lat: 35.8714, lon: 128.6014 },
+    { id: 'incheon', name: '인천', lat: 37.4563, lon: 126.7052 },
+    { id: 'gwangju', name: '광주', lat: 35.1595, lon: 126.8526 },
+    { id: 'daejeon', name: '대전', lat: 36.3504, lon: 127.3845 },
+    { id: 'ulsan', name: '울산', lat: 35.5384, lon: 129.3114 },
+    { id: 'sejong', name: '세종', lat: 36.4801, lon: 127.2890 },
+    { id: 'gyeonggi', name: '경기(수원)', lat: 37.2636, lon: 127.0286 },
+    { id: 'gangwon', name: '강원(춘천)', lat: 37.8813, lon: 127.7298 },
+    { id: 'chungbuk', name: '충북(청주)', lat: 36.6424, lon: 127.4890 },
+    { id: 'chungnam', name: '충남(홍성)', lat: 36.6009, lon: 126.6608 },
+    { id: 'jeonbuk', name: '전북(전주)', lat: 35.8242, lon: 127.1480 },
+    { id: 'jeonnam', name: '전남(무안)', lat: 34.9906, lon: 126.4517 },
+    { id: 'gyeongbuk', name: '경북(안동)', lat: 36.5684, lon: 128.7294 },
+    { id: 'gyeongnam', name: '경남(창원)', lat: 35.2280, lon: 128.6811 },
+    { id: 'jeju', name: '제주', lat: 33.4996, lon: 126.5312 },
+  ];
+
+  function getWeatherRegion() {
+    const id = (state && state.weatherRegion) || 'seoul';
+    return WEATHER_REGIONS.find(function (r) { return r.id === id; }) || WEATHER_REGIONS[0];
+  }
+
+  // WMO 날씨 코드(Open-Meteo 표준) → 이모지 + 짧은 한글 설명
+  function weatherCodeInfo(code) {
+    const map = {
+      0: ['☀️', '맑음'], 1: ['🌤️', '대체로 맑음'], 2: ['⛅', '구름 조금'], 3: ['☁️', '흐림'],
+      45: ['🌫️', '안개'], 48: ['🌫️', '안개'],
+      51: ['🌦️', '이슬비'], 53: ['🌦️', '이슬비'], 55: ['🌦️', '이슬비'],
+      56: ['🌧️', '어는 이슬비'], 57: ['🌧️', '어는 이슬비'],
+      61: ['🌧️', '비'], 63: ['🌧️', '비'], 65: ['🌧️', '비'],
+      66: ['🌧️', '어는 비'], 67: ['🌧️', '어는 비'],
+      71: ['❄️', '눈'], 73: ['❄️', '눈'], 75: ['❄️', '눈'], 77: ['🌨️', '싸락눈'],
+      80: ['🌦️', '소나기'], 81: ['🌦️', '소나기'], 82: ['🌧️', '강한 소나기'],
+      85: ['🌨️', '눈 소나기'], 86: ['🌨️', '눈 소나기'],
+      95: ['⛈️', '뇌우'], 96: ['⛈️', '뇌우'], 99: ['⛈️', '뇌우'],
+    };
+    return map[code] || ['', ''];
+  }
+
+  // 지역별로 캐시(메모리에만, 새로고침되면 초기화되지만 이 정도 기능엔 충분) —
+  // 같은 지역을 20분 안에 다시 요청하면 네트워크 호출 없이 재사용.
+  let weatherCache = null; // { regionId, fetchedAt, temp, code }
+  const WEATHER_CACHE_MS = 20 * 60 * 1000;
+
+  function fetchWeatherForRegion(region) {
+    const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + region.lat +
+      '&longitude=' + region.lon + '&current=temperature_2m,weather_code&timezone=Asia%2FSeoul';
+    return fetch(url).then(function (res) {
+      if (!res.ok) throw new Error('weather fetch failed');
+      return res.json();
+    }).then(function (data) {
+      return {
+        regionId: region.id,
+        fetchedAt: Date.now(),
+        temp: Math.round(data.current.temperature_2m),
+        code: data.current.weather_code,
+      };
+    });
+  }
+
+  function updateTodayWeatherUI() {
+    const el = document.getElementById('td-weather');
+    if (!el) return;
+    const region = getWeatherRegion();
+
+    function render(cache) {
+      if (!cache || cache.regionId !== region.id) { el.textContent = ''; return; }
+      const [icon, label] = weatherCodeInfo(cache.code);
+      el.innerHTML = '';
+      const iconSpan = document.createElement('span');
+      iconSpan.textContent = icon;
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = region.name + (label ? ' ' + label : '');
+      const tempSpan = document.createElement('span');
+      tempSpan.className = 'td-weather-temp';
+      tempSpan.textContent = cache.temp + '°';
+      el.appendChild(iconSpan);
+      el.appendChild(nameSpan);
+      el.appendChild(tempSpan);
+    }
+
+    if (weatherCache && weatherCache.regionId === region.id && (Date.now() - weatherCache.fetchedAt) < WEATHER_CACHE_MS) {
+      render(weatherCache);
+      return;
+    }
+    // 이전 지역 캐시라도 있으면 새로 받아오는 동안 빈 화면 대신 그대로 보여줌
+    render(weatherCache);
+    fetchWeatherForRegion(region).then(function (result) {
+      weatherCache = result;
+      // 그 사이 다른 지역으로 바뀌었을 수도 있으니 항상 최신 지역 기준으로 다시 그림
+      if (getWeatherRegion().id === result.regionId) render(result);
+    }).catch(function () {
+      // 오프라인 등으로 실패해도 이 부가 기능 하나 때문에 오늘 탭 전체가
+      // 어색해지면 안 되므로 조용히 무시(이전 캐시가 있었으면 그대로 남음).
+    });
+  }
+
+  function closeWeatherRegionPicker() {
+    document.getElementById('weather-region-overlay').classList.remove('open');
+  }
+
+  function openWeatherRegionPicker() {
+    const list = document.getElementById('weather-region-list');
+    list.innerHTML = '';
+    const current = getWeatherRegion();
+    WEATHER_REGIONS.forEach(function (region) {
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'shift-picker-item';
+      const label = document.createElement('span');
+      label.textContent = region.name;
+      item.appendChild(label);
+      if (region.id === current.id) {
+        const check = document.createElement('span');
+        check.className = 'weather-region-item-check';
+        check.textContent = '✓';
+        item.appendChild(check);
+      }
+      item.addEventListener('click', function () {
+        state.weatherRegion = region.id;
+        saveState();
+        closeWeatherRegionPicker();
+        updateTodayWeatherUI();
+      });
+      list.appendChild(item);
+    });
+    document.getElementById('weather-region-overlay').classList.add('open');
+  }
+
+  document.getElementById('weather-region-overlay').addEventListener('click', function (e) {
+    if (e.target === this) closeWeatherRegionPicker();
+  });
+  document.getElementById('td-weather').addEventListener('click', openWeatherRegionPicker);
+
   // ── 오늘 탭 ──────────────────────────────────────────────
   function renderToday() {
     const idx = calcTodayIdx();
@@ -4945,6 +5131,8 @@
       todayCard.classList.remove('has-shift');
       todayCard.style.removeProperty('--shift-color');
     }
+
+    try { updateTodayWeatherUI(); } catch (e) { /* 날씨는 부가 기능 — 실패해도 오늘 탭 렌더는 계속돼야 함 */ }
 
     // 오늘 할 일 (반복 할일 + 한 번짜리 할 일을 하나의 목록으로 합쳐 보여줌)
     const repeatTodos = getRepeatTodosForDate(todayDateStr);
