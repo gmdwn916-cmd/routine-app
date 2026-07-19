@@ -1042,15 +1042,27 @@
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       grid-template-rows: repeat(4, 1fr);
-      gap: 10px;
+      gap: 0;
       flex: 1;
       min-height: 0;
       margin: 6px 0 14px;
+      border-top: 1px solid var(--line);
+      border-left: 1px solid var(--line);
     }
 
+    /* 달력 탭 격자(.grid-cell)와 같은 모양으로 통일(2026-07-19, 사용자
+       요청 — "달력 페이지의 디자인과 동일하게") — 각지고(border-radius 0)
+       칸끼리 옅은 선(var(--line))으로 나뉘어 표처럼 보이게 함. 원래는
+       gap:10px로 각자 떨어진 둥근 카드 모양이었는데, 그 gap을 없애고
+       border-right/bottom을 줘서 옆·아래 칸과 맞닿게 함 — year-grid 자체의
+       border-top/left로 격자의 왼쪽·위 바깥 테두리도 마저 닫음(달력 탭은
+       위가 grid-header 밑줄로, 왼쪽은 별도 처리 없이 트여 있었지만, 여기는
+       header 줄이 없어서 이 방식으로 사각형을 완성). */
     .year-month-box {
       background: var(--surface);
-      border-radius: 12px;
+      border-radius: 0;
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
       padding: 10px 10px 8px;
       cursor: pointer;
       min-height: 84px;
