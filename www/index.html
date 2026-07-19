@@ -4981,6 +4981,9 @@
   const WEATHER_RAIN_CODES = [51,53,55,56,57,61,63,65,66,67,80,81,82,95,96,99];
   const WEATHER_SNOW_CODES = [71,73,75,77,85,86];
 
+  // 지역 이름의 최후 대체 수단(역지오코딩 자체가 실패했을 때만 씀) — 시·도
+  // 17개 좌표 중 제일 가까운 것으로 뭉뚱그림(정밀하지 않음, 아래
+  // reverseGeocodeKorean이 항상 우선).
   function nearestWeatherRegionName(lat, lon) {
     let best = WEATHER_REGIONS[0], bestDist = Infinity;
     WEATHER_REGIONS.forEach(function (r) {
@@ -4988,6 +4991,41 @@
       if (d < bestDist) { bestDist = d; best = r; }
     });
     return best.name;
+  }
+
+  // GPS 좌표로 실제 동네 이름 알아내기(2026-07-19 추가 — 사용자가 "삼성
+  // 기본 날씨 앱은 부천시 중동까지 나오는데 내 앱은 인천이라고 뜬다"고
+  // 지적함. 원인: 그 전까지는 역지오코딩 없이 시·도 17곳 좌표 중 가장
+  // 가까운 곳으로만 뭉뚱그렸었음 — 정밀도가 아예 다른 방식이었음).
+  // BigDataCloud의 "reverse-geocode-client" 엔드포인트를 씀 — API 키가
+  // 필요 없고(Open-Meteo와 같은 이유), 애초에 앱에서 클라이언트가 직접
+  // 불러 쓰라고 만든 무료 엔드포인트라 CORS도 열려 있음(Access-Control-
+  // Allow-Origin: *). **참고로 OpenStreetMap Nominatim도 검토했지만
+  // 이 환경(서버형 IP 대역)에서 바로 "Access denied"로 거부됨**(그쪽
+  // 정책상 User-Agent로 신원을 밝혀도 안 풀림, 클라이언트/앱 내장 형태의
+  // 사용 자체를 제한하는 정책이라 실제 사용자 기기에서도 언제 막힐지
+  // 신뢰할 수 없다고 판단해 제외) — BigDataCloud로 교체.
+  function reverseGeocodeKorean(lat, lon) {
+    const url = 'https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=' + lat +
+      '&longitude=' + lon + '&localityLanguage=ko';
+    return fetch(url).then(function (res) {
+      if (!res.ok) throw new Error('reverse geocode failed');
+      return res.json();
+    }).then(function (data) {
+      // 시/군/구 정도(city) + 그보다 더 세밀한 동/읍/면(locality)을 이어붙임
+      // — 삼성 기본 앱의 "부천시 중동" 같은 형태에 최대한 가깝게.
+      const city = data.city || data.principalSubdivision || '';
+      const detail = (data.locality && data.locality !== city) ? data.locality : '';
+      const name = (city && detail) ? (city + ' ' + detail) : (city || detail);
+      if (!name) throw new Error('empty geocode result');
+      return name;
+    });
+  }
+
+  function resolveGpsDisplayName(lat, lon) {
+    return reverseGeocodeKorean(lat, lon).catch(function () {
+      return nearestWeatherRegionName(lat, lon);
+    });
   }
 
   // 현재 코드가 이미 비/눈이면 그대로, 아니면 지금부터 오늘 남은 시간
@@ -5029,7 +5067,7 @@
   // 위치 권한(네이티브: @capacitor/geolocation이 안드로이드 권한 다이얼로그를
   // 띄움 / 웹: 브라우저 자체 위치 권한 프롬프트로 자동 대체) — 한 세션 안에서
   // 거부되면(gpsDeniedThisSession) 매번 다시 시도하지 않고 조용히 대체 지역으로.
-  let gpsCoordsCache = null; // { lat, lon, fetchedAt }
+  let gpsCoordsCache = null; // { lat, lon, name, fetchedAt }
   let gpsDeniedThisSession = false;
   const GPS_CACHE_MS = 20 * 60 * 1000;
 
@@ -5058,15 +5096,17 @@
       return Promise.resolve({ lat: region.lat, lon: region.lon, name: region.name });
     }
     if (gpsCoordsCache && (Date.now() - gpsCoordsCache.fetchedAt) < GPS_CACHE_MS) {
-      return Promise.resolve({ lat: gpsCoordsCache.lat, lon: gpsCoordsCache.lon, name: nearestWeatherRegionName(gpsCoordsCache.lat, gpsCoordsCache.lon) });
+      return Promise.resolve({ lat: gpsCoordsCache.lat, lon: gpsCoordsCache.lon, name: gpsCoordsCache.name });
     }
     if (gpsDeniedThisSession) {
       const fallback = WEATHER_REGIONS[0];
       return Promise.resolve({ lat: fallback.lat, lon: fallback.lon, name: fallback.name });
     }
     return requestGpsCoords().then(function (coords) {
-      gpsCoordsCache = { lat: coords.lat, lon: coords.lon, fetchedAt: Date.now() };
-      return { lat: coords.lat, lon: coords.lon, name: nearestWeatherRegionName(coords.lat, coords.lon) };
+      return resolveGpsDisplayName(coords.lat, coords.lon).then(function (name) {
+        gpsCoordsCache = { lat: coords.lat, lon: coords.lon, name: name, fetchedAt: Date.now() };
+        return { lat: coords.lat, lon: coords.lon, name: name };
+      });
     }).catch(function () {
       gpsDeniedThisSession = true;
       const fallback = WEATHER_REGIONS[0];
