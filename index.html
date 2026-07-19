@@ -5131,7 +5131,8 @@
       tempSpan.className = 'td-weather-temp';
       tempSpan.textContent = c.temp + '°';
       const iconSpan = document.createElement('span');
-      iconSpan.textContent = c.icon + ' ' + c.label;
+      // 흐림은 글자 없이 아이콘만(2026-07-19 요청) — 해/비/눈은 그대로 글자도 같이.
+      iconSpan.textContent = (c.key === 'cloudy') ? c.icon : (c.icon + ' ' + c.label);
       el.appendChild(nameSpan);
       el.appendChild(tempSpan);
       el.appendChild(iconSpan);
@@ -5215,7 +5216,56 @@
   document.getElementById('weather-region-overlay').addEventListener('click', function (e) {
     if (e.target === this) closeWeatherRegionPicker();
   });
-  document.getElementById('td-weather').addEventListener('click', openWeatherRegionPicker);
+
+  // 짧게 탭 = 기기의 기본 날씨 앱 열기(2026-07-19 요청), 꾹 누르기(0.5초) =
+  // 지역 수동 선택 팝업 — 미배치 목록의 "짧은 탭/꾹 누르기" 상태 기계
+  // (setupInboxItemDrag)와 같은 원리: 롱프레스가 활성화됐을 때만 touchend에서
+  // preventDefault()로 뒤이어 오는 가짜 click을 막아, 그 경우엔 click
+  // 핸들러(날씨 앱 열기)가 안 불리게 함.
+  function openDefaultWeatherApp() {
+    const bridge = getWidgetBridge();
+    if (!bridge) return; // 웹에는 "기본 날씨 앱" 개념이 없어 아무 것도 안 함
+    bridge.openWeatherApp().catch(function () {});
+  }
+
+  (function setupWeatherTapOrLongPress() {
+    const el = document.getElementById('td-weather');
+    let timer = null;
+    let longPressed = false;
+    let startX = 0, startY = 0;
+
+    el.addEventListener('touchstart', function (e) {
+      longPressed = false;
+      const t = e.touches[0];
+      startX = t.clientX; startY = t.clientY;
+      timer = setTimeout(function () {
+        longPressed = true;
+        if (navigator.vibrate) navigator.vibrate(40);
+        openWeatherRegionPicker();
+      }, 500);
+    }, { passive: true });
+
+    el.addEventListener('touchmove', function (e) {
+      const t = e.touches[0];
+      if (Math.abs(t.clientX - startX) > 8 || Math.abs(t.clientY - startY) > 8) clearTimeout(timer);
+    }, { passive: true });
+
+    el.addEventListener('touchend', function (e) {
+      clearTimeout(timer);
+      if (longPressed && e.cancelable) e.preventDefault();
+    }, { passive: false });
+
+    el.addEventListener('touchcancel', function () {
+      clearTimeout(timer);
+    }, { passive: true });
+
+    // 데스크톱 마우스 클릭(길게 누르기 구분 없음)이나, 터치인데 롱프레스로
+    // 안 확정된 경우(짧은 탭 뒤 브라우저가 만드는 가짜 click)에 여기로 옴.
+    el.addEventListener('click', function () {
+      if (longPressed) { longPressed = false; return; }
+      openDefaultWeatherApp();
+    });
+  })();
 
   // ── 오늘 탭 ──────────────────────────────────────────────
   function renderToday() {

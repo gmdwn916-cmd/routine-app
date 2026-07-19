@@ -320,4 +320,34 @@ public class WidgetBridgePlugin extends Plugin {
             call.reject("save failed: " + e.getMessage(), e);
         }
     }
+
+    // 오늘 탭 날씨(2026-07-19 추가) 꾹 누르면 기기에 설치된 "기본 날씨 앱"을
+    // 열어줌 — 안드로이드에는 특정 앱을 지정하는 표준 API가 없지만,
+    // Intent.CATEGORY_APP_WEATHER라는 표준 카테고리가 있어서(런처가 "날씨
+    // 앱"을 찾을 때 쓰는 것과 같음) 그걸로 등록된 앱을 찾아서 그대로 염 —
+    // 삼성/스톡 안드로이드 등 대부분의 기본 날씨 앱이 이 카테고리로 등록돼
+    // 있음. 등록된 앱이 하나도 없으면(드묾) 아무 것도 안 하고 opened:false만
+    // 돌려줌 — JS 쪽에서 이 실패도 조용히 무시하도록 되어 있음.
+    @PluginMethod
+    public void openWeatherApp(PluginCall call) {
+        try {
+            android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_MAIN);
+            intent.addCategory(android.content.Intent.CATEGORY_APP_WEATHER);
+            android.content.pm.PackageManager pm = getContext().getPackageManager();
+            java.util.List<android.content.pm.ResolveInfo> matches = pm.queryIntentActivities(intent, 0);
+            JSObject ret = new JSObject();
+            if (matches != null && !matches.isEmpty()) {
+                intent.setFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+                getContext().startActivity(intent);
+                ret.put("opened", true);
+            } else {
+                ret.put("opened", false);
+            }
+            call.resolve(ret);
+        } catch (Exception e) {
+            JSObject ret = new JSObject();
+            ret.put("opened", false);
+            call.resolve(ret);
+        }
+    }
 }
