@@ -5,11 +5,17 @@
      있던 정보를 그대로 인텐트로 받아서 보여주기만 함(따로 다시 계산 안 함).
      체크·수정 기능은 없음(보기 전용) — 입력칸에 글자 쓰고 엔터 치면 그 날짜에
      바로 새 할 일이 추가됨(미배치 아님). -->
+<!-- dqv_root: 이 카드 전체가 "앱 열기" 반응 영역(2026-07-19 추가) — 입력칸
+     (dqv_input)만 자기 자신의 포커스/커서 배치로 터치를 직접 소비해서 이
+     클릭이 안 불림, 나머지(날짜·근무·할 일 목록 글자, 여백)는 전부 이
+     루트로 떨어져서 앱을 엶. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/dqv_root"
     android:layout_width="300dp"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="20dp"
+    android:clickable="true"
     android:background="@drawable/quick_add_bg">
 
     <TextView

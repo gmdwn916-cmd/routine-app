@@ -2,6 +2,7 @@ package com.hyeongju.routineapp;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
@@ -96,6 +97,16 @@ public class DayQuickViewActivity extends Activity {
             todosView.setText(sb.toString());
         }
 
+        // 카드(입력칸 제외) 아무 곳이나 누르면 앱을 그 날짜 상세 화면으로
+        // 열어줌(2026-07-19 추가, 사용자 요청) — dqv_input은 자기 터치를
+        // 직접 소비(포커스+커서 배치)하므로 이 리스너가 안 불리고, 나머지
+        // 영역(날짜·근무·할 일 목록, 여백)만 여기로 떨어짐(안드로이드 표준
+        // 터치 처리 — 스케줄 위젯의 날짜 칸/부모 클릭 분리와 같은 원리).
+        if (!TextUtils.isEmpty(targetDate)) {
+            View root = findViewById(R.id.dqv_root);
+            root.setOnClickListener(v -> openAppToDay());
+        }
+
         final EditText input = findViewById(R.id.dqv_input);
         input.requestFocus();
         input.post(() -> {
@@ -135,6 +146,19 @@ public class DayQuickViewActivity extends Activity {
                 input.addTextChangedListener(this);
             }
         });
+    }
+
+    // 이 화면(taskAffinity="")과 MainActivity는 서로 다른 작업(task)이라
+    // FLAG_ACTIVITY_NEW_TASK가 필요함(위젯 1·오늘 위젯의 "+" 버튼과 같은
+    // 이유). MainActivity가 target="day"를 받으면(JS의 syncWidgetNavTarget)
+    // 달력 탭에서 그 날짜가 있는 달로 이동한 뒤 날짜 상세 화면을 바로 엶.
+    private void openAppToDay() {
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.putExtra(MainActivity.EXTRA_WIDGET_NAV, "day");
+        intent.putExtra(MainActivity.EXTRA_WIDGET_NAV_DATE, targetDate);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+        finish();
     }
 
     private void save(EditText input) {

@@ -805,6 +805,30 @@
 - 각 날짜 칸의 PendingIntent는 requestCode(200+i) + action("com.hyeongju.
   routineapp.OPEN_DAY_"+날짜)을 같이 줌 — 페이지를 넘겨 같은 칸 위치가
   다른 날짜를 가리키게 될 때의 충돌 방지(위 공통 규칙).
+- **날짜 칸 팝업을 누르면 앱 열기(2026-07-19 추가)**: 팝업(DayQuickViewActivity)
+  카드에서 입력칸(dqv_input)을 뺀 나머지 아무 곳(날짜·근무·할 일 목록
+  글자, 여백)을 누르면 앱이 열리면서 그 날짜의 상세 화면(달력 탭에서
+  날짜를 직접 눌렀을 때와 같은 화면)으로 바로 이동함. 루트 레이아웃에
+  `id="dqv_root"` + `clickable="true"`를 주고 `setOnClickListener`를
+  걸었을 뿐, `dqv_input`(EditText)은 자기 터치를 직접 소비(포커스+커서
+  배치)하므로 이 리스너가 안 불림 — 안드로이드 표준 터치 처리로 별도
+  분기 코드 없이 자연스럽게 나뉨(스케줄 위젯 자체의 "날짜/근무 칸(자식)은
+  팝업, 나머지(부모)는 넘기기" 분리와 같은 원리). **위젯 nav-target
+  파이프라인에 새 타겟 추가**: 기존 `widget_nav`(`"month"|"today"|"inbox"`)
+  체계에 `"day"`를 추가하고 `widget_nav_date` extra로 날짜를 같이 실어
+  보냄(`MainActivity.EXTRA_WIDGET_NAV_DATE`) — 다른 위젯들과 완전히 같은
+  "네이티브는 저장만, JS가 다음 동기화 시점(`syncWidgetNavTarget`)에
+  가져감" 패턴 그대로 확장(`WidgetBridgePlugin.getPendingNavTarget()`이
+  `date` 필드도 같이 돌려주도록 수정). JS는 `target==='day'`일 때 그
+  날짜가 있는 달로 먼저 이동(`calYear`/`calMonth` 설정 + `switchTab
+  ('month')`, 'month' 타겟과 같은 방식)한 뒤 `openDayDetail(dayIdx0,
+  dateStr)`을 바로 불러 날짜 상세를 엶(dayIdx0는 다른 위젯 payload와 같은
+  공식으로 계산). **taskAffinity가 빈 값이라 MainActivity와 다른
+  작업(task)이므로 `FLAG_ACTIVITY_NEW_TASK`가 필요**(위젯 1·오늘 위젯의
+  "+" 버튼과 같은 이유) — 다만 이건 사용자가 직접 누른 진짜 액티비티
+  안에서 바로 `startActivity()`를 부르는 것이라(브로드캐스트 리시버 안이
+  아님), 다른 위젯들이 겪었던 "배경 실행 제한" 문제는 해당 없음(PendingIntent
+  우회가 필요 없음).
 
 ## 위젯 4 — 오늘 전체 관리 (TodayWidgetProvider / TodayWidgetService)
 - 오늘 날짜·요일·근무를 위젯 2·3처럼 크게 보여주고, 그 아래 오늘의 반복

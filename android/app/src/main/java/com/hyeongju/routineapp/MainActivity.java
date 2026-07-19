@@ -23,6 +23,9 @@ public class MainActivity extends BridgeActivity {
     // 저장해두고 JS쪽(syncWidgetNavTarget)이 앱 시작/포그라운드 복귀 시 읽어가게 함.
     static final String EXTRA_WIDGET_NAV = "widget_nav";
     static final String EXTRA_WIDGET_NAV_MONTH = "widget_nav_month";
+    // "day" 타겟(2026-07-19 추가, 스케줄 위젯 날짜 팝업에서 앱 열기)용 —
+    // 위 두 extra와 같은 방식으로 그 날짜 하나만 실어 보냄.
+    static final String EXTRA_WIDGET_NAV_DATE = "widget_nav_date";
 
     private static final String ALARM_CHANNEL_ID = "shift-alarm";
 
@@ -100,6 +103,8 @@ public class MainActivity extends BridgeActivity {
             obj.put("target", target);
             String month = intent.getStringExtra(EXTRA_WIDGET_NAV_MONTH);
             if (month != null) obj.put("month", month);
+            String date = intent.getStringExtra(EXTRA_WIDGET_NAV_DATE);
+            if (date != null) obj.put("date", date);
 
             SharedPreferences prefs = getSharedPreferences(WidgetBridgePlugin.PREFS_NAME, Context.MODE_PRIVATE);
             prefs.edit().putString(WidgetBridgePlugin.KEY_PENDING_NAV_TARGET, obj.toString()).apply();
@@ -111,5 +116,6 @@ public class MainActivity extends BridgeActivity {
         // Activity가 재생성될 때 getIntent()가 같은 값을 또 들고 있는 것 방지).
         intent.removeExtra(EXTRA_WIDGET_NAV);
         intent.removeExtra(EXTRA_WIDGET_NAV_MONTH);
+        intent.removeExtra(EXTRA_WIDGET_NAV_DATE);
     }
 }

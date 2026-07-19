@@ -242,9 +242,11 @@ public class WidgetBridgePlugin extends Plugin {
 
     // 위젯(달력/스케줄/오늘 할일/미배치 목록)을 탭해서 앱이 열렸을 때, "어느
     // 화면으로 바로 들어가야 하는지"를 JS가 읽어가게 함 — MainActivity가
-    // onCreate/onNewIntent에서 인텐트의 widget_nav(/widget_nav_month) 값을
-    // 미리 여기(SharedPreferences)에 저장해둠. target: "month"(달력 탭, 그
-    // 위젯이 보여주고 있던 달로 이동)|"today"(오늘 탭)|"inbox"(미배치 열기).
+    // onCreate/onNewIntent에서 인텐트의 widget_nav(/widget_nav_month/
+    // widget_nav_date) 값을 미리 여기(SharedPreferences)에 저장해둠. target:
+    // "month"(달력 탭, 그 위젯이 보여주고 있던 달로 이동)|"today"(오늘 탭)|
+    // "inbox"(미배치 열기)|"day"(2026-07-19 추가, 스케줄 위젯 날짜 팝업에서
+    // 앱 열기 — 그 날짜의 날짜 상세 화면으로 바로 이동, date 필드에 담김).
     @PluginMethod
     public void getPendingNavTarget(PluginCall call) {
         SharedPreferences prefs = getContext().getSharedPreferences(
@@ -256,6 +258,7 @@ public class WidgetBridgePlugin extends Plugin {
                 JSONObject obj = new JSONObject(raw);
                 ret.put("target", obj.optString("target", ""));
                 if (obj.has("month")) ret.put("month", obj.optString("month", ""));
+                if (obj.has("date")) ret.put("date", obj.optString("date", ""));
             } catch (Exception e) {
                 // 파싱 실패 시 아무 목표도 없는 걸로 취급
             }

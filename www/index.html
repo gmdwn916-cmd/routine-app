@@ -6896,6 +6896,19 @@
         switchTab('today');
       } else if (target === 'inbox') {
         openInbox();
+      } else if (target === 'day' && res.date && state && state.cycleDays && state.baseDate) {
+        // 스케줄 위젯의 날짜 팝업을 눌러 앱을 연 경우(2026-07-19 추가) —
+        // 그 날짜가 있는 달로 먼저 이동한 뒤(위 'month'와 같은 방식) 날짜
+        // 상세 화면까지 바로 엶. dayIdx0는 다른 위젯 payload 계산과 같은
+        // 공식으로 구함(getEffectiveShiftName 등이 요구하는 값).
+        const d = parseLocalDate(res.date);
+        calYear = d.getFullYear();
+        calMonth = d.getMonth();
+        switchTab('month');
+        const baseMid = parseLocalDate(state.baseDate);
+        const diff = Math.round((d - baseMid) / 86400000);
+        const dayIdx0 = ((diff % state.cycleDays) + state.cycleDays) % state.cycleDays;
+        openDayDetail(dayIdx0, res.date);
       }
       await bridge.clearPendingNavTarget();
     } catch (e) {}
