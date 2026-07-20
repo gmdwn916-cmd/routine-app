@@ -5431,11 +5431,24 @@
         const evEl = document.createElement('div');
         evEl.className = 'cell-event-item';
         evEl.textContent = '• ' + ev.text;
-        // 달력 칸의 할 일 글자색도 buildTodoRow와 같은 규칙을 씀(2026-07-16
-        // — "모든 페이지에서 적용해달라"는 요청으로 확장, 예전엔 .cell-event-item
-        // 이 항상 고정 주황이었음). ev.repeat 필드 존재 여부로 반복 여부를 판단
-        // (한 번짜리 할 일은 이 필드 자체가 없음).
-        evEl.style.color = ev.important ? '#ff9500' : (ev.repeat ? REPEAT_TEXT_COLOR : 'var(--text-1)');
+        // 완료된 항목은 회색 취소선으로(2026-07-20 추가) — 달력 칸이 원래
+        // 완료된 항목을 아예 안 보여줘서 그날 아무것도 안 한 것처럼 휑해
+        // 보인다는 지적으로, 우선 이 표시 방식부터 확정(보이기/숨기기
+        // 토글은 다음 단계). 반복 할일은 done_log 기준(isRepeatDoneOn),
+        // 한 번짜리는 ev.done 기준으로 판단 — 다른 화면(buildTodoRow 등)은
+        // 완료 항목을 아예 목록에서 지우는 방식이라 취소선 표시 자체가 이
+        // 화면 전용임.
+        const isDone = ev.repeat ? isRepeatDoneOn(ev.id, cellDateStr) : !!ev.done;
+        if (isDone) {
+          evEl.style.color = 'var(--text-3)';
+          evEl.style.textDecoration = 'line-through';
+        } else {
+          // 달력 칸의 할 일 글자색도 buildTodoRow와 같은 규칙을 씀(2026-07-16
+          // — "모든 페이지에서 적용해달라"는 요청으로 확장, 예전엔 .cell-event-item
+          // 이 항상 고정 주황이었음). ev.repeat 필드 존재 여부로 반복 여부를 판단
+          // (한 번짜리 할 일은 이 필드 자체가 없음).
+          evEl.style.color = ev.important ? '#ff9500' : (ev.repeat ? REPEAT_TEXT_COLOR : 'var(--text-1)');
+        }
         evList.appendChild(evEl);
       });
       if (sortedSingle.length > 3) {
@@ -5610,12 +5623,14 @@
         appendShiftIndicator(cell, cellDateStr, shiftName);
       }
 
-      // 반복 할일 + 한 번짜리 할 일을 달력에서 같은 방식으로 표시 (완료된 항목은 숨김)
+      // 반복 할일 + 한 번짜리 할 일을 달력에서 같은 방식으로 표시. 완료된
+      // 항목도 이제 같이 보여줌(2026-07-20 — "완료 항목이 안 보이니 아무
+      // 것도 안 한 것처럼 휑하다"는 지적, appendEventIndicators가 회색
+      // 취소선으로 구분해 그림) — 켜고 끄는 토글은 다음 단계에서 추가 예정,
+      // 지금은 항상 같이 보여줌.
       const repeatTodos = getRepeatTodosForDate(cellDateStr);
       const cellEvents = getEventsForDate(cellDateStr);
-      const undoneRepeat = repeatTodos.filter(function (item) { return !isRepeatDoneOn(item.id, cellDateStr); });
-      const undoneCellEvents = cellEvents.filter(function (ev) { return !ev.done; });
-      appendEventIndicators(cell, cellDateStr, undoneRepeat.concat(undoneCellEvents));
+      appendEventIndicators(cell, cellDateStr, repeatTodos.concat(cellEvents));
 
       cell.addEventListener('click', function () {
         if (bulkShiftSuppressClick) { bulkShiftSuppressClick = false; return; }
