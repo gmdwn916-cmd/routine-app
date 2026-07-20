@@ -757,8 +757,12 @@
   getShiftColor + getRepeatTodosForDate/getEventsForDate), buildSchedulePayload()
   → pushScheduleToWidget(). payload: { headers, satCol/sunCol,
   pages: [{days(14)}]×3 } — days는
-  {date,dayNum,isToday,shiftName,color,batchId,holidayName,todos}
-  (batchId/holidayName은 2026-07-18 추가).
+  {date,dayNum,isToday,shiftName,color,batchId,holidayName,todos,allTodos}
+  (batchId/holidayName은 2026-07-18 추가, allTodos는 2026-07-19 추가 —
+  "위젯 공통 규칙" 위 "날짜 칸 팝업" 항목 참고). **todos/allTodos 둘 다
+  compareByTimeline로 시간순 정렬된 뒤 만들어짐(2026-07-20 추가)** — 예전엔
+  정렬 없이 반복 할일 먼저 그다음 한 번짜리를 그냥 이어붙이기만 했음, 자세한
+  내용은 "핵심 로직"의 "getTimelineSlotOrder/compareByTimeline" 항목 참고.
 - **일괄수정만 이어붙이기 + 공휴일 이름 표시**: 위젯 2와 완전히 같은 규칙
   (판단 기준·줄 경계 처리·SpannableString 방식 전부 동일, 자세한 이유는
   위젯 2 항목 참고) — **이 위젯은 원래 이 구분 자체가 아예 없어서 "괌"처럼
@@ -859,6 +863,15 @@
   날씨는 오른쪽으로 붙여줘" 요청으로 `layout_width="match_parent"` +
   `gravity="end"`로 바꿔서 줄 안에서 오른쪽 끝에 붙게 함(Java 코드는 안
   건드림, XML만 수정).
+- **목록이 시간순으로 정렬됨(2026-07-20 수정) + 스케줄 위젯도 같은 기준
+  적용**: 이 위젯은 원래도 `timeSlot`/`timelineOrder` 저장값 기준으로
+  부분적으로 정렬은 하고 있었지만, 반복 할일처럼 그 값이 아직 없는 항목은
+  그냥 뒤죽박죽 순서로 남는 문제가 있었음(오늘 탭·날짜 상세는 이미
+  2026-07-19에 텍스트 즉석 인식 폴백을 갖춰 이 문제가 없었음) — 사용자가
+  "날짜마다 시간순으로 배열해둔 순서 그대로 위젯에도 보여달라"고 요청해서,
+  이 위젯과 **스케줄 위젯(전엔 정렬 자체가 아예 없었음)** 둘 다 앱 화면과
+  똑같은 정렬 함수를 쓰도록 통일함 — 자세한 내용은 "핵심 로직"의
+  "getTimelineSlotOrder/compareByTimeline 공용 정렬 함수" 항목 참고.
 - **체크 반응 영역은 체크칸(item_check)만** — 텍스트(item_text)와 나머지
   여백은 대신 "오늘 탭 화면 열기"로 분리돼 있음(각 뷰마다 자기 몫의
   fillInIntent가 필요, 위 "중첩 클릭 영역" 규칙 — 컬렉션 위젯은 부모→자식
@@ -2114,6 +2127,21 @@
     목적 — "숫자가 있으면 그게 곧 배치"). 자동 배치를 원치 않으면 맨 앞
     숫자를 빼고 쓰거나, 배치된 뒤 손으로 다시 드래그하면 됨(단, 그 뒤에
     글자를 또 고치면서 숫자가 그대로 남아 있으면 다시 숫자 기준으로 돌아감).
+  - **getTimelineSlotOrder/compareByTimeline 공용 정렬 함수(2026-07-20 추가)**:
+    위 `renderTodayTimeline()`의 `slotOf`/`orderOf`(저장값 우선, 없으면
+    텍스트 즉석 인식) 로직을 별도 공용 함수 `getTimelineSlotOrder(item)`
+    (`{slot, order}` 반환)와 `compareByTimeline(itemA, itemB)`(정렬 비교
+    함수)로 뽑아냄 — 사용자가 "위젯도 앱과 같은 시간순으로 보여달라"고
+    요청해서, 오늘 위젯(`buildTodayWidgetPayload`)과 스케줄 위젯
+    (`buildSchedulePayload`)의 목록 정렬도 이 함수로 통일함(오늘 위젯은
+    예전에 저장값만 보고 부분적으로 정렬하고 있었고, 스케줄 위젯은
+    정렬 자체가 아예 없었음 — 둘 다 반복 할일이 뒤죽박죽으로 보이는 문제가
+    있었음). `TIMELINE_SLOT_RANK`는 `TIMELINE_SLOTS` 배열의 인덱스로 자동
+    생성(미정=0/오전=1/오후=2/밤=3) — 이 배열 자체를 수정하면(순서 변경 등)
+    자동으로 같이 반영됨. **앞으로 할 일 목록을 시간순으로 보여줘야 하는
+    화면·위젯을 새로 만들 때는 이 두 함수를 그대로 재사용할 것** — 각자
+    다시 slotOf/orderOf를 만들지 말 것(이미 두 번 따로 만들었다가 통합한
+    전례가 있음).
 
 ## 안 만들 것 (포지션 유지)
 - 범용 습관 트래커·만능 투두·일반 근무자용 확장 금지.

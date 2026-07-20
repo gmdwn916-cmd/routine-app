@@ -4866,6 +4866,35 @@
   // (2026-07-17 추가). 날짜 상세는 2026-07-19부터 이 방식 대신 오늘 탭과
   // 같은 timeSlot/timelineOrder 저장값 기반 정렬(renderTodayTimeline)을
   // 씀 — 서로 다른 화면이니 혼동하지 말 것.
+  // timeSlot/timelineOrder가 저장돼 있으면 그 값을, 없으면(주로 반복 할일)
+  // 텍스트 맨 앞 숫자로 즉석 계산 — renderTodayTimeline(오늘 탭·날짜 상세)과
+  // 위젯 payload 빌더(스케줄 위젯·오늘 위젯) 전부 이 함수 하나로 통일해서
+  // 정렬 기준이 서로 어긋나지 않게 함(2026-07-20 추가, "날짜마다 시간순으로
+  // 배열해둔 순서 그대로 위젯에도 보여달라" 요청) — 예전엔 오늘 위젯만
+  // (timeSlot/timelineOrder 저장값만 보고, 텍스트 즉석 인식 폴백 없이)
+  // 부분적으로 정렬했고 스케줄 위젯은 정렬 자체가 없었음.
+  const TIMELINE_SLOT_RANK = {};
+  TIMELINE_SLOTS.forEach(function (s, i) { TIMELINE_SLOT_RANK[s.key] = i; });
+
+  function getTimelineSlotOrder(item) {
+    let slot = item.timeSlot;
+    let order = typeof item.timelineOrder === 'number' ? item.timelineOrder : null;
+    if (!slot || order === null) {
+      const t = parseLeadingTimeFromText(item.text);
+      if (t) {
+        if (!slot) slot = t.hh < 12 ? 'morning' : (t.hh < 19 ? 'afternoon' : 'night');
+        if (order === null) order = t.hh * 60 + t.mm;
+      }
+    }
+    return { slot: slot || 'unset', order: order || 0 };
+  }
+
+  function compareByTimeline(itemA, itemB) {
+    const a = getTimelineSlotOrder(itemA), b = getTimelineSlotOrder(itemB);
+    const sr = TIMELINE_SLOT_RANK[a.slot] - TIMELINE_SLOT_RANK[b.slot];
+    return sr !== 0 ? sr : a.order - b.order;
+  }
+
   function sortByLeadingTime(list) {
     return list.slice().sort(function (a, b) {
       const ta = parseLeadingTimeFromText(a.text);
@@ -4920,18 +4949,11 @@
     // 할 일에는 사실상 영향 없음** — applyAutoTimeSlot이 배치/수정 시점에
     // 이미 timeSlot을 채워두므로(인식 안 되면 그냥 비워둠=미정 그대로),
     // 이 폴백은 그 값이 존재하는 한 안 쓰임 — 즉 손으로 옮긴 자리를 다시
-    // 텍스트로 덮어쓰는 일은 없음(store된 값이 항상 우선).
-    function slotOf(item) {
-      if (item.timeSlot) return item.timeSlot;
-      const t = parseLeadingTimeFromText(item.text);
-      if (t) return t.hh < 12 ? 'morning' : (t.hh < 19 ? 'afternoon' : 'night');
-      return 'unset';
-    }
-    function orderOf(item) {
-      if (typeof item.timelineOrder === 'number') return item.timelineOrder;
-      const t = parseLeadingTimeFromText(item.text);
-      return t ? (t.hh * 60 + t.mm) : 0;
-    }
+    // 텍스트로 덮어쓰는 일은 없음(store된 값이 항상 우선). **2026-07-20:
+    // 이 슬롯/순서 계산 로직은 이제 getTimelineSlotOrder() 공용 함수로 옮김**
+    // (스케줄·오늘 위젯 payload 빌더도 같은 함수를 씀 — 위 정의 참고).
+    function slotOf(item) { return getTimelineSlotOrder(item).slot; }
+    function orderOf(item) { return getTimelineSlotOrder(item).order; }
 
     TIMELINE_SLOTS.forEach(function (slotDef) {
       const itemsInSlot = all.filter(function (t) { return slotOf(t.item) === slotDef.key; });
@@ -6706,7 +6728,12 @@
 
         const undoneRepeat = getRepeatTodosForDate(dateStr).filter(function (ev) { return !isRepeatDoneOn(ev.id, dateStr); });
         const undoneOneTime = getEventsForDate(dateStr).filter(function (ev) { return !ev.done; });
-        const allTodoTexts = undoneRepeat.concat(undoneOneTime).map(function (ev) { return '• ' + ev.text; });
+        // 오늘 탭·날짜 상세와 같은 시간순 정렬(2026-07-20 추가, "시간순으로
+        // 배열해둔 순서 그대로 위젯에도 보여달라" 요청) — 예전엔 반복 할일을
+        // 앞에, 그다음 한 번짜리를 순서 그대로 이어붙이기만 해서 시간순이
+        // 전혀 아니었음.
+        const sortedTodos = undoneRepeat.concat(undoneOneTime).sort(compareByTimeline);
+        const allTodoTexts = sortedTodos.map(function (ev) { return '• ' + ev.text; });
         // todos: 위젯 칸 안에 실제로 그릴 수 있는 만큼만(최대 3줄, 공간이
         // 좁아서 그 이상은 못 그림). allTodos: 그 날의 전체 목록(2026-07-19
         // 추가) — 날짜 칸 팝업(DayQuickViewActivity)이 위젯 칸과 같은
@@ -6752,8 +6779,6 @@
   // 어긋나지 않게. 완료 여부(done)를 각 항목에 실어 보내서 위젯이 체크 표시를
   // 그릴 수 있게 함 — 이 위젯만 유일하게 "쓰기"(체크)가 있는 위젯이라, 위젯에서
   // 누른 체크는 임시 보관함에 쌓였다가 위 syncWidgetTodayToggles()가 반영한다.
-  const TODAY_WIDGET_SLOT_RANK = { unset: 0, morning: 1, afternoon: 2, night: 3 };
-
   function buildTodayWidgetPayload() {
     if (!state || !state.cycleDays || !state.baseDate) return null;
 
@@ -6786,12 +6811,11 @@
     const all = getRepeatTodosForDate(dateStr).filter(function (it) { return !isRepeatDoneOn(it.id, dateStr); }).map(function (it) { return { kind: 'repeat', item: it }; })
       .concat(getEventsForDate(dateStr).filter(function (it) { return !it.done; }).map(function (it) { return { kind: 'onetime', item: it }; }));
 
-    function slotOf(t) { return t.item.timeSlot || 'unset'; }
-    function orderOf(t) { return typeof t.item.timelineOrder === 'number' ? t.item.timelineOrder : 0; }
-    all.sort(function (a, b) {
-      const sr = TODAY_WIDGET_SLOT_RANK[slotOf(a)] - TODAY_WIDGET_SLOT_RANK[slotOf(b)];
-      return sr !== 0 ? sr : orderOf(a) - orderOf(b);
-    });
+    // 2026-07-20: 오늘 탭·날짜 상세와 같은 정렬 기준(getTimelineSlotOrder,
+    // 반복 할일의 텍스트 즉석 인식 폴백 포함)을 씀 — 예전엔 이 위젯만 저장된
+    // timeSlot/timelineOrder만 보고 정렬해서, 아직 손으로 안 옮긴 반복
+    // 할일은 앱 화면과 다른 순서로 보일 수 있었음.
+    all.sort(function (a, b) { return compareByTimeline(a.item, b.item); });
 
     const items = all.map(function (t) {
       const cat = getCat(t.item.category);
