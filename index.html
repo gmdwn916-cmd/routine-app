@@ -2866,19 +2866,24 @@
           </div>
           <div class="form-group">
             <label for="input-shift-n">교대 수</label>
-            <input type="number" id="input-shift-n" min="1" max="52" placeholder="예: 4" inputmode="numeric">
+            <input type="number" id="input-shift-n" min="0" max="52" placeholder="예: 4" inputmode="numeric">
+            <!-- 2026-07-20 추가 — 교대근무자가 아닌 사람(일반 직장인·불규칙
+                 근무자)도 근무 패턴 없이 쓸 수 있게 0을 특수값으로 허용. -->
+            <div class="shift-color-hint">0을 입력하면 근무 패턴 없이 쓸 수 있어요(일반 직장인·불규칙 근무자용).</div>
           </div>
-          <div class="form-group">
-            <label>근무 순서</label>
-            <div id="pattern-chip-list" class="pattern-chip-list"></div>
-            <div class="pattern-chip-input-row">
-              <input type="text" id="input-pattern-chip" maxlength="10" placeholder="근무명">
-              <button type="button" id="btn-pattern-chip-add">확인</button>
+          <div id="sd-cycle-pattern-fields">
+            <div class="form-group">
+              <label>근무 순서</label>
+              <div id="pattern-chip-list" class="pattern-chip-list"></div>
+              <div class="pattern-chip-input-row">
+                <input type="text" id="input-pattern-chip" maxlength="10" placeholder="근무명">
+                <button type="button" id="btn-pattern-chip-add">확인</button>
+              </div>
             </div>
-          </div>
-          <div class="form-group">
-            <label for="input-base">Day 1 시작 날짜</label>
-            <input type="date" id="input-base">
+            <div class="form-group">
+              <label for="input-base">Day 1 시작 날짜</label>
+              <input type="date" id="input-base">
+            </div>
           </div>
           <div class="onboard-warn" id="warn-settings"></div>
           <button class="btn btn-primary" id="btn-save-settings">저장</button>
@@ -3338,9 +3343,12 @@
       <div class="onboard-title">몇 교대인가요?</div>
       <div class="onboard-sub">교대 수를 입력하면 주기가 자동으로 설정됩니다.<br>예: 4교대 → 4×7 = 28일 주기</div>
       <div class="onboard-cycle-row">
-        <input type="number" class="onboard-big-input" id="ob-cycle" min="1" max="52" placeholder="4" inputmode="numeric">
+        <input type="number" class="onboard-big-input" id="ob-cycle" min="0" max="52" placeholder="4" inputmode="numeric">
         <span class="onboard-unit">교대</span>
       </div>
+      <!-- 2026-07-20 추가 — 교대근무자가 아닌 사람(일반 직장인·불규칙 근무자)도
+           근무 패턴 없이 쓸 수 있게 0을 특수값으로 허용. -->
+      <div class="shift-color-hint">0을 입력하면 근무 패턴 없이 쓸 수 있어요(일반 직장인·불규칙 근무자용).</div>
       <div class="onboard-warn" id="ob-warn-1"></div>
       <div class="onboard-btn-row">
         <button class="btn-ob-next" id="btn-ob-1">다음 →</button>
@@ -3642,6 +3650,32 @@
     });
     state.cycleDays = cycleDays;
     state.baseDate = baseDate;
+    // 근무 패턴 없음 모드(아래 applyNoShiftMode)에서 실제 패턴으로 되돌아올
+    // 수도 있으므로 여기서 항상 꺼줌(2026-07-20 추가).
+    state.noShiftMode = false;
+  }
+
+  // 근무 패턴 없이 쓰기(2026-07-20 추가) — "교대 수 0"을 선택하면 호출됨.
+  // 일반 직장인·불규칙 근무자를 위한 모드: cycleDays를 0으로 두면 기존
+  // 곳곳의 `% state.cycleDays` 계산이 0으로 나누기가 돼버리고, `!state.
+  // cycleDays` 가드(오늘 탭 등 "설정 안 됨" 판정에 널리 쓰임)도 0을 falsy로
+  // 봐서 "미설정"으로 오판하게 됨 — 그래서 실제로 cycleDays=0을 쓰는 대신,
+  // **하루짜리 트리비얼 주기(cycleDays=1, 근무 이름이 빈 문자열인 날 하나)**
+  // 를 만들어 기존 계산식을 하나도 안 건드리고 그대로 통과시킴(어떤 날짜든
+  // dayIndex0이 항상 0으로 계산되고, getEffectiveShiftName의 "기본 패턴"
+  // 우선순위가 자연히 빈 이름을 돌려줌 — 이 함수 하나로 앱 전체·위젯 전체가
+  // "근무 없음"을 알아서 표시함, 별도로 매 화면마다 분기 안 넣어도 됨).
+  // `state.noShiftMode` 플래그는 오직 설정 화면 UI(입력칸에 0 표시, 근무
+  // 순서/시작일 칸 숨기기)와 "내 근무" 요약 문구를 위해서만 씀 — 실제 근무
+  // 계산 로직은 이 플래그를 전혀 안 봄.
+  function applyNoShiftMode(baseDate) {
+    if (!state) { state = { cycleDays: 0, baseDate: '', days: [], events: [], inbox: [], shiftColors: {}, shiftOverrides: [], dayOverrides: [], weekStart: 0 }; }
+    if (!Array.isArray(state.events)) { state.events = []; }
+    if (!state.shiftColors) { state.shiftColors = {}; }
+    state.days = [{ dayIndex: 1, shiftType: { name: '' }, items: [] }];
+    state.cycleDays = 1;
+    state.baseDate = baseDate || formatDateStr(todayMidnight());
+    state.noShiftMode = true;
   }
 
   // ── 마이그레이션: routine(문자열) → items(배열) ───────────
@@ -5299,7 +5333,16 @@
       (tdMid.getMonth() + 1) + '월 ' + tdMid.getDate() + '일 ' + DOW_KR[tdMid.getDay()] + '요일';
 
     const { name: todayShiftName } = getEffectiveShiftName(formatDateStr(tdMid), idx);
-    document.getElementById('td-dnum').textContent = todayShiftName || '근무 미설정';
+    // 근무 패턴 없음 모드(2026-07-20 추가)에서는 이 배지 자체를 숨김 —
+    // "근무 미설정"은 "설정을 깜빡했다"는 뜻으로 읽히기 쉬운데, 일반
+    // 직장인·불규칙 근무자는 일부러 근무를 안 쓰기로 고른 것이라 다른 문구.
+    const tdDnumEl = document.getElementById('td-dnum');
+    if (state.noShiftMode) {
+      tdDnumEl.style.display = 'none';
+    } else {
+      tdDnumEl.style.display = '';
+      tdDnumEl.textContent = todayShiftName || '근무 미설정';
+    }
 
     const todayHoliday = getKoreanHoliday(todayDateStr);
     const holidayNameEl = document.getElementById('td-holiday-name');
@@ -5908,6 +5951,7 @@
     var ITEMS = [
       { key: 'cycle', icon: SETTINGS_ICONS.cycle, label: '내 근무', getValue: function() {
         if (!state || !state.cycleDays || !state.baseDate) return '미설정';
+        if (state.noShiftMode) return '근무 패턴 없음';
         var n = state.cycleDays % 7 === 0 ? state.cycleDays / 7 : state.cycleDays;
         var suffix = state.cycleDays % 7 === 0 ? '교대' : '일 주기';
         var d = parseLocalDate(state.baseDate);
@@ -5915,6 +5959,7 @@
       }},
       { key: 'colors', icon: SETTINGS_ICONS.colors, label: '근무 편집', getValue: function() {
         if (!state || !state.cycleDays) return '미설정';
+        if (state.noShiftMode) return '해당 없음';
         var names = [];
         state.days.forEach(function(d) {
           if (d.shiftType.name && !names.includes(d.shiftType.name)) names.push(d.shiftType.name);
@@ -6009,6 +6054,15 @@
     });
   }
 
+  // 교대 수에 0을 입력하면(2026-07-20 추가) 근무 순서·시작 날짜 칸은
+  // 의미가 없으므로 통째로 숨김 — "내 근무" 화면을 열 때, 그리고 입력 중에도
+  // 실시간으로 반영(입력칸에 값을 바꿀 때마다 이 함수를 부름).
+  function updateCycleFormVisibility() {
+    const n = document.getElementById('input-shift-n').value.trim();
+    document.getElementById('sd-cycle-pattern-fields').style.display = (n === '0') ? 'none' : '';
+  }
+  document.getElementById('input-shift-n').addEventListener('input', updateCycleFormVisibility);
+
   // "근무 순서"를 쉼표로 구분한 한 줄 대신 칸(칩) 여러 개로 관리(2026-07-18
   // 추가) — 이름 하나를 쓰고 "확인"을 누르면 칩이 되고 입력칸이 다시
   // 비워져서 바로 다음 이름을 이어 쓸 수 있음. 저장(btn-save-settings)은
@@ -6090,7 +6144,10 @@
       // 그냥 이 화면의 form-group 중 하나, "저장" 버튼 하나로 같이 저장됨).
       document.getElementById('input-my-team-name').value = (state && state.myTeamName) || '';
       var cd = state && state.cycleDays;
-      var n = (cd && cd % 7 === 0) ? cd / 7 : '';
+      // 근무 패턴 없음 모드는 입력칸에 0을 그대로 보여줌(2026-07-20 추가) —
+      // applyNoShiftMode()가 cycleDays를 1(트리비얼 주기)로 저장해두지만,
+      // 이 화면에는 사용자가 실제로 고른 "0"을 그대로 보여줘야 함.
+      var n = (state && state.noShiftMode) ? 0 : ((cd && cd % 7 === 0) ? cd / 7 : '');
       document.getElementById('input-shift-n').value = n;
       // 근무 순서를 칩 배열로 채움(2026-07-18, comma-join 문자열 대신) —
       // 이 화면을 열 때마다 저장된 값 기준으로 새로 채움.
@@ -6099,6 +6156,7 @@
       renderPatternChips();
       document.getElementById('input-base').value = (state && state.baseDate) || '';
       document.getElementById('warn-settings').textContent = '';
+      updateCycleFormVisibility();
     } else if (key === 'colors') {
       renderShiftColorSettings();
     } else if (key === 'weekstart') {
@@ -7308,12 +7366,29 @@
   document.getElementById('btn-settings-back').addEventListener('click', closeSettingsDetail);
 
   document.getElementById('btn-save-settings').addEventListener('click', function () {
-    const n = parseInt(document.getElementById('input-shift-n').value, 10);
+    const raw = document.getElementById('input-shift-n').value;
     const baseDate = document.getElementById('input-base').value;
     const teamName = document.getElementById('input-my-team-name').value.trim();
     const warn = document.getElementById('warn-settings');
 
-    if (!n || n < 1 || n > 52) { warn.textContent = '교대 수를 1~52 사이로 입력해 주세요.'; return; }
+    if (raw.trim() === '') { warn.textContent = '교대 수를 입력해 주세요.'; return; }
+    const n = parseInt(raw, 10);
+    if (isNaN(n) || n < 0 || n > 52) { warn.textContent = '교대 수를 0~52 사이로 입력해 주세요.'; return; }
+    warn.textContent = '';
+
+    // 0 = 근무 패턴 없음(2026-07-20 추가) — 근무 순서·시작 날짜는 안 물어봄
+    // (화면에서도 이미 숨겨져 있음, updateCycleFormVisibility 참고).
+    if (n === 0) {
+      applyNoShiftMode();
+      state.myTeamName = teamName;
+      saveState();
+      renderToday();
+      renderGrid();
+      pushAllWidgets();
+      switchTab('today');
+      return;
+    }
+
     // 쉼표로 구분한 한 줄 대신 칩으로 쌓아둔 배열을 그대로 씀(2026-07-18).
     const pattern = patternChips.slice();
     if (pattern.length === 0) { warn.textContent = '근무 순서를 최소 1개 입력해 주세요.'; return; }
@@ -7755,11 +7830,24 @@
   }
 
   document.getElementById('btn-ob-1').addEventListener('click', function () {
-    const n = parseInt(document.getElementById('ob-cycle').value, 10);
+    const raw = document.getElementById('ob-cycle').value;
     const warn = document.getElementById('ob-warn-1');
-    if (!n || n < 1) { warn.textContent = '1 이상의 숫자를 입력해 주세요.'; return; }
+    if (raw.trim() === '') { warn.textContent = '숫자를 입력해 주세요.'; return; }
+    const n = parseInt(raw, 10);
+    if (isNaN(n) || n < 0) { warn.textContent = '0 이상의 숫자를 입력해 주세요.'; return; }
     if (n > 52) { warn.textContent = '52 이하로 입력해 주세요.'; return; }
     warn.textContent = '';
+
+    // 0 = 근무 패턴 없음(2026-07-20 추가) — 교대근무자가 아닌 사람도 쓸 수
+    // 있게, 순서/날짜를 더 물어보지 않고 바로 온보딩을 끝냄.
+    if (n === 0) {
+      state = null;
+      applyNoShiftMode();
+      saveState();
+      document.getElementById('onboard-overlay').classList.remove('open');
+      switchTab('today');
+      return;
+    }
 
     const cycleDays = n * 7;
     document.getElementById('ob-sub-2').innerHTML =
