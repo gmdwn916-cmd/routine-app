@@ -92,10 +92,12 @@ public class TodayWidgetService extends RemoteViewsService {
                     if (arr != null) {
                         for (int i = 0; i < arr.length(); i++) {
                             JSONObject it = arr.optJSONObject(i);
-                            // 완료된 항목은 목록에서 아예 안 보이게 함 — payload는
-                            // 원래 미완료 항목만 담고 있지만, 혹시 남아있는 옛 데이터를
-                            // 대비한 안전장치로 한 번 더 걸러줌.
-                            if (it != null && !it.optBoolean("done", false)) next.add(it);
+                            // 완료된 항목을 목록에 넣을지는 이제 JS
+                            // (buildTodayWidgetPayload, 설정 탭 "완료된 항목" 토글)가
+                            // 미리 결정해서 넘김(2026-07-20) — 여기서 done 여부로
+                            // 다시 걸러내지 않고 받은 그대로 씀. getViewAt()이 done이면
+                            // 회색+취소선으로 그려줌.
+                            if (it != null) next.add(it);
                         }
                     }
                 } catch (Exception e) {

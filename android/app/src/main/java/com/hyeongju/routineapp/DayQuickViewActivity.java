@@ -8,8 +8,12 @@ import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.StrikethroughSpan;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -78,13 +82,26 @@ public class DayQuickViewActivity extends Activity {
 
         TextView todosView = findViewById(R.id.dqv_todos);
         String todosJson = getIntent().getStringExtra(EXTRA_TODOS);
-        StringBuilder sb = new StringBuilder();
+        // 완료된 항목 표시 설정(2026-07-20 추가, 설정 탭 "완료된 항목" 위젯 토글)
+        // — todos가 이제 순수 문자열이 아니라 {text, done} 객체라(스케줄 위젯
+        // 칸과 같은 형식), done이면 회색 취소선을 얹음. 구버전 데이터(순수
+        // 문자열)도 optJSONObject가 null을 주므로 그대로 안전하게 처리됨.
+        SpannableStringBuilder sb = new SpannableStringBuilder();
         try {
             if (todosJson != null) {
                 JSONArray arr = new JSONArray(todosJson);
                 for (int i = 0; i < arr.length(); i++) {
+                    JSONObject todoObj = arr.optJSONObject(i);
+                    String text = todoObj != null ? todoObj.optString("text", "") : arr.optString(i, "");
+                    boolean done = todoObj != null && todoObj.optBoolean("done", false);
                     if (sb.length() > 0) sb.append('\n');
-                    sb.append(arr.optString(i, ""));
+                    int start = sb.length();
+                    sb.append(text);
+                    if (done) {
+                        int end = sb.length();
+                        sb.setSpan(new StrikethroughSpan(), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                        sb.setSpan(new ForegroundColorSpan(ContextCompat.getColor(this, R.color.widget_text_secondary)), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    }
                 }
             }
         } catch (JSONException e) {
@@ -94,7 +111,7 @@ public class DayQuickViewActivity extends Activity {
             todosView.setText("이 날 할 일이 없어요");
             todosView.setTextColor(ContextCompat.getColor(this, R.color.widget_text_secondary));
         } else {
-            todosView.setText(sb.toString());
+            todosView.setText(sb);
         }
 
         // 카드(입력칸 제외) 아무 곳이나 누르면 앱을 그 날짜 상세 화면으로

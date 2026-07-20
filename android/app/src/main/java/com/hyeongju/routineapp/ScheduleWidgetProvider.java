@@ -9,9 +9,11 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.text.Spannable;
+import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.RelativeSizeSpan;
+import android.text.style.StrikethroughSpan;
 import android.widget.RemoteViews;
 
 import androidx.core.content.ContextCompat;
@@ -35,6 +37,17 @@ public class ScheduleWidgetProvider extends AppWidgetProvider {
 
     // 달력 위젯과 같은 값(웹의 --holiday-color) — 자세한 이유는 그쪽 주석 참고.
     private static final int HOLIDAY_COLOR = 0xFFD9645E;
+
+    // 완료된 할 일은 회색 취소선으로(2026-07-20 추가, 설정 탭 "완료된 항목" 위젯
+    // 토글) — todos/allTodos가 이제 {text, done} 객체라 그 done을 보고 취소선
+    // span만 얹음. 텍스트 색은 XML 기본값(widget_text_secondary)을 그대로 두고
+    // (완료든 아니든 이 위젯의 할 일 줄은 원래도 회색 계열) 취소선만 추가.
+    private static CharSequence buildTodoText(String text, boolean done) {
+        if (!done) return text;
+        SpannableString ss = new SpannableString(text);
+        ss.setSpan(new StrikethroughSpan(), 0, text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        return ss;
+    }
 
     private static CharSequence buildDateText(int dayNum, String holidayName) {
         String numStr = String.valueOf(dayNum);
@@ -307,7 +320,13 @@ public class ScheduleWidgetProvider extends AppWidgetProvider {
 
                                 if (todos != null) {
                                     for (int t = 0; t < todos.length() && t < MAX_TODOS_PER_CELL; t++) {
-                                        views.setTextViewText(idFor(context, "sch_todo_" + i + "_" + t), todos.optString(t, ""));
+                                        // {text, done} 객체(2026-07-20 추가)와 예전 순수 문자열
+                                        // 형식을 둘 다 안전하게 처리 — optJSONObject가 null이면
+                                        // (구버전 데이터 등) optString으로 바로 문자열을 읽음.
+                                        JSONObject todoObj = todos.optJSONObject(t);
+                                        String text = todoObj != null ? todoObj.optString("text", "") : todos.optString(t, "");
+                                        boolean done = todoObj != null && todoObj.optBoolean("done", false);
+                                        views.setTextViewText(idFor(context, "sch_todo_" + i + "_" + t), buildTodoText(text, done));
                                     }
                                 }
 
