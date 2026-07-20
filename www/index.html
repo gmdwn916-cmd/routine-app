@@ -4590,7 +4590,11 @@
         if (cdow !== 0 && cdow !== 6 && !koreanHolidayCache.has(candidate)) break;
         candidate = addDaysStr(candidate, 1);
       }
-      koreanHolidayCache.set(candidate, { name: e.name + ' 대체공휴일', isSubstitute: true });
+      // 원래 공휴일 이름을 안 붙이고 "대체공휴일"로만 표시(2026-07-20 요청) —
+      // 예전엔 "광복절 대체공휴일"처럼 이어붙였는데, getKoreanHoliday()를
+      // 어디서든 그대로 쓰는 구조라(달력 탭·오늘 탭·날짜 상세·달력/스케줄
+      // 위젯 전부 공유) 여기 한 곳만 고치면 앱 전체·위젯 전체에 다 반영됨.
+      koreanHolidayCache.set(candidate, { name: '대체공휴일', isSubstitute: true });
     });
   }
 
