@@ -26,7 +26,7 @@
        동작하려면 이 옵션이 반드시 있어야 함. -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#ffffff" id="meta-theme-color">
-  <title>교대근무 루틴</title>
+  <title>교대시간</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -3071,7 +3071,7 @@
         </div>
         <div class="help-topic">
           <div class="help-topic-title">홈 화면에서 앱을 열지 않고도</div>
-          <div class="help-topic-body">홈 화면에 추가할 수 있는 위젯이 다섯 종류 있어요 — 빠른 할 일 추가, 이번 달 달력, N주 스케줄, 오늘 할 일, 미배치 목록. 오늘 무슨 근무인지, 할 일이 뭔지 앱을 열지 않고 홈 화면에서 바로 보고 체크할 수 있어요. 홈 화면을 꾹 눌러 위젯 추가에서 "루틴"을 찾으면 돼요.</div>
+          <div class="help-topic-body">홈 화면에 추가할 수 있는 위젯이 다섯 종류 있어요 — 빠른 할 일 추가, 이번 달 달력, N주 스케줄, 오늘 할 일, 미배치 목록. 오늘 무슨 근무인지, 할 일이 뭔지 앱을 열지 않고 홈 화면에서 바로 보고 체크할 수 있어요. 홈 화면을 꾹 눌러 위젯 추가에서 "교대시간"을 찾으면 돼요.</div>
         </div>
         <div class="help-topic">
           <div class="help-topic-title">근무유형별 알람</div>
@@ -7101,6 +7101,35 @@
     try { await bridge.setInboxWidgetData({ json: JSON.stringify(payload) }); } catch (e) {}
   }
 
+  // ── 오늘 팀 근무 위젯(위젯 6, 2026-07-21 추가, 읽기 전용) ──
+  // 4×1 크기 — 오늘 하루, 모든 팀의 근무를 한 줄로 훑어보는 용도. "다른 팀
+  // 근무 확인" 화면의 "오늘" 행 하나만 위젯으로 뽑아낸 것과 같음(getOrderedTeams/
+  // getTeamShift/getShiftColor를 그대로 재사용 — 팀 근무 계산 로직이 두 곳에
+  // 있으면 어긋날 위험이 있어서 절대 새로 만들지 않음). 폭이 좁아서 팀은
+  // 최대 6개까지만(그 이상은 실사용에서 드묾, 위젯 3의 "할 일 최대 3개"와
+  // 같은 종류의 한계).
+  function buildTeamTodayWidgetPayload() {
+    if (!state || !state.cycleDays || !state.baseDate) return null;
+    const todayMid = todayMidnight();
+    const dateStr = formatDateStr(todayMid);
+    const DOW_KR = ['일', '월', '화', '수', '목', '금', '토'];
+    const dateLabel = (todayMid.getMonth() + 1) + '/' + todayMid.getDate() + '(' + DOW_KR[todayMid.getDay()] + ')';
+    const orderedTeams = getOrderedTeams(false);
+    const teams = orderedTeams.slice(0, 6).map(function (team) {
+      const shiftName = getTeamShift(team, dateStr);
+      return { name: team.name, shiftName: shiftName || '', color: getShiftColor(shiftName) || '', isMyTeam: !!team.isMyTeam };
+    });
+    return { dateLabel: dateLabel, teams: teams };
+  }
+
+  async function pushTeamTodayWidgetToWidget() {
+    const bridge = getWidgetBridge();
+    if (!bridge) return;
+    const payload = buildTeamTodayWidgetPayload();
+    if (!payload) return;
+    try { await bridge.setTeamTodayData({ json: JSON.stringify(payload) }); } catch (e) {}
+  }
+
   // 할일추가 위젯(위젯 1)은 앱과 주고받는 데이터가 없어서 다른 위젯들처럼
   // setXXXData가 곧 다시 그리는 계기가 되어주지 못함 — 그래서 라이트/다크
   // 설정을 바꿔도 앱을 다시 열어도 최초 배치 때 색이 그대로 남아있던 버그가
@@ -7122,6 +7151,7 @@
     pushTodayWidgetToWidget();
     pushInboxWidgetToWidget();
     pushQuickAddWidgetRefresh();
+    pushTeamTodayWidgetToWidget();
   }
 
   // 위젯(달력/스케줄/오늘 할일/미배치 목록)을 탭해서 앱이 열렸을 때, 그 위젯에
@@ -7147,6 +7177,12 @@
         switchTab('today');
       } else if (target === 'inbox') {
         openInbox();
+      } else if (target === 'teamcal') {
+        // 오늘 팀 근무 위젯(위젯 6, 2026-07-21 추가)을 탭해서 앱을 연 경우 —
+        // "다른 팀 근무 확인" 화면으로 바로 이동(그 화면이 항상 오늘부터
+        // 보여주므로 날짜를 따로 안 넘겨도 됨).
+        switchTab('month');
+        openTeamCal();
       } else if (target === 'day' && res.date && state && state.cycleDays && state.baseDate) {
         // 스케줄 위젯의 날짜 팝업을 눌러 앱을 연 경우(2026-07-19 추가) —
         // 그 날짜가 있는 달로 먼저 이동한 뒤(위 'month'와 같은 방식) 날짜
@@ -7197,7 +7233,7 @@
       if (!granted && document.getElementById('shift-alarm-card') === card) {
         const warn = document.createElement('div');
         warn.className = 'shift-alarm-warning';
-        warn.textContent = '⚠️ 알림 권한이 꺼져 있어서 알람이 울리지 않아요. 휴대폰 설정 → 앱 → 루틴 → 알림에서 허용해주세요.';
+        warn.textContent = '⚠️ 알림 권한이 꺼져 있어서 알람이 울리지 않아요. 휴대폰 설정 → 앱 → 교대시간 → 알림에서 허용해주세요.';
         card.insertBefore(warn, card.firstChild);
       }
     })();
@@ -7367,7 +7403,7 @@
     // 미리 알려줌.
     const batteryHint = document.createElement('p');
     batteryHint.className = 'shift-color-hint';
-    batteryHint.textContent = '알람이 안 울리면 휴대폰 배터리 절약 기능이 이 앱을 막고 있을 수 있어요. 설정 → 앱 → 루틴 → 배터리에서 "제한 없음"으로 바꿔보세요.';
+    batteryHint.textContent = '알람이 안 울리면 휴대폰 배터리 절약 기능이 이 앱을 막고 있을 수 있어요. 설정 → 앱 → 교대시간 → 배터리에서 "제한 없음"으로 바꿔보세요.';
     card.appendChild(batteryHint);
   }
 

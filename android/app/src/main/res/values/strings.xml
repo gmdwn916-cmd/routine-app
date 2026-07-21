@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">루틴</string>
-    <string name="title_activity_main">루틴</string>
+    <string name="app_name">교대시간</string>
+    <string name="title_activity_main">교대시간</string>
     <string name="package_name">com.hyeongju.routineapp</string>
     <string name="custom_url_scheme">com.hyeongju.routineapp</string>
 </resources>

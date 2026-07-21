@@ -208,6 +208,23 @@ public class WidgetBridgePlugin extends Plugin {
         call.resolve();
     }
 
+    // 오늘 팀 근무 위젯(위젯 6)용 — 오늘 하루, 모든 팀의 근무를 JS가 전부
+    // 계산해서 넘겨준 결과를 저장하고 다시 그리게만 함. 근무·날짜 계산 로직
+    // 없이 그대로 저장만 하는 원칙은 다른 위젯과 동일.
+    @PluginMethod
+    public void setTeamTodayData(PluginCall call) {
+        String json = call.getString("json");
+        if (json == null) {
+            call.reject("json missing");
+            return;
+        }
+        SharedPreferences prefs = getContext().getSharedPreferences(
+            TeamTodayWidgetProvider.PREFS_NAME, Context.MODE_PRIVATE);
+        prefs.edit().putString(TeamTodayWidgetProvider.KEY_TEAM_TODAY_DATA, json).apply();
+        TeamTodayWidgetProvider.refreshAll(getContext());
+        call.resolve();
+    }
+
     // 할일추가 위젯(위젯 1)용 — 이 위젯은 앱과 주고받는 데이터가 아예 없어서
     // setXXXData 같은 계기가 없음. 그래서 앱이 열릴 때마다 "색만 다시 판단해서
     // 다시 그려라"는 신호만 보내는 용도로 따로 둠(라이트/다크/시스템 설정이
@@ -237,6 +254,7 @@ public class WidgetBridgePlugin extends Plugin {
         TodayWidgetProvider.refreshAll(getContext());
         InboxWidgetProvider.refreshAll(getContext());
         QuickAddWidgetProvider.refreshAll(getContext());
+        TeamTodayWidgetProvider.refreshAll(getContext());
         call.resolve();
     }
 
@@ -246,7 +264,9 @@ public class WidgetBridgePlugin extends Plugin {
     // widget_nav_date) 값을 미리 여기(SharedPreferences)에 저장해둠. target:
     // "month"(달력 탭, 그 위젯이 보여주고 있던 달로 이동)|"today"(오늘 탭)|
     // "inbox"(미배치 열기)|"day"(2026-07-19 추가, 스케줄 위젯 날짜 팝업에서
-    // 앱 열기 — 그 날짜의 날짜 상세 화면으로 바로 이동, date 필드에 담김).
+    // 앱 열기 — 그 날짜의 날짜 상세 화면으로 바로 이동, date 필드에 담김)|
+    // "teamcal"(2026-07-21 추가, 오늘 팀 근무 위젯 — "다른 팀 근무 확인"
+    // 화면으로 바로 이동).
     @PluginMethod
     public void getPendingNavTarget(PluginCall call) {
         SharedPreferences prefs = getContext().getSharedPreferences(
