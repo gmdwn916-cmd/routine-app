@@ -10,12 +10,12 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="horizontal"
-    android:gravity="center_vertical"
+    android:gravity="bottom"
     android:background="@drawable/widget_background"
     android:paddingStart="10dp"
     android:paddingEnd="8dp"
     android:paddingTop="4dp"
-    android:paddingBottom="4dp">
+    android:paddingBottom="0dp">
 
     <TextView
         android:id="@+id/tt_date"
@@ -23,7 +23,7 @@
         android:layout_height="wrap_content"
         android:textStyle="bold"
         android:textColor="@color/widget_text_primary"
-        android:textSize="16sp"
+        android:textSize="18sp"
         android:maxLines="1" />
 
     <LinearLayout
@@ -33,7 +33,7 @@
         android:layout_weight="1"
         android:layout_marginStart="6dp"
         android:orientation="vertical"
-        android:gravity="center">
+        android:gravity="bottom|center_horizontal">
         <TextView
             android:id="@+id/tt_name_0"
             android:layout_width="match_parent"
@@ -43,7 +43,7 @@
             android:ellipsize="end"
             android:textStyle="bold"
             android:textColor="@color/widget_text_secondary"
-            android:textSize="13sp" />
+            android:textSize="14sp" />
         <TextView
             android:id="@+id/tt_shift_0"
             android:layout_width="match_parent"
@@ -53,9 +53,9 @@
             android:maxLines="1"
             android:ellipsize="end"
             android:textStyle="bold"
-            android:textSize="14sp"
-            android:paddingTop="2dp"
-            android:paddingBottom="2dp" />
+            android:textSize="16sp"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp" />
     </LinearLayout>
 
     <LinearLayout
@@ -65,7 +65,7 @@
         android:layout_weight="1"
         android:layout_marginStart="6dp"
         android:orientation="vertical"
-        android:gravity="center">
+        android:gravity="bottom|center_horizontal">
         <TextView
             android:id="@+id/tt_name_1"
             android:layout_width="match_parent"
@@ -75,7 +75,7 @@
             android:ellipsize="end"
             android:textStyle="bold"
             android:textColor="@color/widget_text_secondary"
-            android:textSize="13sp" />
+            android:textSize="14sp" />
         <TextView
             android:id="@+id/tt_shift_1"
             android:layout_width="match_parent"
@@ -85,9 +85,9 @@
             android:maxLines="1"
             android:ellipsize="end"
             android:textStyle="bold"
-            android:textSize="14sp"
-            android:paddingTop="2dp"
-            android:paddingBottom="2dp" />
+            android:textSize="16sp"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp" />
     </LinearLayout>
 
     <LinearLayout
@@ -97,7 +97,7 @@
         android:layout_weight="1"
         android:layout_marginStart="6dp"
         android:orientation="vertical"
-        android:gravity="center">
+        android:gravity="bottom|center_horizontal">
         <TextView
             android:id="@+id/tt_name_2"
             android:layout_width="match_parent"
@@ -107,7 +107,7 @@
             android:ellipsize="end"
             android:textStyle="bold"
             android:textColor="@color/widget_text_secondary"
-            android:textSize="13sp" />
+            android:textSize="14sp" />
         <TextView
             android:id="@+id/tt_shift_2"
             android:layout_width="match_parent"
@@ -117,9 +117,9 @@
             android:maxLines="1"
             android:ellipsize="end"
             android:textStyle="bold"
-            android:textSize="14sp"
-            android:paddingTop="2dp"
-            android:paddingBottom="2dp" />
+            android:textSize="16sp"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp" />
     </LinearLayout>
 
     <LinearLayout
@@ -129,7 +129,7 @@
         android:layout_weight="1"
         android:layout_marginStart="6dp"
         android:orientation="vertical"
-        android:gravity="center">
+        android:gravity="bottom|center_horizontal">
         <TextView
             android:id="@+id/tt_name_3"
             android:layout_width="match_parent"
@@ -139,7 +139,7 @@
             android:ellipsize="end"
             android:textStyle="bold"
             android:textColor="@color/widget_text_secondary"
-            android:textSize="13sp" />
+            android:textSize="14sp" />
         <TextView
             android:id="@+id/tt_shift_3"
             android:layout_width="match_parent"
@@ -149,9 +149,9 @@
             android:maxLines="1"
             android:ellipsize="end"
             android:textStyle="bold"
-            android:textSize="14sp"
-            android:paddingTop="2dp"
-            android:paddingBottom="2dp" />
+            android:textSize="16sp"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp" />
     </LinearLayout>
 
     <LinearLayout
@@ -161,7 +161,7 @@
         android:layout_weight="1"
         android:layout_marginStart="6dp"
         android:orientation="vertical"
-        android:gravity="center">
+        android:gravity="bottom|center_horizontal">
         <TextView
             android:id="@+id/tt_name_4"
             android:layout_width="match_parent"
@@ -171,7 +171,7 @@
             android:ellipsize="end"
             android:textStyle="bold"
             android:textColor="@color/widget_text_secondary"
-            android:textSize="13sp" />
+            android:textSize="14sp" />
         <TextView
             android:id="@+id/tt_shift_4"
             android:layout_width="match_parent"
@@ -181,9 +181,9 @@
             android:maxLines="1"
             android:ellipsize="end"
             android:textStyle="bold"
-            android:textSize="14sp"
-            android:paddingTop="2dp"
-            android:paddingBottom="2dp" />
+            android:textSize="16sp"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp" />
     </LinearLayout>
 
     <LinearLayout
@@ -193,7 +193,7 @@
         android:layout_weight="1"
         android:layout_marginStart="6dp"
         android:orientation="vertical"
-        android:gravity="center">
+        android:gravity="bottom|center_horizontal">
         <TextView
             android:id="@+id/tt_name_5"
             android:layout_width="match_parent"
@@ -203,7 +203,7 @@
             android:ellipsize="end"
             android:textStyle="bold"
             android:textColor="@color/widget_text_secondary"
-            android:textSize="13sp" />
+            android:textSize="14sp" />
         <TextView
             android:id="@+id/tt_shift_5"
             android:layout_width="match_parent"
@@ -213,9 +213,9 @@
             android:maxLines="1"
             android:ellipsize="end"
             android:textStyle="bold"
-            android:textSize="14sp"
-            android:paddingTop="2dp"
-            android:paddingBottom="2dp" />
+            android:textSize="16sp"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp" />
     </LinearLayout>
 
 </LinearLayout>

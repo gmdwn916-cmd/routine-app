@@ -53,13 +53,6 @@ public class ScheduleWidgetProvider extends AppWidgetProvider {
     // 자료를 받을 때마다 이 값으로 되돌리기 위해 public으로 노출.
     public static final int DEFAULT_WEEK_START_INDEX = -WEEK_OFFSET_START;
 
-    // 위젯 크기(세로 dp)로 몇 주(줄)를 보여줄지 어림잡는 데 쓰는 상수 —
-    // 예전 "2주 고정"일 때의 minHeight(110dp) 기준으로 역산함: 헤더(요일
-    // 이름 줄)+위아래 패딩을 대략 32dp로, 남는 공간을 2로 나누면 한 줄당
-    // 대략 39dp. 정확한 값이 아니라 어림값(다른 위젯들의 estimateVisibleRows()
-    // 와 같은 성격) — 틀려도 줄 수가 1~2줄 정도 어긋날 뿐 깨지지 않음.
-    private static final int HEADER_AND_PADDING_DP = 32;
-    private static final int WEEK_ROW_HEIGHT_DP = 39;
 
     private static final String ACTION_PREV = "com.hyeongju.routineapp.SCHEDULE_PREV";
     private static final String ACTION_NEXT = "com.hyeongju.routineapp.SCHEDULE_NEXT";
@@ -165,17 +158,21 @@ public class ScheduleWidgetProvider extends AppWidgetProvider {
         }
     }
 
-    // 위젯 크기(세로 dp)로 몇 주(줄)를 보여줄지 어림잡음 — 다른 위젯들의
-    // estimateVisibleRows()와 같은 성격의 어림 계산(정확하지 않아도 됨,
-    // 틀리면 그냥 줄 수가 조금 어긋날 뿐).
+    // 위젯 크기(세로 dp)로 몇 주(줄)를 보여줄지 계산 — 처음엔 "헤더+패딩
+    // 어림값" 방식으로 추정했는데, "4x1이면 정확히 1주, 4x2면 정확히 2주"
+    // 요청으로 어림 계산 대신 안드로이드 위젯 크기 공식을 그대로 역산함:
+    // 이 프로젝트의 다른 위젯들 minWidth/minHeight 값이 전부 공식 문서의
+    // "cells = (size+30)/70" 규칙을 따르고 있음(예: 2x2 위젯들의 110dp =
+    // 70*2-30, 1x1 위젯의 40dp = 70*1-30, 이 위젯 자체의 minWidth 250dp =
+    // 70*4-30) — 그러니 반대로 `(minHeightDp+30)/70`을 반올림하면 지금 몇
+    // 행(줄)짜리로 배치돼 있는지 정확히 나옴(2026-07-21 재조정).
     private static int estimateVisibleWeeks(Context context, int appWidgetId) {
         if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) return DEFAULT_VISIBLE_WEEKS;
         try {
             Bundle opts = AppWidgetManager.getInstance(context).getAppWidgetOptions(appWidgetId);
             int minHeightDp = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0);
             if (minHeightDp <= 0) return DEFAULT_VISIBLE_WEEKS;
-            int usableDp = minHeightDp - HEADER_AND_PADDING_DP;
-            int weeks = usableDp / WEEK_ROW_HEIGHT_DP;
+            int weeks = (int) Math.round((minHeightDp + 30) / 70.0);
             if (weeks < 1) weeks = 1;
             if (weeks > MAX_WEEKS) weeks = MAX_WEEKS;
             return weeks;
