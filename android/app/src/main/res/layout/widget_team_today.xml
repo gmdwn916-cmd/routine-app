@@ -41,8 +41,9 @@
             android:gravity="center"
             android:maxLines="1"
             android:ellipsize="end"
+            android:textStyle="bold"
             android:textColor="@color/widget_text_secondary"
-            android:textSize="11sp" />
+            android:textSize="13sp" />
         <TextView
             android:id="@+id/tt_shift_0"
             android:layout_width="match_parent"
@@ -72,8 +73,9 @@
             android:gravity="center"
             android:maxLines="1"
             android:ellipsize="end"
+            android:textStyle="bold"
             android:textColor="@color/widget_text_secondary"
-            android:textSize="11sp" />
+            android:textSize="13sp" />
         <TextView
             android:id="@+id/tt_shift_1"
             android:layout_width="match_parent"
@@ -103,8 +105,9 @@
             android:gravity="center"
             android:maxLines="1"
             android:ellipsize="end"
+            android:textStyle="bold"
             android:textColor="@color/widget_text_secondary"
-            android:textSize="11sp" />
+            android:textSize="13sp" />
         <TextView
             android:id="@+id/tt_shift_2"
             android:layout_width="match_parent"
@@ -134,8 +137,9 @@
             android:gravity="center"
             android:maxLines="1"
             android:ellipsize="end"
+            android:textStyle="bold"
             android:textColor="@color/widget_text_secondary"
-            android:textSize="11sp" />
+            android:textSize="13sp" />
         <TextView
             android:id="@+id/tt_shift_3"
             android:layout_width="match_parent"
@@ -165,8 +169,9 @@
             android:gravity="center"
             android:maxLines="1"
             android:ellipsize="end"
+            android:textStyle="bold"
             android:textColor="@color/widget_text_secondary"
-            android:textSize="11sp" />
+            android:textSize="13sp" />
         <TextView
             android:id="@+id/tt_shift_4"
             android:layout_width="match_parent"
@@ -196,8 +201,9 @@
             android:gravity="center"
             android:maxLines="1"
             android:ellipsize="end"
+            android:textStyle="bold"
             android:textColor="@color/widget_text_secondary"
-            android:textSize="11sp" />
+            android:textSize="13sp" />
         <TextView
             android:id="@+id/tt_shift_5"
             android:layout_width="match_parent"

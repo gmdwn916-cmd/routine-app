@@ -34,8 +34,9 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:maxLines="1"
+            android:textStyle="bold"
             android:textColor="#007AFF"
-            android:textSize="11sp"
+            android:textSize="13sp"
             android:text="1팀" />
         <TextView
             android:layout_width="match_parent"
@@ -63,8 +64,9 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:maxLines="1"
+            android:textStyle="bold"
             android:textColor="@color/widget_text_secondary"
-            android:textSize="11sp"
+            android:textSize="13sp"
             android:text="2팀" />
         <TextView
             android:layout_width="match_parent"
@@ -92,8 +94,9 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:maxLines="1"
+            android:textStyle="bold"
             android:textColor="@color/widget_text_secondary"
-            android:textSize="11sp"
+            android:textSize="13sp"
             android:text="3팀" />
         <TextView
             android:layout_width="match_parent"
@@ -121,8 +124,9 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:maxLines="1"
+            android:textStyle="bold"
             android:textColor="@color/widget_text_secondary"
-            android:textSize="11sp"
+            android:textSize="13sp"
             android:text="4팀" />
         <TextView
             android:layout_width="match_parent"
