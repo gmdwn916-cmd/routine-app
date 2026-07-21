@@ -207,9 +207,9 @@ public class ScheduleWidgetProvider extends AppWidgetProvider {
             Bundle opts = AppWidgetManager.getInstance(context).getAppWidgetOptions(appWidgetId);
             int minHeightDp = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0);
             if (minHeightDp <= 0) return DEFAULT_VISIBLE_WEEKS;
-            int weeks = (int) Math.round((minHeightDp + 30) / 70.0);
-            if (weeks < 1) weeks = 1;
-            if (weeks > MAX_WEEKS) weeks = MAX_WEEKS;
+            // 렌더링이 이제 "1주 또는 2주" 두 단계뿐이라(위 updateOne() 참고),
+            // 여기서 넘기는 양도 그 두 단계 중 하나로만 clamp.
+            int weeks = minHeightDp < 110 ? 1 : 2;
             return weeks;
         } catch (Exception e) {
             return DEFAULT_VISIBLE_WEEKS;
@@ -264,18 +264,31 @@ public class ScheduleWidgetProvider extends AppWidgetProvider {
         }
     }
 
-    // API 31+에서는 "1~5주" 화면을 전부 미리 만들어 SizeF 맵으로 감싸서,
-    // 실제로 몇 주를 보여줄지는 안드로이드가 현재 위젯 크기와 비교해 직접
-    // 고르게 함(위 클래스 주석 참고) — dp 어림 계산이 아예 필요 없어짐.
-    // API 31 미만은 이 생성자가 없어서 그냥 "2주 고정" 화면 하나만 씀(예전
-    // 버전과 동일한 동작).
+    // **3차 조정(2026-07-21, 같은 날) — 5단계에서 2단계로 축소**: SizeF 맵
+    // 자체(안드로이드가 실제 크기와 직접 비교해 고르는 방식)는 실기기에서
+    // "4x1→1주"는 정확히 맞았지만, "4x2"에서 3주로 잘못 뽑히는 문제가
+    // 있었음 — 원인은 1~5주 다섯 단계 경계값(40/110/180/250/320dp)이 여전히
+    // "70×n-30" 공식에서 나온 값인데, 이 기기의 실제 2행 높이가 그 경계
+    // (180dp, "3주" 임계값)를 넘어서 버렸기 때문(1행 높이는 우연히 110dp
+    // 밑이라 1주는 맞았던 것). 다섯 단계를 전부 정밀하게 다시 맞추려면
+    // 실기기 값을 하나하나 확인해야 하는데 그럴 방법이 없어서, **범위를
+    // "1주 또는 2주" 두 단계로만 줄임** — 안드로이드가 위젯의 실제 세로
+    // 공간이 SizeF(100,110)의 요구 조건(높이 ≥110dp)을 만족하면 무조건
+    // "2주"를 고르고, 못 만족하면(4x1처럼 확실히 작을 때만) "1주"를 고름 —
+    // 중간 단계(3/4/5주)가 아예 없으니 실기기 오차가 있어도 엉뚱한 단계로
+    // 잘못 뽑힐 여지 자체가 사라짐 — 위젯을 이보다 훨씬 크게 리사이즈해도
+    // "2주"보다 위 단계가 없으므로 그냥 계속 "2주"로 남을 뿐(빈 여백이
+    // 좀 더 생길 뿐 엉뚱한 주 수가 나오지는 않음). **`widget_schedule_info.xml`의
+    // `maxResizeHeight`는 일부러 안 낮춤** — 이 기기의 실제 "2행" 높이가
+    // 이미 우리 예상(110dp)보다 훨씬 큰 것으로 확인돼서, maxResizeHeight를
+    // 110dp로 낮추면 오히려 이 기기의 런처가 실제로 쓰려는 "2행" 크기보다
+    // 작게 강제로 눌러버릴 위험이 있음 — 위 SizeF 2단계 방식은 상한 없이도
+    // 이미 안전하므로 굳이 리사이즈 상한을 건드릴 필요가 없다고 판단.
     private static void updateOne(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             Map<SizeF, RemoteViews> variants = new HashMap<>();
-            for (int weeks = 1; weeks <= MAX_WEEKS; weeks++) {
-                float minHeightDp = 70f * weeks - 30f;
-                variants.put(new SizeF(VARIANT_WIDTH_DP, minHeightDp), buildViewsForWeeks(context, appWidgetId, weeks));
-            }
+            variants.put(new SizeF(VARIANT_WIDTH_DP, 40f), buildViewsForWeeks(context, appWidgetId, 1));
+            variants.put(new SizeF(VARIANT_WIDTH_DP, 110f), buildViewsForWeeks(context, appWidgetId, 2));
             appWidgetManager.updateAppWidget(appWidgetId, new RemoteViews(variants));
         } else {
             appWidgetManager.updateAppWidget(appWidgetId, buildViewsForWeeks(context, appWidgetId, DEFAULT_VISIBLE_WEEKS));
