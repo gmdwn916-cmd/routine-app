@@ -10,7 +10,7 @@
     android:paddingStart="10dp"
     android:paddingEnd="8dp"
     android:paddingTop="4dp"
-    android:paddingBottom="0dp">
+    android:paddingBottom="10dp">
 
     <TextView
         android:layout_width="wrap_content"
