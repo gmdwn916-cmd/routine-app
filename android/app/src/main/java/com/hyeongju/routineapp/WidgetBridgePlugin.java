@@ -124,12 +124,13 @@ public class WidgetBridgePlugin extends Plugin {
         }
         SharedPreferences prefs = getContext().getSharedPreferences(
             ScheduleWidgetProvider.PREFS_NAME, Context.MODE_PRIVATE);
-        // 앱이 새 자료를 보낼 때마다 페이지 위치를 1(=배열의 "이번 2주")로
-        // 되돌림 — 위젯에서 이전/다음 페이지로 넘겨봤어도 앱을 열면 오늘
-        // 기준으로 리셋됨(달력 위젯이 매번 인덱스 1로 되돌리는 것과 동일).
+        // 앱이 새 자료를 보낼 때마다 시작 주 위치를 "이번 주"로 되돌림 —
+        // 위젯에서 이전/다음으로 넘겨봤어도 앱을 열면 오늘 기준으로 리셋됨
+        // (달력 위젯이 매번 인덱스 1로 되돌리는 것과 동일한 원칙, 2026-07-21
+        // 재설계로 "2주 페이지" 대신 "주 단위"가 되면서 키 이름도 같이 바뀜).
         prefs.edit()
             .putString(ScheduleWidgetProvider.KEY_SCHEDULE_DATA, json)
-            .putInt(ScheduleWidgetProvider.KEY_PAGE_INDEX, 1)
+            .putInt(ScheduleWidgetProvider.KEY_WEEK_START_INDEX, ScheduleWidgetProvider.DEFAULT_WEEK_START_INDEX)
             .apply();
         ScheduleWidgetProvider.refreshAll(getContext());
         call.resolve();

@@ -90,7 +90,7 @@ public class TeamTodayWidgetProvider extends AppWidgetProvider {
         views.setTextColor(idFor(context, "tt_date"), primaryText);
         for (int i = 0; i < MAX_TEAMS; i++) {
             views.setViewVisibility(idFor(context, "tt_slot_" + i), View.GONE);
-            views.setInt(idFor(context, "tt_slot_" + i), "setBackgroundColor", 0x00000000);
+            views.setInt(idFor(context, "tt_slot_" + i), "setBackgroundResource", 0);
         }
 
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
@@ -115,10 +115,14 @@ public class TeamTodayWidgetProvider extends AppWidgetProvider {
                         views.setTextViewText(nameId, team.optString("name", ""));
                         views.setTextColor(nameId, isMyTeam ? accentBlue : secondaryText);
                         // 내 팀 칸을 "오늘" 표시와 같은 방식으로 강조(2026-07-21
-                        // 요청) — 앱의 다른 화면들이 "오늘"에 쓰는 옅은 파란
-                        // 배경(rgba(0,122,255,0.08), 팀 근무 비교 표의
-                        // `.tst-date-row.today`와 같은 톤)을 이 칸 전체에 입힘.
-                        views.setInt(slotId, "setBackgroundColor", isMyTeam ? 0x14007AFF : 0x00000000);
+                        // 요청, 같은 날 재요청으로 테두리도 추가) — 옅은 파란
+                        // 배경(팀 근무 비교 표의 `.tst-date-row.today`와 같은 톤)
+                        // + 파란 테두리(`widget_myteam_highlight`)를 이 칸
+                        // 전체에 입힘. setBackgroundColor로는 테두리를 그릴 수
+                        // 없어서(색만 채워지는 사각형뿐) 미리 만들어둔 shape
+                        // 드로어블로 바꿈.
+                        views.setInt(slotId, "setBackgroundResource",
+                            isMyTeam ? R.drawable.widget_myteam_highlight : 0);
 
                         String shiftName = team.optString("shiftName", "");
                         String color = team.optString("color", "");

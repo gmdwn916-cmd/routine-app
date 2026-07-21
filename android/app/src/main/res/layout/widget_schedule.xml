@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- N주 스케줄 위젯(4x1~4x5 리사이즈 가능, 2026-07-21 재설계) — 한 줄에
+     한 주(7칸)씩, 최대 5줄(35칸)까지 미리 선언해두고 실제 위젯 크기에 맞는
+     줄 수만 Provider가 보이게(VISIBLE) 하고 나머지 줄은 GONE으로 숨김
+     (sch_week_row_0~4). RemoteViews는 뷰를 동적으로 늘릴 수 없어서 다른
+     위젯들과 같은 "최대치를 미리 선언" 방식 — GONE인 형제는 LinearLayout의
+     weight 배분에서 자동으로 빠지므로, 보이는 줄들이 남는 세로 공간을
+     알아서 나눠 채움(별도 weight 재계산 코드 불필요). -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_schedule_root"
     android:layout_width="match_parent"
@@ -77,6 +84,7 @@
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/sch_week_row_0"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
@@ -483,6 +491,7 @@
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/sch_week_row_1"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
@@ -877,6 +886,1227 @@
                 android:textSize="10sp" />
             <TextView
                 android:id="@+id/sch_todo_13_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/sch_week_row_2"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal">
+        <LinearLayout
+            android:id="@+id/sch_cell_14"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="top|center_horizontal"
+            android:paddingTop="2dp"
+            android:paddingBottom="4dp">
+            <TextView
+                android:id="@+id/sch_date_14"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:textColor="@color/widget_text_primary"
+                android:textSize="16sp" />
+            <TextView
+                android:id="@+id/sch_shift_14"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:textStyle="bold"
+                android:textSize="11sp" />
+            <TextView
+                android:id="@+id/sch_todo_14_0"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_14_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_14_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/sch_cell_15"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="top|center_horizontal"
+            android:paddingTop="2dp"
+            android:paddingBottom="4dp">
+            <TextView
+                android:id="@+id/sch_date_15"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:textColor="@color/widget_text_primary"
+                android:textSize="16sp" />
+            <TextView
+                android:id="@+id/sch_shift_15"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:textStyle="bold"
+                android:textSize="11sp" />
+            <TextView
+                android:id="@+id/sch_todo_15_0"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_15_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_15_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/sch_cell_16"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="top|center_horizontal"
+            android:paddingTop="2dp"
+            android:paddingBottom="4dp">
+            <TextView
+                android:id="@+id/sch_date_16"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:textColor="@color/widget_text_primary"
+                android:textSize="16sp" />
+            <TextView
+                android:id="@+id/sch_shift_16"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:textStyle="bold"
+                android:textSize="11sp" />
+            <TextView
+                android:id="@+id/sch_todo_16_0"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_16_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_16_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/sch_cell_17"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="top|center_horizontal"
+            android:paddingTop="2dp"
+            android:paddingBottom="4dp">
+            <TextView
+                android:id="@+id/sch_date_17"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:textColor="@color/widget_text_primary"
+                android:textSize="16sp" />
+            <TextView
+                android:id="@+id/sch_shift_17"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:textStyle="bold"
+                android:textSize="11sp" />
+            <TextView
+                android:id="@+id/sch_todo_17_0"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_17_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_17_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/sch_cell_18"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="top|center_horizontal"
+            android:paddingTop="2dp"
+            android:paddingBottom="4dp">
+            <TextView
+                android:id="@+id/sch_date_18"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:textColor="@color/widget_text_primary"
+                android:textSize="16sp" />
+            <TextView
+                android:id="@+id/sch_shift_18"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:textStyle="bold"
+                android:textSize="11sp" />
+            <TextView
+                android:id="@+id/sch_todo_18_0"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_18_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_18_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/sch_cell_19"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="top|center_horizontal"
+            android:paddingTop="2dp"
+            android:paddingBottom="4dp">
+            <TextView
+                android:id="@+id/sch_date_19"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:textColor="@color/widget_text_primary"
+                android:textSize="16sp" />
+            <TextView
+                android:id="@+id/sch_shift_19"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:textStyle="bold"
+                android:textSize="11sp" />
+            <TextView
+                android:id="@+id/sch_todo_19_0"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_19_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_19_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/sch_cell_20"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="top|center_horizontal"
+            android:paddingTop="2dp"
+            android:paddingBottom="4dp">
+            <TextView
+                android:id="@+id/sch_date_20"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:textColor="@color/widget_text_primary"
+                android:textSize="16sp" />
+            <TextView
+                android:id="@+id/sch_shift_20"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:textStyle="bold"
+                android:textSize="11sp" />
+            <TextView
+                android:id="@+id/sch_todo_20_0"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_20_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_20_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/sch_week_row_3"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal">
+        <LinearLayout
+            android:id="@+id/sch_cell_21"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="top|center_horizontal"
+            android:paddingTop="2dp"
+            android:paddingBottom="4dp">
+            <TextView
+                android:id="@+id/sch_date_21"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:textColor="@color/widget_text_primary"
+                android:textSize="16sp" />
+            <TextView
+                android:id="@+id/sch_shift_21"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:textStyle="bold"
+                android:textSize="11sp" />
+            <TextView
+                android:id="@+id/sch_todo_21_0"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_21_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_21_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/sch_cell_22"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="top|center_horizontal"
+            android:paddingTop="2dp"
+            android:paddingBottom="4dp">
+            <TextView
+                android:id="@+id/sch_date_22"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:textColor="@color/widget_text_primary"
+                android:textSize="16sp" />
+            <TextView
+                android:id="@+id/sch_shift_22"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:textStyle="bold"
+                android:textSize="11sp" />
+            <TextView
+                android:id="@+id/sch_todo_22_0"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_22_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_22_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/sch_cell_23"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="top|center_horizontal"
+            android:paddingTop="2dp"
+            android:paddingBottom="4dp">
+            <TextView
+                android:id="@+id/sch_date_23"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:textColor="@color/widget_text_primary"
+                android:textSize="16sp" />
+            <TextView
+                android:id="@+id/sch_shift_23"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:textStyle="bold"
+                android:textSize="11sp" />
+            <TextView
+                android:id="@+id/sch_todo_23_0"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_23_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_23_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/sch_cell_24"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="top|center_horizontal"
+            android:paddingTop="2dp"
+            android:paddingBottom="4dp">
+            <TextView
+                android:id="@+id/sch_date_24"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:textColor="@color/widget_text_primary"
+                android:textSize="16sp" />
+            <TextView
+                android:id="@+id/sch_shift_24"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:textStyle="bold"
+                android:textSize="11sp" />
+            <TextView
+                android:id="@+id/sch_todo_24_0"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_24_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_24_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/sch_cell_25"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="top|center_horizontal"
+            android:paddingTop="2dp"
+            android:paddingBottom="4dp">
+            <TextView
+                android:id="@+id/sch_date_25"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:textColor="@color/widget_text_primary"
+                android:textSize="16sp" />
+            <TextView
+                android:id="@+id/sch_shift_25"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:textStyle="bold"
+                android:textSize="11sp" />
+            <TextView
+                android:id="@+id/sch_todo_25_0"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_25_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_25_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/sch_cell_26"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="top|center_horizontal"
+            android:paddingTop="2dp"
+            android:paddingBottom="4dp">
+            <TextView
+                android:id="@+id/sch_date_26"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:textColor="@color/widget_text_primary"
+                android:textSize="16sp" />
+            <TextView
+                android:id="@+id/sch_shift_26"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:textStyle="bold"
+                android:textSize="11sp" />
+            <TextView
+                android:id="@+id/sch_todo_26_0"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_26_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_26_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/sch_cell_27"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="top|center_horizontal"
+            android:paddingTop="2dp"
+            android:paddingBottom="4dp">
+            <TextView
+                android:id="@+id/sch_date_27"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:textColor="@color/widget_text_primary"
+                android:textSize="16sp" />
+            <TextView
+                android:id="@+id/sch_shift_27"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:textStyle="bold"
+                android:textSize="11sp" />
+            <TextView
+                android:id="@+id/sch_todo_27_0"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_27_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_27_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/sch_week_row_4"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal">
+        <LinearLayout
+            android:id="@+id/sch_cell_28"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="top|center_horizontal"
+            android:paddingTop="2dp"
+            android:paddingBottom="4dp">
+            <TextView
+                android:id="@+id/sch_date_28"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:textColor="@color/widget_text_primary"
+                android:textSize="16sp" />
+            <TextView
+                android:id="@+id/sch_shift_28"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:textStyle="bold"
+                android:textSize="11sp" />
+            <TextView
+                android:id="@+id/sch_todo_28_0"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_28_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_28_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/sch_cell_29"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="top|center_horizontal"
+            android:paddingTop="2dp"
+            android:paddingBottom="4dp">
+            <TextView
+                android:id="@+id/sch_date_29"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:textColor="@color/widget_text_primary"
+                android:textSize="16sp" />
+            <TextView
+                android:id="@+id/sch_shift_29"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:textStyle="bold"
+                android:textSize="11sp" />
+            <TextView
+                android:id="@+id/sch_todo_29_0"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_29_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_29_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/sch_cell_30"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="top|center_horizontal"
+            android:paddingTop="2dp"
+            android:paddingBottom="4dp">
+            <TextView
+                android:id="@+id/sch_date_30"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:textColor="@color/widget_text_primary"
+                android:textSize="16sp" />
+            <TextView
+                android:id="@+id/sch_shift_30"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:textStyle="bold"
+                android:textSize="11sp" />
+            <TextView
+                android:id="@+id/sch_todo_30_0"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_30_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_30_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/sch_cell_31"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="top|center_horizontal"
+            android:paddingTop="2dp"
+            android:paddingBottom="4dp">
+            <TextView
+                android:id="@+id/sch_date_31"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:textColor="@color/widget_text_primary"
+                android:textSize="16sp" />
+            <TextView
+                android:id="@+id/sch_shift_31"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:textStyle="bold"
+                android:textSize="11sp" />
+            <TextView
+                android:id="@+id/sch_todo_31_0"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_31_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_31_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/sch_cell_32"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="top|center_horizontal"
+            android:paddingTop="2dp"
+            android:paddingBottom="4dp">
+            <TextView
+                android:id="@+id/sch_date_32"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:textColor="@color/widget_text_primary"
+                android:textSize="16sp" />
+            <TextView
+                android:id="@+id/sch_shift_32"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:textStyle="bold"
+                android:textSize="11sp" />
+            <TextView
+                android:id="@+id/sch_todo_32_0"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_32_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_32_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/sch_cell_33"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="top|center_horizontal"
+            android:paddingTop="2dp"
+            android:paddingBottom="4dp">
+            <TextView
+                android:id="@+id/sch_date_33"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:textColor="@color/widget_text_primary"
+                android:textSize="16sp" />
+            <TextView
+                android:id="@+id/sch_shift_33"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:textStyle="bold"
+                android:textSize="11sp" />
+            <TextView
+                android:id="@+id/sch_todo_33_0"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_33_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_33_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/sch_cell_34"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="top|center_horizontal"
+            android:paddingTop="2dp"
+            android:paddingBottom="4dp">
+            <TextView
+                android:id="@+id/sch_date_34"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:textColor="@color/widget_text_primary"
+                android:textSize="16sp" />
+            <TextView
+                android:id="@+id/sch_shift_34"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:textStyle="bold"
+                android:textSize="11sp" />
+            <TextView
+                android:id="@+id/sch_todo_34_0"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_34_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="10sp" />
+            <TextView
+                android:id="@+id/sch_todo_34_2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="1dp"

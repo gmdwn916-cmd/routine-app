@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 오늘 팀 근무 위젯(위젯 6)의 "내 팀" 칸 강조용(2026-07-21 추가) — 옅은
+     파란 배경(팀 근무 비교 표의 "오늘" 표시와 같은 톤) + 파란 테두리를
+     같이 줌. 라이트/다크 공통(파란색 하나라 두 테마 배경 어디서나 무난히
+     보여서 다른 정적 색상들처럼 테마 구분 없이 값 하나로 통일). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="#14007AFF" />
+    <stroke android:width="1.5dp" android:color="#FF007AFF" />
+    <corners android:radius="8dp" />
+</shape>

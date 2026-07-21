@@ -20,7 +20,7 @@
         android:textSize="16sp"
         android:text="7/21(화)" />
 
-    <!-- 1팀 = 내 팀 예시 — 오늘 표시와 같은 옅은 파란 배경으로 강조 -->
+    <!-- 1팀 = 내 팀 예시 — 오늘 표시와 같은 옅은 파란 배경 + 테두리로 강조 -->
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="match_parent"
@@ -28,7 +28,7 @@
         android:layout_marginStart="6dp"
         android:orientation="vertical"
         android:gravity="center"
-        android:background="#14007AFF">
+        android:background="@drawable/widget_myteam_highlight">
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
