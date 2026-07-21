@@ -4,218 +4,243 @@
      RemoteViews라 화면 크기에 맞춰 동적으로 뷰를 늘릴 수 없음 — 다른
      위젯들과 같은 이유), 실제 팀 수가 이보다 적으면 남는 칸은 Provider가
      GONE으로 숨김. 근무 배지는 스케줄 위젯(sch_shift_N)과 같은 방식(둥근
-     모서리 없이 flat 배경 tint) — 이 위젯도 칸이 작아서 같은 단순화가 맞음. -->
+     모서리 없이 flat 배경 tint) — 이 위젯도 칸이 작아서 같은 단순화가 맞음.
+     세로 위치(2026-07-22, "위젯 전체를 5칸으로 나눴을 때 밑에서 2번째 칸"
+     요청): 실제 기기가 이 위젯에 실제로 배정하는 세로 높이가 이 프로젝트가
+     예상한 값과 다를 수 있다는 게 스케줄 위젯 리사이즈 때 이미 확인된
+     문제라(CLAUDE.md "스케줄 위젯" 항목 참고), dp 숫자로 paddingTop/Bottom을
+     추측하는 대신 위아래에 빈 TextView 스페이서를 두고 weight로 "남는 세로
+     공간을 3:1로 나눠라"라고만 지시함 — 실제 높이가 얼마든 이 비율(위 3,
+     아래 1)만 지켜지므로 "5칸 중 밑에서 2번째"와 같은 결과가 나옴(칸 5개 중
+     내용이 있는 4번째 칸을 빼면 위 3칸+아래 1칸이 남는 것과 같은 비율). -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_team_today_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="horizontal"
-    android:gravity="bottom"
+    android:orientation="vertical"
     android:background="@drawable/widget_background"
     android:paddingStart="10dp"
-    android:paddingEnd="8dp"
-    android:paddingTop="4dp"
-    android:paddingBottom="10dp">
+    android:paddingEnd="8dp">
 
     <TextView
-        android:id="@+id/tt_date"
-        android:layout_width="wrap_content"
+        android:id="@+id/tt_top_spacer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="3" />
+
+    <LinearLayout
+        android:id="@+id/tt_content_row"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textStyle="bold"
-        android:textColor="@color/widget_text_primary"
-        android:textSize="18sp"
-        android:maxLines="1" />
+        android:orientation="horizontal">
 
-    <LinearLayout
-        android:id="@+id/tt_slot_0"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:layout_marginStart="6dp"
-        android:orientation="vertical"
-        android:gravity="bottom|center_horizontal">
         <TextView
-            android:id="@+id/tt_name_0"
-            android:layout_width="match_parent"
+            android:id="@+id/tt_date"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="center"
-            android:maxLines="1"
-            android:ellipsize="end"
             android:textStyle="bold"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="14sp" />
-        <TextView
-            android:id="@+id/tt_shift_0"
-            android:layout_width="match_parent"
+            android:textColor="@color/widget_text_primary"
+            android:textSize="18sp"
+            android:maxLines="1" />
+
+        <LinearLayout
+            android:id="@+id/tt_slot_0"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="1dp"
-            android:gravity="center"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold"
-            android:textSize="16sp"
-            android:paddingTop="3dp"
-            android:paddingBottom="3dp" />
+            android:layout_weight="1"
+            android:layout_marginStart="6dp"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+            <TextView
+                android:id="@+id/tt_name_0"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textStyle="bold"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="14sp" />
+            <TextView
+                android:id="@+id/tt_shift_0"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:paddingTop="3dp"
+                android:paddingBottom="3dp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/tt_slot_1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="6dp"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+            <TextView
+                android:id="@+id/tt_name_1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textStyle="bold"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="14sp" />
+            <TextView
+                android:id="@+id/tt_shift_1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:paddingTop="3dp"
+                android:paddingBottom="3dp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/tt_slot_2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="6dp"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+            <TextView
+                android:id="@+id/tt_name_2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textStyle="bold"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="14sp" />
+            <TextView
+                android:id="@+id/tt_shift_2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:paddingTop="3dp"
+                android:paddingBottom="3dp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/tt_slot_3"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="6dp"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+            <TextView
+                android:id="@+id/tt_name_3"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textStyle="bold"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="14sp" />
+            <TextView
+                android:id="@+id/tt_shift_3"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:paddingTop="3dp"
+                android:paddingBottom="3dp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/tt_slot_4"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="6dp"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+            <TextView
+                android:id="@+id/tt_name_4"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textStyle="bold"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="14sp" />
+            <TextView
+                android:id="@+id/tt_shift_4"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:paddingTop="3dp"
+                android:paddingBottom="3dp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/tt_slot_5"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="6dp"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+            <TextView
+                android:id="@+id/tt_name_5"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textStyle="bold"
+                android:textColor="@color/widget_text_secondary"
+                android:textSize="14sp" />
+            <TextView
+                android:id="@+id/tt_shift_5"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:paddingTop="3dp"
+                android:paddingBottom="3dp" />
+        </LinearLayout>
+
     </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/tt_slot_1"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:layout_marginStart="6dp"
-        android:orientation="vertical"
-        android:gravity="bottom|center_horizontal">
-        <TextView
-            android:id="@+id/tt_name_1"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="14sp" />
-        <TextView
-            android:id="@+id/tt_shift_1"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="1dp"
-            android:gravity="center"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold"
-            android:textSize="16sp"
-            android:paddingTop="3dp"
-            android:paddingBottom="3dp" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/tt_slot_2"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:layout_marginStart="6dp"
-        android:orientation="vertical"
-        android:gravity="bottom|center_horizontal">
-        <TextView
-            android:id="@+id/tt_name_2"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="14sp" />
-        <TextView
-            android:id="@+id/tt_shift_2"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="1dp"
-            android:gravity="center"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold"
-            android:textSize="16sp"
-            android:paddingTop="3dp"
-            android:paddingBottom="3dp" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/tt_slot_3"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:layout_marginStart="6dp"
-        android:orientation="vertical"
-        android:gravity="bottom|center_horizontal">
-        <TextView
-            android:id="@+id/tt_name_3"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="14sp" />
-        <TextView
-            android:id="@+id/tt_shift_3"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="1dp"
-            android:gravity="center"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold"
-            android:textSize="16sp"
-            android:paddingTop="3dp"
-            android:paddingBottom="3dp" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/tt_slot_4"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:layout_marginStart="6dp"
-        android:orientation="vertical"
-        android:gravity="bottom|center_horizontal">
-        <TextView
-            android:id="@+id/tt_name_4"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="14sp" />
-        <TextView
-            android:id="@+id/tt_shift_4"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="1dp"
-            android:gravity="center"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold"
-            android:textSize="16sp"
-            android:paddingTop="3dp"
-            android:paddingBottom="3dp" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/tt_slot_5"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:layout_marginStart="6dp"
-        android:orientation="vertical"
-        android:gravity="bottom|center_horizontal">
-        <TextView
-            android:id="@+id/tt_name_5"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="14sp" />
-        <TextView
-            android:id="@+id/tt_shift_5"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="1dp"
-            android:gravity="center"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold"
-            android:textSize="16sp"
-            android:paddingTop="3dp"
-            android:paddingBottom="3dp" />
-    </LinearLayout>
+    <TextView
+        android:id="@+id/tt_bottom_spacer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
 
 </LinearLayout>
