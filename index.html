@@ -2678,6 +2678,16 @@
       display: flex;
       flex-direction: column;
     }
+    /* 화면 재설계 때 이 클래스 자체가 누락돼서 버튼이 왼쪽에 붙어있던 버그
+       수정(2026-07-21) — .btn-team-cal-wrap(달력 탭 "전체 근무보기" 버튼)과
+       같은 "오른쪽 배치 + 여유로운 여백" 원칙, 이 화면은 꽉 찬 화면이라
+       아래쪽 기기 안전영역도 같이 챙김. */
+    .tcal-cal-btn-wrap {
+      display: flex;
+      justify-content: flex-end;
+      flex-shrink: 0;
+      padding: 14px 20px calc(18px + env(safe-area-inset-bottom, 0));
+    }
     /* .btn-team-cal과 같은 이유로 같은 방식(보라색 유지, 옅은 톤 + opacity로
        덜 쨍하게) 적용 */
     .btn-tcal-go-cal {
@@ -2725,6 +2735,12 @@
       overflow: auto;
       -webkit-overflow-scrolling: touch;
       padding: 0 10px 24px;
+      /* 브라우저의 자동 스크롤 앵커링(과거 날짜를 위에 끼워넣을 때 브라우저가
+         "알아서" scrollTop을 보정하려는 기본 동작)을 끔 — 이 화면은 JS가 직접
+         scrollTop을 계산해서 보정하므로(loadPrevTeamShiftRows), 브라우저
+         자동 보정과 겹치면 서로 어긋나 최종 위치가 예측 불가능하게 흔들리는
+         문제가 있었음(2026-07-21 발견). */
+      overflow-anchor: none;
     }
     .tst-header-row, .tst-date-row {
       display: grid;
@@ -2741,21 +2757,35 @@
     }
     .tst-date-row { border-bottom: 1px solid var(--divider); }
     .tst-date-row.today { background: rgba(0,122,255,0.08); }
+    /* 날짜·근무 칸 높이 고정(2026-07-21 추가) — 근무 이름에 숫자가 섞이면
+       (예: "일2") 줄 높이가 미묘하게 더 커 보이는 문제가 있었음(폰트가 숫자와
+       한글을 서로 다른 메트릭으로 렌더링해서 생기는 현상으로 추정) — padding
+       기반 가변 높이 대신 height+line-height를 고정값으로 못박아서 내용과
+       무관하게 항상 같은 높이가 되게 함. 색은 이제 JS에서 인라인으로
+       직접 정함(오늘 > 공휴일 > 토/일 > 평소 순서, "오늘" 색상 규칙과 겹칠 때
+       CSS 클래스 우선순위로 헷갈리지 않도록) — 이 클래스 자체엔 색 규칙 없음.
+       (달력 근무 칸 높이 통일 항목과 같은 원칙.) */
     .tst-date-cell {
-      padding: 8px 4px 8px 2px;
+      height: 26px;
+      line-height: 26px;
+      padding: 0 4px 0 2px;
       font-size: 12px;
       font-weight: 600;
-      color: var(--text-1);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    .tst-date-row.today .tst-date-cell { color: var(--accent-blue); font-weight: 700; }
-    .tst-date-cell .tst-holiday-name {
-      font-size: 9px;
-      color: var(--holiday-color);
-      display: block;
-      font-weight: 500;
+    .tst-date-row.today .tst-date-cell { font-weight: 700; }
+    .tst-month-label-cell {
+      height: 26px;
+      line-height: 26px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-2);
+      text-align: left;
+      padding-left: 2px;
+      overflow: hidden;
+      white-space: nowrap;
     }
     .tst-team-header-cell {
       padding: 8px 3px;
@@ -2785,7 +2815,10 @@
     .tst-team-header-cell.dragging { opacity: 0.3; }
     .tst-shift-cell {
       margin: 2px;
-      padding: 5px 2px;
+      height: 26px;
+      line-height: 26px;
+      padding: 0 2px;
+      box-sizing: border-box;
       text-align: center;
       font-size: 11px;
       font-weight: 600;
@@ -2808,8 +2841,9 @@
       font-size: 12px;
       padding: 14px;
     }
-    /* 설정 탭 "팀 근무" 화면 전용(2026-07-21, 이름 입력칸·오프셋 조정 버튼이
-       헤더 칸 안에 더 들어감) */
+    /* 설정 탭 "팀 근무" 화면 전용(2026-07-21, 이름 입력칸이 헤더 칸 안에
+       더 들어감 — 자리 조정 버튼은 2026-07-21 같은 날 삭제됨, 아래
+       renderTeamSettings 주석 참고) */
     .tst-team-header-cell .tst-name-input {
       width: 100%;
       padding: 3px 4px;
@@ -2822,18 +2856,6 @@
       outline: none;
       box-sizing: border-box;
       text-align: center;
-      margin-bottom: 2px;
-    }
-    .tst-offset-btn {
-      width: 100%;
-      padding: 1px 0;
-      border-radius: 8px;
-      border: 1px solid var(--check-border);
-      background: none;
-      color: var(--text-2);
-      font-size: 9px;
-      cursor: pointer;
-      font-family: inherit;
     }
   </style>
 </head>
@@ -3679,12 +3701,13 @@
   let showDoneEvents = false; // 오늘 탭: 완료한 할 일 표시 여부(새로고침 시 기본 false로 리셋)
   let showDoneDDEvents = false; // 날짜 상세: 완료한 할 일 표시 여부(열 때마다 state.showDoneItems.dayDetail로 리셋, 2026-07-20)
 
-  // 팀 근무 비교 표(2026-07-21 추가) — 오늘부터 스크롤로 계속 이어지는 표라
-  // 월 개념이 없음(연/월 상태 대신 "다음에 어디서부터 이어 그릴지"만 필요).
-  let tcalNextDayOffset = 0; // 오늘로부터 며칠째까지 만들었는지(다음 배치 시작점)
+  // 팀 근무 비교 표(2026-07-21 추가, 같은 날 재조정 — 과거 방향 스크롤도
+  // 지원하도록 확장) — 오늘부터 양쪽으로 스크롤로 이어지는 표라 "월" 상태가
+  // 없음(연/월 대신 "다음/이전에 어디서부터 이어 그릴지"만 필요).
+  let tcalNextDayOffset = 0; // 오늘로부터 미래 방향으로 며칠째까지 만들었는지(다음 배치 시작점)
+  let tcalPrevDayOffset = -1; // 오늘로부터 과거 방향으로 며칠째까지 만들었는지(다음 배치 시작점, 음수)
   let tcalFilterTeamIdx = 'all'; // 'all' 또는 orderedTeams 안의 인덱스
   let tcalFilterShiftName = 'all'; // 'all' 또는 근무 이름
-  const TCAL_CHUNK_DAYS = 60; // 한 번에 미리 계산하는 실제 날짜 수(필터로 걸러지면 더 적게 보일 수 있음)
   const TCAL_MAX_LOOKAHEAD_DAYS = 730; // 필터가 너무 빡빡해도 여기까지만 찾아보고 멈춤(무한 루프 방지)
   const TCAL_MIN_VISIBLE_PER_LOAD = 14; // 한 번 "더 불러오기"에 최소 이만큼은 보여주려고 시도
 
@@ -9123,25 +9146,38 @@
   }
 
   function teamShiftGridTemplate(n) {
-    return '58px repeat(' + n + ', minmax(48px,1fr))';
+    return '40px repeat(' + n + ', minmax(48px,1fr))';
+  }
+
+  const DOW_KR = ['일', '월', '화', '수', '목', '금', '토'];
+
+  // 날짜 칸 글자색(2026-07-21 추가) — 오늘 > 공휴일 > 토/일 > 평소 순서로
+  // 우선순위를 둠(달력 탭 날짜 칸과 같은 우선순위 원칙). 인라인으로 직접
+  // 색을 정해서 CSS 클래스 우선순위와 안 헷갈리게 함.
+  function tstDateColor(dow, isToday, isHoliday) {
+    if (isToday) return 'var(--accent-blue)';
+    if (isHoliday) return 'var(--holiday-color)';
+    if (dow === 0) return '#ff3b30';
+    if (dow === 6) return 'var(--accent-blue)';
+    return 'var(--text-1)';
   }
 
   // 날짜 하나(dateInfo)에 대해 orderedTeams 각각의 근무를 보여주는 행 — 설정
   // 탭·확인 화면 둘 다 이 함수로 행을 그림(완전히 읽기 전용, 조작 UI 없음).
+  // dateInfo: { dateStr, dayNum, dow, isToday, isHoliday }
   function buildTeamShiftDateRow(dateInfo, orderedTeams) {
     var row = document.createElement('div');
     row.className = 'tst-date-row' + (dateInfo.isToday ? ' today' : '');
     row.style.gridTemplateColumns = teamShiftGridTemplate(orderedTeams.length);
+    row.dataset.date = dateInfo.dateStr;
 
+    // 날짜 칸엔 "22(월)" 형태만(2026-07-21 — 예전엔 "7/22(월)"처럼 월도
+    // 같이 찍었는데, 월은 이제 헤더의 월 라벨 칸이 따로 보여주므로 중복이라
+    // 뺌) + 토/일/공휴일 색(공휴일 이름 글자는 더 안 보여줌, 색으로만 구분).
     var dateCell = document.createElement('div');
     dateCell.className = 'tst-date-cell';
-    dateCell.textContent = dateInfo.label;
-    if (dateInfo.holidayName) {
-      var hSpan = document.createElement('span');
-      hSpan.className = 'tst-holiday-name';
-      hSpan.textContent = dateInfo.holidayName;
-      dateCell.appendChild(hSpan);
-    }
+    dateCell.textContent = dateInfo.dayNum + '(' + DOW_KR[dateInfo.dow] + ')';
+    dateCell.style.color = tstDateColor(dateInfo.dow, dateInfo.isToday, dateInfo.isHoliday);
     row.appendChild(dateCell);
 
     orderedTeams.forEach(function (team) {
@@ -9269,8 +9305,7 @@
     for (var d = 0; d < shiftCount; d++) {
       var dm = new Date(todayMid.getFullYear(), todayMid.getMonth(), todayMid.getDate() + d);
       var dsStr = formatDateStr(dm);
-      var hol = getKoreanHoliday(dsStr);
-      dates.push({ dateStr: dsStr, label: (dm.getMonth() + 1) + '/' + dm.getDate(), isToday: d === 0, holidayName: hol ? hol.name : '' });
+      dates.push({ dateStr: dsStr, dayNum: dm.getDate(), dow: dm.getDay(), isToday: d === 0, isHoliday: !!getKoreanHoliday(dsStr) });
     }
 
     var tableWrap = document.createElement('div');
@@ -9279,7 +9314,10 @@
     var hdr = document.createElement('div');
     hdr.className = 'tst-header-row';
     hdr.style.gridTemplateColumns = teamShiftGridTemplate(orderedTeams.length);
-    hdr.appendChild(document.createElement('div')); // 날짜 라벨 자리(빈칸)
+    var monthCell = document.createElement('div');
+    monthCell.className = 'tst-month-label-cell';
+    monthCell.textContent = (todayMid.getMonth() + 1) + '월'; // 이 화면은 스크롤이 없어 항상 오늘 기준 월 하나만 고정 표시
+    hdr.appendChild(monthCell);
 
     orderedTeams.forEach(function (team) {
       var cell = document.createElement('div');
@@ -9317,20 +9355,9 @@
       }(team.teamIdx, inp));
       cell.appendChild(inp);
 
-      var offBtn = document.createElement('button');
-      offBtn.type = 'button';
-      offBtn.className = 'tst-offset-btn';
-      offBtn.textContent = '자리 ▶';
-      (function (idx) {
-        offBtn.addEventListener('click', function () {
-          state.teams[idx].offsetDays = (state.teams[idx].offsetDays + 1) % state.cycleDays;
-          saveState();
-          renderTeamSettings();
-          renderToday();
-        });
-      }(team.teamIdx));
-      cell.appendChild(offBtn);
-
+      // "자리 ▶"(offsetDays 순환) 버튼은 2026-07-21 사용자 요청으로 삭제함 —
+      // 팀의 자리(offsetDays)를 조정하는 UI 자체가 이제 이 화면에 없음(다시
+      // 만들지 말 것, 필요해지면 사용자가 다른 방식으로 요청할 것).
       hdr.appendChild(cell);
     });
     tableWrap.appendChild(hdr);
@@ -9394,6 +9421,24 @@
     tcalFilterShiftName = shiftSel.value;
   }
 
+  // 헤더 맨 왼쪽의 "N월" 라벨(2026-07-21 추가) — 지금 화면 위쪽(고정 헤더
+  // 바로 아래)에 걸쳐 있는 날짜 행이 몇 월인지 계산해서 보여줌. 스크롤마다
+  // elementFromPoint로 딱 한 번만 확인하는 가벼운 방식(전체 행을 순회하지
+  // 않음 — 확인 화면은 스크롤로 수백 개 행이 쌓일 수 있어 성능을 고려함).
+  function updateTcalMonthLabel() {
+    var wrap = document.getElementById('tcal-table-wrap');
+    var headerRow = document.getElementById('tcal-header-row');
+    var monthCell = document.getElementById('tcal-month-label-cell');
+    if (!wrap || !headerRow || !monthCell) return;
+    var hRect = headerRow.getBoundingClientRect();
+    var wRect = wrap.getBoundingClientRect();
+    var probeEl = document.elementFromPoint(wRect.left + 10, hRect.bottom + 4);
+    var rowEl = probeEl ? probeEl.closest('.tst-date-row') : null;
+    if (!rowEl || !rowEl.dataset.date) return;
+    var d = parseLocalDate(rowEl.dataset.date);
+    monthCell.textContent = (d.getMonth() + 1) + '월';
+  }
+
   function renderTeamShiftScreen() {
     var headerRow = document.getElementById('tcal-header-row');
     var rowsWrap = document.getElementById('tcal-date-rows');
@@ -9401,8 +9446,10 @@
     headerRow.innerHTML = '';
     rowsWrap.innerHTML = '';
     loadMoreEl.style.display = 'none';
-    loadMoreEl.dataset.loading = '';
+    delete rowsWrap.dataset.loadingNext;
+    delete rowsWrap.dataset.loadingPrev;
     tcalNextDayOffset = 0;
+    tcalPrevDayOffset = -1;
 
     var orderedTeams = getOrderedTeams(false);
     populateTcalFilterOptions(orderedTeams);
@@ -9420,22 +9467,15 @@
     });
 
     headerRow.style.gridTemplateColumns = teamShiftGridTemplate(tcalVisibleTeams.length);
-    headerRow.appendChild(document.createElement('div')); // 날짜 라벨 자리(빈칸)
+    var monthCell = document.createElement('div');
+    monthCell.className = 'tst-month-label-cell';
+    monthCell.id = 'tcal-month-label-cell';
+    headerRow.appendChild(monthCell);
+    // 팀 이름 칸 재정렬은 설정 탭에서만(2026-07-21 요청) — 이 화면은 보기
+    // 전용이라 손잡이·드래그 없이 이름만 보여줌.
     tcalVisibleTeams.forEach(function (team) {
       var cell = document.createElement('div');
       cell.className = 'tst-team-header-cell' + (team.isMyTeam ? ' my-team' : '');
-      if (!team.isMyTeam) {
-        cell.dataset.teamIdx = team.teamIdx;
-        var handle = document.createElement('div');
-        handle.className = 'tst-team-header-handle';
-        handle.textContent = '≡';
-        cell.appendChild(handle);
-        setupTeamColumnDrag(handle, cell, headerRow, function (newOrder) {
-          reorderTeamsFromDomOrder(newOrder);
-          renderTeamShiftScreen();
-          renderToday();
-        });
-      }
       var nameEl = document.createElement('div');
       nameEl.className = 'tst-team-header-name';
       nameEl.textContent = team.name;
@@ -9444,58 +9484,92 @@
     });
 
     loadMoreTeamShiftRows();
+    loadPrevTeamShiftRows(false);
+    updateTcalMonthLabel();
 
     var wrap = document.getElementById('tcal-table-wrap');
+    // 오늘 행을 헤더 바로 아래로 스크롤(이 화면을 열 때·필터/재렌더할 때마다
+    // 항상 "오늘부터 보기"가 기본 — 위에 과거 날짜를 미리 깔아둬도 처음
+    // 보이는 화면은 그대로 유지).
+    // 화면(특히 큰 화면/태블릿)에서는 처음 불러온 미래 날짜 분량만으로 오늘을
+    // 헤더 바로 아래까지 밀 만큼 스크롤 가능한 높이가 안 나올 수 있음(브라우저가
+    // scrollTop을 "스크롤 가능한 최대치"로 자동 clamp해버려서 목표에 못
+    // 미침, 2026-07-21 발견) — 목표에 못 미치면 미래 날짜를 더 불러와서
+    // 스크롤 가능 범위를 넓힌 뒤 다시 시도(최대 5번, 대부분 1~2번 안에 끝남).
+    function scrollTodayToTop(attempts) {
+      var todayRow = rowsWrap.querySelector('.tst-date-row.today');
+      if (!todayRow) return;
+      var headerRect = headerRow.getBoundingClientRect();
+      var todayRect = todayRow.getBoundingClientRect();
+      var target = wrap.scrollTop + (todayRect.top - headerRect.bottom);
+      wrap.scrollTop = target;
+      updateTcalMonthLabel();
+      if (attempts < 5 && Math.abs(wrap.scrollTop - target) > 1) {
+        loadMoreTeamShiftRows();
+        requestAnimationFrame(function () { scrollTodayToTop(attempts + 1); });
+      }
+    }
+    requestAnimationFrame(function () { scrollTodayToTop(0); });
+
     if (!wrap.dataset.scrollBound) {
       wrap.dataset.scrollBound = '1';
       wrap.addEventListener('scroll', function () {
         if (wrap.scrollTop + wrap.clientHeight >= wrap.scrollHeight - 200) {
           loadMoreTeamShiftRows();
         }
+        if (wrap.scrollTop <= 100) {
+          loadPrevTeamShiftRows(true);
+        }
+        updateTcalMonthLabel();
       });
     }
   }
 
-  // 오늘로부터 이어서 날짜 행을 계산해 덧붙임 — 근무 필터가 걸려 있으면
-  // 조건에 안 맞는 날짜는 건너뛰고, 최소 TCAL_MIN_VISIBLE_PER_LOAD개를 보여줄
-  // 때까지(또는 TCAL_MAX_LOOKAHEAD_DAYS에 도달할 때까지) 계속 찾아봄 —
-  // "드래그(스크롤)하면 월 상관없이 날짜가 계속 보이는" 동작.
+  // 날짜 하나를 buildTeamShiftDateRow에 넘길 dateInfo로 변환.
+  function tcalBuildDateInfo(dm, offset) {
+    var dateStr = formatDateStr(dm);
+    return {
+      dateStr: dateStr,
+      dayNum: dm.getDate(),
+      dow: dm.getDay(),
+      isToday: offset === 0,
+      isHoliday: !!getKoreanHoliday(dateStr)
+    };
+  }
+
+  // 오늘로부터 미래 방향으로 이어서 날짜 행을 계산해 아래에 덧붙임 — 근무
+  // 필터가 걸려 있으면 조건에 안 맞는 날짜는 건너뛰고, 최소
+  // TCAL_MIN_VISIBLE_PER_LOAD개를 보여줄 때까지(또는 TCAL_MAX_LOOKAHEAD_DAYS에
+  // 도달할 때까지) 계속 찾아봄 — "스크롤하면 월 상관없이 날짜가 계속
+  // 보이는" 동작.
   function loadMoreTeamShiftRows() {
     if (tcalVisibleTeams.length === 0) return;
     var rowsWrap = document.getElementById('tcal-date-rows');
     var loadMoreEl = document.getElementById('tcal-load-more');
-    if (loadMoreEl.dataset.loading === '1') return;
-    loadMoreEl.dataset.loading = '1';
+    if (rowsWrap.dataset.loadingNext === '1') return;
+    rowsWrap.dataset.loadingNext = '1';
 
     var addedCount = 0;
     var fragment = document.createDocumentFragment();
     var todayMid = todayMidnight();
-    var DOW_KR = ['일', '월', '화', '수', '목', '금', '토'];
 
     while (addedCount < TCAL_MIN_VISIBLE_PER_LOAD && tcalNextDayOffset < TCAL_MAX_LOOKAHEAD_DAYS) {
       var offset = tcalNextDayOffset;
       var dm = new Date(todayMid.getFullYear(), todayMid.getMonth(), todayMid.getDate() + offset);
-      var dateStr = formatDateStr(dm);
-      var hol = getKoreanHoliday(dateStr);
       tcalNextDayOffset++;
 
       if (tcalFilterShiftName !== 'all') {
+        var dateStr = formatDateStr(dm);
         var anyMatch = tcalVisibleTeams.some(function (team) { return getTeamShift(team, dateStr) === tcalFilterShiftName; });
         if (!anyMatch) continue;
       }
 
-      var dateInfo = {
-        dateStr: dateStr,
-        label: (dm.getMonth() + 1) + '/' + dm.getDate() + '(' + DOW_KR[dm.getDay()] + ')',
-        isToday: offset === 0,
-        holidayName: hol ? hol.name : ''
-      };
-      fragment.appendChild(buildTeamShiftDateRow(dateInfo, tcalVisibleTeams));
+      fragment.appendChild(buildTeamShiftDateRow(tcalBuildDateInfo(dm, offset), tcalVisibleTeams));
       addedCount++;
     }
 
     rowsWrap.appendChild(fragment);
-    loadMoreEl.dataset.loading = '';
+    delete rowsWrap.dataset.loadingNext;
 
     var reachedEnd = tcalNextDayOffset >= TCAL_MAX_LOOKAHEAD_DAYS;
     if (reachedEnd && rowsWrap.children.length === 0) {
@@ -9505,6 +9579,53 @@
       rowsWrap.appendChild(msg);
     }
     loadMoreEl.style.display = reachedEnd ? 'none' : '';
+  }
+
+  // 오늘로부터 과거 방향으로 이어서 날짜 행을 계산해 위에 덧붙임(2026-07-21
+  // 추가 — "이전 날짜로도 스크롤 가능하게" 요청). compensateScroll이 true면
+  // (스크롤이 위쪽 끝에 가까워져서 자동으로 불릴 때) 방금 위에 끼워넣은
+  // 만큼 scrollTop을 같이 밀어줘서 화면에 보이던 내용이 그대로 유지되게 함
+  // (안 그러면 위에 내용이 생기면서 지금 보던 화면이 아래로 밀려 보이는
+  // 점프가 생김) — false면(화면을 처음 열 때) 그냥 붙이기만 하고, 그 뒤
+  // renderTeamShiftScreen()이 "오늘"로 스크롤을 다시 맞춤.
+  function loadPrevTeamShiftRows(compensateScroll) {
+    if (tcalVisibleTeams.length === 0) return;
+    if (tcalPrevDayOffset <= -TCAL_MAX_LOOKAHEAD_DAYS) return;
+    var wrap = document.getElementById('tcal-table-wrap');
+    var rowsWrap = document.getElementById('tcal-date-rows');
+    if (rowsWrap.dataset.loadingPrev === '1') return;
+    rowsWrap.dataset.loadingPrev = '1';
+
+    var addedCount = 0;
+    var newRows = [];
+    var todayMid = todayMidnight();
+
+    while (addedCount < TCAL_MIN_VISIBLE_PER_LOAD && tcalPrevDayOffset > -TCAL_MAX_LOOKAHEAD_DAYS) {
+      var offset = tcalPrevDayOffset;
+      var dm = new Date(todayMid.getFullYear(), todayMid.getMonth(), todayMid.getDate() + offset);
+      tcalPrevDayOffset--;
+
+      if (tcalFilterShiftName !== 'all') {
+        var dateStr = formatDateStr(dm);
+        var anyMatch = tcalVisibleTeams.some(function (team) { return getTeamShift(team, dateStr) === tcalFilterShiftName; });
+        if (!anyMatch) continue;
+      }
+
+      newRows.unshift(buildTeamShiftDateRow(tcalBuildDateInfo(dm, offset), tcalVisibleTeams));
+      addedCount++;
+    }
+
+    var prevHeight = rowsWrap.scrollHeight;
+    var fragment = document.createDocumentFragment();
+    newRows.forEach(function (r) { fragment.appendChild(r); });
+    rowsWrap.insertBefore(fragment, rowsWrap.firstChild);
+
+    if (compensateScroll) {
+      var addedHeight = rowsWrap.scrollHeight - prevHeight;
+      wrap.scrollTop += addedHeight;
+    }
+
+    delete rowsWrap.dataset.loadingPrev;
   }
 
   document.getElementById('btn-team-cal').addEventListener('click', openTeamCal);
