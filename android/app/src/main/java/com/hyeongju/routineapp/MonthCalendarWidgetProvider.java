@@ -46,8 +46,13 @@ public class MonthCalendarWidgetProvider extends AppWidgetProvider {
     // 날짜 칸의 숫자 뒤에 공휴일 이름을 작게 이어붙임(2026-07-18 추가) — 이
     // 위젯 레이아웃엔 공휴일 전용 칸이 따로 없어서, 같은 TextView 안에 크기·색이
     // 다른 부분(Span)을 넣는 방식으로 처리(레이아웃 XML은 안 건드림).
-    private static CharSequence buildDateText(int dayNum, String holidayName) {
-        String numStr = String.valueOf(dayNum);
+    // showMonth가 true면 "7/21"처럼 월을 같이 붙임(2026-07-22 추가, 스케줄
+    // 위젯의 buildDateText와 같은 방식) — 맨 위 월 표시(widget_month_label)를
+    // 없애는 대신, 이 그리드가 실제로 보여주는 첫 칸(index 0, 다른 달 날짜가
+    // 삐져나온 자리일 수 있음)과 달이 넘어가는 칸(dayNum==1) 둘 다 이 조건에
+    // 해당해서 화면 어딘가에 항상 "지금 몇 월인지"가 보임.
+    private static CharSequence buildDateText(int dayNum, int monthNum, boolean showMonth, String holidayName) {
+        String numStr = showMonth ? (monthNum + "/" + dayNum) : String.valueOf(dayNum);
         if (holidayName == null || holidayName.isEmpty()) return numStr;
         SpannableStringBuilder ssb = new SpannableStringBuilder(numStr + " " + holidayName);
         int start = numStr.length() + 1;
@@ -221,18 +226,13 @@ public class MonthCalendarWidgetProvider extends AppWidgetProvider {
             // 남음, 2026-07-16 발견·수정). 스케줄 위젯(sch_cell_N)은 처음부터
             // 이 리셋이 있었음 — 이 위젯만 빠져있던 것.
             views.setInt(idFor(context, "cell_container_" + i), "setBackgroundColor", 0x00000000);
+            // 다른 달 날짜 흐림 표시(otherMonth, 2026-07-22 추가) 리셋 — 매번
+            // 명시적으로 1.0(완전 불투명)으로 되돌려둔 뒤, 아래 데이터 채우는
+            // 루프에서 otherMonth인 칸만 다시 흐리게 함(재활용되는 뷰가 이전
+            // 칸의 흐림 상태를 그대로 물고 있는 사고 예방 — 이 위젯의 다른
+            // "매번 리셋" 습관과 동일한 이유).
+            views.setFloat(idFor(context, "cell_container_" + i), "setAlpha", 1.0f);
         }
-        views.setTextViewText(idFor(context, "widget_month_label"), "");
-        // 버그(수정 완료, 2026-07-18) — 이 글자색만 XML 기본값(@color/widget_
-        // text_primary, 휴대폰 "시스템" 다크/라이트만 따라감)에 계속 의존하고
-        // 있어서, 앱 안 설정(설정 탭 "테마")에서 다크를 강제로 골랐는데
-        // 시스템 자체는 아직 라이트일 때 배경(WidgetThemeHelper.isDarkMode()
-        // 기준, 앞줄 참고)은 어둡게 바뀌는데 이 글자만 밝은 배경 기준 색(거의
-        // 검정)으로 남아 어두운 배경 위에서 안 보이는 문제가 있었음 — 다른
-        // 텍스트(cell_date_i 등)는 이미 primaryText(WidgetThemeHelper.
-        // primaryTextColor(), 앱 테마 우선)를 쓰고 있었는데 이 라벨만 빠져
-        // 있었음. 명시적으로 지정해서 고침.
-        views.setTextColor(idFor(context, "widget_month_label"), primaryText);
 
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         String raw = prefs.getString(KEY_MONTH_DATA, null);
@@ -261,8 +261,6 @@ public class MonthCalendarWidgetProvider extends AppWidgetProvider {
 
                     JSONObject monthObj = months.optJSONObject(idx);
                     if (monthObj != null) {
-                        views.setTextViewText(idFor(context, "widget_month_label"), monthObj.optString("monthLabel", ""));
-
                         String todayStr = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Calendar.getInstance().getTime());
 
                         JSONArray days = monthObj.optJSONArray("days");
@@ -291,12 +289,30 @@ public class MonthCalendarWidgetProvider extends AppWidgetProvider {
                                 String color = day.optString("color", "");
                                 String batchId = day.optString("batchId", "");
                                 String holidayName = day.optString("holidayName", "");
+                                boolean otherMonth = day.optBoolean("otherMonth", false);
 
                                 int dateId = idFor(context, "cell_date_" + i);
                                 int shiftId = idFor(context, "cell_shift_" + i);
                                 int cellId = idFor(context, "cell_container_" + i);
 
-                                views.setTextViewText(dateId, buildDateText(dayNum, holidayName));
+                                // 맨 위 월 표시(widget_month_label)를 없앤 대신, 이 그리드가
+                                // 실제로 보여주는 첫 칸(index 0 — 다른 달 날짜가 삐져나온
+                                // 자리일 수 있음)과 달이 넘어가는 칸(dayNum==1) 둘 다 "7/1"
+                                // 처럼 월을 같이 보여줌(스케줄 위젯과 같은 방식, 2026-07-22
+                                // 추가).
+                                int monthNum = 0;
+                                if (dateStr.length() >= 7) {
+                                    try { monthNum = Integer.parseInt(dateStr.substring(5, 7)); } catch (Exception e) { /* 무시 */ }
+                                }
+                                boolean showMonth = (i == 0) || (dayNum == 1);
+                                views.setTextViewText(dateId, buildDateText(dayNum, monthNum, showMonth, holidayName));
+
+                                // 다른 달 날짜는 앱 달력 탭(.other-month, opacity 0.38)과 같은
+                                // 톤으로 흐리게(2026-07-22 추가) — 칸 전체(cell_container)에
+                                // 알파를 줘서 날짜 숫자·근무 배지 전부 같이 흐려짐.
+                                if (otherMonth) {
+                                    views.setFloat(cellId, "setAlpha", 0.38f);
+                                }
 
                                 if (!shiftName.isEmpty()) {
                                     boolean continuesBand = !batchId.isEmpty() && batchId.equals(prevBatchId);

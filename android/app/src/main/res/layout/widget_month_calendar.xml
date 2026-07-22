@@ -5,17 +5,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@drawable/widget_background"
-    android:padding="6dp">
-
-    <TextView
-        android:id="@+id/widget_month_label"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:textSize="21sp"
-        android:textStyle="bold"
-        android:textColor="@color/widget_text_primary"
-        android:paddingBottom="3dp" />
+    android:padding="4dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -29,7 +19,7 @@
             android:gravity="center"
             android:textStyle="bold"
             android:textColor="@color/widget_text_secondary"
-            android:textSize="17sp" />
+            android:textSize="12sp" />
         <TextView
             android:id="@+id/header_1"
             android:layout_width="0dp"
@@ -38,7 +28,7 @@
             android:gravity="center"
             android:textStyle="bold"
             android:textColor="@color/widget_text_secondary"
-            android:textSize="17sp" />
+            android:textSize="12sp" />
         <TextView
             android:id="@+id/header_2"
             android:layout_width="0dp"
@@ -47,7 +37,7 @@
             android:gravity="center"
             android:textStyle="bold"
             android:textColor="@color/widget_text_secondary"
-            android:textSize="17sp" />
+            android:textSize="12sp" />
         <TextView
             android:id="@+id/header_3"
             android:layout_width="0dp"
@@ -56,7 +46,7 @@
             android:gravity="center"
             android:textStyle="bold"
             android:textColor="@color/widget_text_secondary"
-            android:textSize="17sp" />
+            android:textSize="12sp" />
         <TextView
             android:id="@+id/header_4"
             android:layout_width="0dp"
@@ -65,7 +55,7 @@
             android:gravity="center"
             android:textStyle="bold"
             android:textColor="@color/widget_text_secondary"
-            android:textSize="17sp" />
+            android:textSize="12sp" />
         <TextView
             android:id="@+id/header_5"
             android:layout_width="0dp"
@@ -74,7 +64,7 @@
             android:gravity="center"
             android:textStyle="bold"
             android:textColor="@color/widget_text_secondary"
-            android:textSize="17sp" />
+            android:textSize="12sp" />
         <TextView
             android:id="@+id/header_6"
             android:layout_width="0dp"
@@ -83,7 +73,7 @@
             android:gravity="center"
             android:textStyle="bold"
             android:textColor="@color/widget_text_secondary"
-            android:textSize="17sp" />
+            android:textSize="12sp" />
     </LinearLayout>
 
     <LinearLayout
@@ -98,7 +88,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_0"
                 android:layout_width="wrap_content"
@@ -106,17 +96,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_0"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cell_container_1"
@@ -125,7 +115,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_1"
                 android:layout_width="wrap_content"
@@ -133,17 +123,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cell_container_2"
@@ -152,7 +142,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_2"
                 android:layout_width="wrap_content"
@@ -160,17 +150,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cell_container_3"
@@ -179,7 +169,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_3"
                 android:layout_width="wrap_content"
@@ -187,17 +177,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_3"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cell_container_4"
@@ -206,7 +196,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_4"
                 android:layout_width="wrap_content"
@@ -214,17 +204,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_4"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cell_container_5"
@@ -233,7 +223,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_5"
                 android:layout_width="wrap_content"
@@ -241,17 +231,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_5"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cell_container_6"
@@ -260,7 +250,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_6"
                 android:layout_width="wrap_content"
@@ -268,17 +258,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_6"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
     </LinearLayout>
 
@@ -294,7 +284,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_7"
                 android:layout_width="wrap_content"
@@ -302,17 +292,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_7"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cell_container_8"
@@ -321,7 +311,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_8"
                 android:layout_width="wrap_content"
@@ -329,17 +319,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_8"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cell_container_9"
@@ -348,7 +338,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_9"
                 android:layout_width="wrap_content"
@@ -356,17 +346,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_9"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cell_container_10"
@@ -375,7 +365,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_10"
                 android:layout_width="wrap_content"
@@ -383,17 +373,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_10"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cell_container_11"
@@ -402,7 +392,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_11"
                 android:layout_width="wrap_content"
@@ -410,17 +400,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_11"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cell_container_12"
@@ -429,7 +419,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_12"
                 android:layout_width="wrap_content"
@@ -437,17 +427,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_12"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cell_container_13"
@@ -456,7 +446,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_13"
                 android:layout_width="wrap_content"
@@ -464,17 +454,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_13"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
     </LinearLayout>
 
@@ -490,7 +480,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_14"
                 android:layout_width="wrap_content"
@@ -498,17 +488,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_14"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cell_container_15"
@@ -517,7 +507,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_15"
                 android:layout_width="wrap_content"
@@ -525,17 +515,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_15"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cell_container_16"
@@ -544,7 +534,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_16"
                 android:layout_width="wrap_content"
@@ -552,17 +542,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_16"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cell_container_17"
@@ -571,7 +561,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_17"
                 android:layout_width="wrap_content"
@@ -579,17 +569,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_17"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cell_container_18"
@@ -598,7 +588,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_18"
                 android:layout_width="wrap_content"
@@ -606,17 +596,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_18"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cell_container_19"
@@ -625,7 +615,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_19"
                 android:layout_width="wrap_content"
@@ -633,17 +623,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_19"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cell_container_20"
@@ -652,7 +642,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_20"
                 android:layout_width="wrap_content"
@@ -660,17 +650,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_20"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
     </LinearLayout>
 
@@ -686,7 +676,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_21"
                 android:layout_width="wrap_content"
@@ -694,17 +684,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_21"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cell_container_22"
@@ -713,7 +703,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_22"
                 android:layout_width="wrap_content"
@@ -721,17 +711,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_22"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cell_container_23"
@@ -740,7 +730,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_23"
                 android:layout_width="wrap_content"
@@ -748,17 +738,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_23"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cell_container_24"
@@ -767,7 +757,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_24"
                 android:layout_width="wrap_content"
@@ -775,17 +765,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_24"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cell_container_25"
@@ -794,7 +784,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_25"
                 android:layout_width="wrap_content"
@@ -802,17 +792,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_25"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cell_container_26"
@@ -821,7 +811,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_26"
                 android:layout_width="wrap_content"
@@ -829,17 +819,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_26"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cell_container_27"
@@ -848,7 +838,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_27"
                 android:layout_width="wrap_content"
@@ -856,17 +846,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_27"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
     </LinearLayout>
 
@@ -882,7 +872,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_28"
                 android:layout_width="wrap_content"
@@ -890,17 +880,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_28"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cell_container_29"
@@ -909,7 +899,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_29"
                 android:layout_width="wrap_content"
@@ -917,17 +907,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_29"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cell_container_30"
@@ -936,7 +926,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_30"
                 android:layout_width="wrap_content"
@@ -944,17 +934,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_30"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cell_container_31"
@@ -963,7 +953,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_31"
                 android:layout_width="wrap_content"
@@ -971,17 +961,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_31"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cell_container_32"
@@ -990,7 +980,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_32"
                 android:layout_width="wrap_content"
@@ -998,17 +988,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_32"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cell_container_33"
@@ -1017,7 +1007,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_33"
                 android:layout_width="wrap_content"
@@ -1025,17 +1015,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_33"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cell_container_34"
@@ -1044,7 +1034,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_34"
                 android:layout_width="wrap_content"
@@ -1052,17 +1042,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_34"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
     </LinearLayout>
 
@@ -1078,7 +1068,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_35"
                 android:layout_width="wrap_content"
@@ -1086,17 +1076,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_35"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cell_container_36"
@@ -1105,7 +1095,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_36"
                 android:layout_width="wrap_content"
@@ -1113,17 +1103,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_36"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cell_container_37"
@@ -1132,7 +1122,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_37"
                 android:layout_width="wrap_content"
@@ -1140,17 +1130,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_37"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cell_container_38"
@@ -1159,7 +1149,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_38"
                 android:layout_width="wrap_content"
@@ -1167,17 +1157,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_38"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cell_container_39"
@@ -1186,7 +1176,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_39"
                 android:layout_width="wrap_content"
@@ -1194,17 +1184,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_39"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cell_container_40"
@@ -1213,7 +1203,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_40"
                 android:layout_width="wrap_content"
@@ -1221,17 +1211,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_40"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cell_container_41"
@@ -1240,7 +1230,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="top|center_horizontal"
-            android:paddingTop="1dp">
+            android:paddingTop="0dp">
             <TextView
                 android:id="@+id/cell_date_41"
                 android:layout_width="wrap_content"
@@ -1248,17 +1238,17 @@
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="16sp" />
+                android:textSize="13sp" />
             <TextView
                 android:id="@+id/cell_shift_41"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:paddingTop="1dp"
-                android:paddingBottom="1dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
                 android:maxLines="1"
                 android:textStyle="bold"
-                android:textSize="13.6sp" />
+                android:textSize="11sp" />
         </LinearLayout>
     </LinearLayout>
 

@@ -6843,37 +6843,59 @@
   // [지난달, 이번달, 다음달] 3개월치를 한 번에 계산해서 넘김 — 위젯은 이 3개
   // 중 하나를 골라 보여주기만 하고(항상 배열 인덱스 1이 "이번달"), 그 범위를
   // 벗어나면 더 못 넘어감(그 이상은 앱을 열어야 최신으로 갱신됨).
-  function buildOneMonthGrid(year, month, weekStart) {
+  // 날짜 하나(dateMid)의 위젯용 칸 데이터를 계산 — buildOneMonthGrid가
+  // 이번 달 날짜뿐 아니라 앞뒤로 삐져나오는 다른 달 날짜에도 똑같이 쓰기
+  // 위해 뽑아낸 공용 헬퍼(2026-07-22 추가, "달력위젯도 달력페이지처럼 다른
+  // 달 날짜까지 다 보여달라"는 요청 — 예전엔 다른 달 자리는 그냥 빈 칸
+  // (null)이었음).
+  function buildMonthWidgetDayCell(dateMid, otherMonth) {
     const baseMid = parseLocalDate(state.baseDate);
+    const diff = Math.round((dateMid - baseMid) / 86400000);
+    const dayIdx0 = ((diff % state.cycleDays) + state.cycleDays) % state.cycleDays;
+    const dateStr = formatDateStr(dateMid);
+    const { name: shiftName } = getEffectiveShiftName(dateStr, dayIdx0);
+    const ov = getDateOverride(dateStr);
+    const holiday = getKoreanHoliday(dateStr);
+    return {
+      date: dateStr,
+      dayNum: dateMid.getDate(),
+      shiftName: shiftName || '',
+      color: getShiftColor(shiftName) || '',
+      // 일괄 수정으로 이어진 날짜인지 위젯이 스스로 판단할 근거(2026-07-18
+      // 추가) — appendShiftIndicator와 같은 기준(같은 batchId를 가진 날짜
+      // 예외끼리만 진짜 이어진 것으로 침). 없으면 빈 문자열.
+      batchId: (ov && ov.batchId) || '',
+      // 공휴일 이름(2026-07-18 추가) — 위젯도 달력 탭과 같은 걸 보여줌.
+      holidayName: holiday ? holiday.name : '',
+      // 이 달(요청받은 month)에 속하지 않는 날짜인지(2026-07-22 추가) —
+      // 앱 달력 탭의 .other-month(옅게 흐림)와 같은 뜻, 위젯도 같은 톤으로
+      // 흐리게 표시하기 위한 표시.
+      otherMonth: !!otherMonth,
+    };
+  }
+
+  function buildOneMonthGrid(year, month, weekStart) {
     const firstOfMonth = new Date(year, month, 1);
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const startWd = weekStart === 1 ? firstOfMonth.getDay() : (firstOfMonth.getDay() + 6) % 7;
 
     const days = [];
-    for (let d = 0; d < startWd; d++) days.push(null);
-    for (let d = 1; d <= daysInMonth; d++) {
-      const dateMid = new Date(year, month, d);
-      const diff = Math.round((dateMid - baseMid) / 86400000);
-      const dayIdx0 = ((diff % state.cycleDays) + state.cycleDays) % state.cycleDays;
-      const dateStr = formatDateStr(dateMid);
-      const { name: shiftName } = getEffectiveShiftName(dateStr, dayIdx0);
-      const ov = getDateOverride(dateStr);
-      const holiday = getKoreanHoliday(dateStr);
-      days.push({
-        date: dateStr,
-        dayNum: d,
-        shiftName: shiftName || '',
-        color: getShiftColor(shiftName) || '',
-        // 일괄 수정으로 이어진 날짜인지 위젯이 스스로 판단할 근거(2026-07-18
-        // 추가) — appendShiftIndicator와 같은 기준(같은 batchId를 가진 날짜
-        // 예외끼리만 진짜 이어진 것으로 침). 없으면 빈 문자열.
-        batchId: (ov && ov.batchId) || '',
-        // 공휴일 이름(2026-07-18 추가) — 위젯도 달력 탭과 같은 걸 보여줌.
-        holidayName: holiday ? holiday.name : '',
-      });
+    // 이전 달이 삐져나오는 앞칸 — 달력 탭(renderGrid)의 cells.push({inMonth:false})와
+    // 같은 범위(startWd개), 빈 칸이 아니라 실제 그 달 날짜로 채움.
+    for (let d = startWd; d > 0; d--) {
+      days.push(buildMonthWidgetDayCell(new Date(year, month, 1 - d), true));
     }
-    while (days.length % 7 !== 0) days.push(null);
-    while (days.length < 42) days.push(null);
+    for (let d = 1; d <= daysInMonth; d++) {
+      days.push(buildMonthWidgetDayCell(new Date(year, month, d), false));
+    }
+    // 다음 달이 삐져나오는 뒷칸 — 42칸(6주)을 항상 채울 때까지 다음 달 날짜를
+    // 계속 이어붙임("다음달 다 보여주고" 요청 — 예전엔 남는 자리를 그냥 빈
+    // 칸으로 뒀음).
+    let nextD = 1;
+    while (days.length < 42) {
+      days.push(buildMonthWidgetDayCell(new Date(year, month + 1, nextD), true));
+      nextD++;
+    }
 
     return { monthLabel: (month + 1) + '월', days: days };
   }
