@@ -1,5 +1,16 @@
 apply plugin: 'com.android.application'
 
+// 정식 배포용 서명 설정(2026-07-22 추가, 플레이스토어 등록 준비) —
+// android/keystore.properties(git에 안 올라감, .gitignore 처리됨)에 실제
+// 키스토어 경로·비밀번호를 담아두고 여기서 읽어옴. 이 파일이 아직 없는
+// 환경(예: 다른 컴퓨터에서 처음 클론한 경우)에서도 디버그 빌드는 계속
+// 되도록, release 서명 설정은 그 파일이 있을 때만 적용함.
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
 android {
     namespace = "com.hyeongju.routineapp"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -16,10 +27,23 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            if (keystorePropertiesFile.exists()) {
+                storeFile rootProject.file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (keystorePropertiesFile.exists()) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 }
