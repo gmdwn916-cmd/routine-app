@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 위젯 선택 화면 미리보기 전용(API 31+) — 실제 데이터가 아니라 예시를
      하드코딩(widget_team_today.xml과 같은 구조, Java 안 건드림). 세로 위치
-     (스페이서 weight 3:1)도 실제 위젯과 항상 같이 맞출 것. -->
+     (스페이서 weight 3:1)와 근무 배지 좌우 여백(6dp, 둥근 테두리와 각진
+     배지가 겹치지 않게 하는 목적)도 실제 위젯과 항상 같이 맞출 것. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -49,6 +50,8 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:layout_marginEnd="6dp"
                 android:layout_marginTop="1dp"
                 android:gravity="center"
                 android:maxLines="1"
@@ -79,6 +82,8 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:layout_marginEnd="6dp"
                 android:layout_marginTop="1dp"
                 android:gravity="center"
                 android:maxLines="1"
@@ -109,6 +114,8 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:layout_marginEnd="6dp"
                 android:layout_marginTop="1dp"
                 android:gravity="center"
                 android:maxLines="1"
@@ -139,6 +146,8 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:layout_marginEnd="6dp"
                 android:layout_marginTop="1dp"
                 android:gravity="center"
                 android:maxLines="1"

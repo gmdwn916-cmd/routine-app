@@ -5,14 +5,32 @@
      위젯들과 같은 이유), 실제 팀 수가 이보다 적으면 남는 칸은 Provider가
      GONE으로 숨김. 근무 배지는 스케줄 위젯(sch_shift_N)과 같은 방식(둥근
      모서리 없이 flat 배경 tint) — 이 위젯도 칸이 작아서 같은 단순화가 맞음.
+     **근무 배지 좌우 여백(2026-07-22 추가)**: 내 팀 칸의 둥근 테두리
+     (`widget_myteam_highlight.xml`, 모서리 8dp)는 그대로 두되, 그 안의
+     근무 배지(`tt_shift_N`, `setBackgroundColor`로 칠해서 항상 각진
+     사각형 — 위 "flat 배경 tint" 참고)가 테두리의 둥근 모서리 바깥으로
+     삐져나와 보이던 문제 때문에 각 `tt_shift_N`에 좌우 여백(6dp)을 줌 —
+     각진 사각형의 좌우 모서리를 테두리 곡선이 시작되는 지점보다 안쪽으로
+     들여보내서, 배지는 계속 각진 모양 그대로이면서도 테두리 곡선과
+     겹치지 않게 됨(배지를 둥글게 바꾸거나 테두리를 각지게 바꾸는 대신,
+     여백만으로 해결 — 처음엔 테두리를 각지게 바꿨다가 사용자가 "테두리는
+     둥근 채로 유지하고 싶었다"고 바로잡아서 이 방식으로 교체함).
      세로 위치(2026-07-22, "위젯 전체를 5칸으로 나눴을 때 밑에서 2번째 칸"
      요청): 실제 기기가 이 위젯에 실제로 배정하는 세로 높이가 이 프로젝트가
      예상한 값과 다를 수 있다는 게 스케줄 위젯 리사이즈 때 이미 확인된
      문제라(CLAUDE.md "스케줄 위젯" 항목 참고), dp 숫자로 paddingTop/Bottom을
      추측하는 대신 위아래에 빈 TextView 스페이서를 두고 weight로 "남는 세로
-     공간을 3:1로 나눠라"라고만 지시함 — 실제 높이가 얼마든 이 비율(위 3,
-     아래 1)만 지켜지므로 "5칸 중 밑에서 2번째"와 같은 결과가 나옴(칸 5개 중
-     내용이 있는 4번째 칸을 빼면 위 3칸+아래 1칸이 남는 것과 같은 비율). -->
+     공간을 비율로 나눠라"라고만 지시함 — 실제 높이가 얼마든 이 비율만
+     지켜짐. **처음엔 위:아래 = 3:1로 시작했는데, 실제 화면 캡처(사용자가
+     빨간 선으로 표시)를 보고 여전히 너무 위쪽에 있다는 피드백을 받아
+     9:1로 더 아래로 내렸다가(같은 날 재조정), 그 직후 사용자가 "다크모드라
+     높이 분간이 잘 안 된 것 같다"며 오히려 위로 올려달라고 재조정** — 9:1은
+     화면이 어두워서 실제보다 더 낮아 보인다고 잘못 판단했을 가능성이 있다는
+     사용자 본인의 재검토였음. 9:1 조정 자체를 되돌려 원래의 3:1로 복귀함
+     (더 낮춘 것이 다크모드 착시로 인한 과잉 수정이었다고 판단, 처음의
+     "5칸 중 밑에서 2번째" 스펙이 계속 유효한 목표였던 것으로 취급). 이
+     비율을 또 조정해야 하면 두 스페이서(tt_top_spacer/tt_bottom_spacer)의
+     weight 값만 바꿀 것, dp 패딩으로 되돌리지 말 것. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_team_today_root"
     android:layout_width="match_parent"
@@ -65,6 +83,8 @@
                 android:id="@+id/tt_shift_0"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:layout_marginEnd="6dp"
                 android:layout_marginTop="1dp"
                 android:gravity="center"
                 android:maxLines="1"
@@ -97,6 +117,8 @@
                 android:id="@+id/tt_shift_1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:layout_marginEnd="6dp"
                 android:layout_marginTop="1dp"
                 android:gravity="center"
                 android:maxLines="1"
@@ -129,6 +151,8 @@
                 android:id="@+id/tt_shift_2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:layout_marginEnd="6dp"
                 android:layout_marginTop="1dp"
                 android:gravity="center"
                 android:maxLines="1"
@@ -161,6 +185,8 @@
                 android:id="@+id/tt_shift_3"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:layout_marginEnd="6dp"
                 android:layout_marginTop="1dp"
                 android:gravity="center"
                 android:maxLines="1"
@@ -193,6 +219,8 @@
                 android:id="@+id/tt_shift_4"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:layout_marginEnd="6dp"
                 android:layout_marginTop="1dp"
                 android:gravity="center"
                 android:maxLines="1"
@@ -225,6 +253,8 @@
                 android:id="@+id/tt_shift_5"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:layout_marginEnd="6dp"
                 android:layout_marginTop="1dp"
                 android:gravity="center"
                 android:maxLines="1"
