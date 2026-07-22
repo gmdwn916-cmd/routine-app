@@ -5556,6 +5556,16 @@
 
     if (singleEvents.length > 0) {
       const sortedSingle = sortByLeadingTime(singleEvents);
+      // 완료된 항목은 항상 맨 아래로(2026-07-22 추가) — 시간순 정렬은
+      // 유지한 채(Array.sort는 안정 정렬), 완료 여부만 기준으로 한 번 더
+      // 정렬해서 미완료가 위, 완료가 아래로 가게 함(showDone이 꺼져 있으면
+      // singleEvents에 완료 항목 자체가 없어서 이 정렬은 사실상 아무
+      // 영향이 없음).
+      sortedSingle.sort(function (a, b) {
+        const aDone = a.repeat ? isRepeatDoneOn(a.id, cellDateStr) : !!a.done;
+        const bDone = b.repeat ? isRepeatDoneOn(b.id, cellDateStr) : !!b.done;
+        return (aDone ? 1 : 0) - (bDone ? 1 : 0);
+      });
       const evList = document.createElement('div');
       evList.className = 'cell-event-list';
       // 2026-07-16: 2줄 → 3줄까지 보이게(사용자 요청) — cell-date/cell-shift-band/
@@ -7001,6 +7011,11 @@
         // 앞에, 그다음 한 번짜리를 순서 그대로 이어붙이기만 해서 시간순이
         // 전혀 아니었음.
         combinedTodos.sort(function (a, b) { return compareByTimeline(a.ev, b.ev); });
+        // 완료된 항목은 항상 맨 아래로(2026-07-22 추가) — 시간순 정렬은
+        // 유지한 채(Array.sort는 안정 정렬이라 위 정렬 순서가 그대로
+        // 보존됨), 완료 여부만 기준으로 한 번 더 정렬해서 미완료가 전부
+        // 위로, 완료가 전부 아래로 가게 함.
+        combinedTodos.sort(function (a, b) { return (a.done ? 1 : 0) - (b.done ? 1 : 0); });
         const allTodoObjs = combinedTodos.map(function (t) { return { text: '• ' + t.ev.text, done: t.done }; });
         // todos: 위젯 칸 안에 실제로 그릴 수 있는 만큼만(최대 3줄, 공간이
         // 좁아서 그 이상은 못 그림). allTodos: 그 날의 전체 목록(2026-07-19
@@ -7089,6 +7104,9 @@
     // timeSlot/timelineOrder만 보고 정렬해서, 아직 손으로 안 옮긴 반복
     // 할일은 앱 화면과 다른 순서로 보일 수 있었음.
     all.sort(function (a, b) { return compareByTimeline(a.item, b.item); });
+    // 완료된 항목은 항상 맨 아래로(2026-07-22 추가) — 스케줄 위젯과 같은
+    // 이유(안정 정렬로 시간순은 유지한 채 완료 여부만 한 번 더 정렬).
+    all.sort(function (a, b) { return (a.done ? 1 : 0) - (b.done ? 1 : 0); });
 
     const items = all.map(function (t) {
       const cat = getCat(t.item.category);
