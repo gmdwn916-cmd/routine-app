@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>개인정보처리방침 - 교대시간</title>
+<style>
+  :root {
+    --bg: #fafafc;
+    --surface: #ffffff;
+    --card: #eef2f9;
+    --card-border: #dbe3f0;
+    --text: #1a1d29;
+    --sub: #666f7d;
+    --line: #e3e7ef;
+    --accent: #007aff;
+    --accent-soft: rgba(0, 122, 255, 0.1);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e1116;
+      --surface: #14171d;
+      --card: #171c26;
+      --card-border: #232a37;
+      --text: #ecedf2;
+      --sub: #9aa3b2;
+      --line: #23262d;
+      --accent: #0a84ff;
+      --accent-soft: rgba(10, 132, 255, 0.14);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0e1116;
+    --surface: #14171d;
+    --card: #171c26;
+    --card-border: #232a37;
+    --text: #ecedf2;
+    --sub: #9aa3b2;
+    --line: #23262d;
+    --accent: #0a84ff;
+    --accent-soft: rgba(10, 132, 255, 0.14);
+  }
+  :root[data-theme="light"] {
+    --bg: #fafafc;
+    --surface: #ffffff;
+    --card: #eef2f9;
+    --card-border: #dbe3f0;
+    --text: #1a1d29;
+    --sub: #666f7d;
+    --line: #e3e7ef;
+    --accent: #007aff;
+    --accent-soft: rgba(0, 122, 255, 0.1);
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Segoe UI", sans-serif;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 56px 24px 96px;
+  }
+  .eyebrow {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 5px 12px;
+    border-radius: 100px;
+    margin-bottom: 18px;
+  }
+  h1 {
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+    text-wrap: balance;
+  }
+  .updated {
+    color: var(--sub);
+    font-size: 14px;
+    margin-bottom: 36px;
+  }
+  .summary {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 22px 24px;
+    margin-bottom: 44px;
+    font-size: 15.5px;
+  }
+  .summary strong {
+    display: block;
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    color: var(--accent);
+    margin-bottom: 8px;
+    font-weight: 700;
+  }
+  nav.toc {
+    margin-bottom: 48px;
+    padding-bottom: 40px;
+    border-bottom: 1px solid var(--line);
+  }
+  nav.toc .label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--sub);
+    margin-bottom: 12px;
+    display: block;
+  }
+  nav.toc ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    columns: 2;
+    column-gap: 24px;
+  }
+  nav.toc li { break-inside: avoid; margin-bottom: 8px; }
+  nav.toc a {
+    color: var(--text);
+    text-decoration: none;
+    font-size: 14.5px;
+    border-bottom: 1px solid transparent;
+  }
+  nav.toc a:hover, nav.toc a:focus-visible {
+    border-bottom-color: var(--accent);
+    color: var(--accent);
+  }
+  section {
+    margin-bottom: 40px;
+    scroll-margin-top: 24px;
+  }
+  h2 {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0 0 12px;
+  }
+  p { margin: 0 0 14px; font-size: 15.5px; max-width: 62ch; }
+  ul { margin: 0 0 14px; padding-left: 22px; max-width: 62ch; }
+  li { font-size: 15.5px; margin-bottom: 6px; }
+  a { color: var(--accent); }
+  a:focus-visible, button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .contact {
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+    font-size: 14.5px;
+    color: var(--sub);
+  }
+  .contact a { color: var(--text); font-weight: 600; }
+  @media (max-width: 480px) {
+    nav.toc ol { columns: 1; }
+    h1 { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <span class="eyebrow">PRIVACY POLICY</span>
+  <h1>교대시간 개인정보처리방침</h1>
+  <div class="updated">최종 수정일 2026년 7월 22일</div>
+
+  <div class="summary">
+    <strong>한 줄 요약</strong>
+    교대시간은 서버나 회원 계정이 없는 앱입니다. 입력하신 근무표·할 일 등은
+    오직 사용 중인 기기 안에만 저장되며, 개발자를 포함해 누구도 그 내용을
+    서버로 전송받거나 들여다볼 수 없습니다.
+  </div>
+
+  <nav class="toc" aria-label="목차">
+    <span class="label">목차</span>
+    <ol>
+      <li><a href="#none">1. 수집하지 않는 정보</a></li>
+      <li><a href="#device">2. 기기에 저장되는 정보</a></li>
+      <li><a href="#location">3. 위치 정보 (날씨 표시)</a></li>
+      <li><a href="#notification">4. 알림 (근무별 알람)</a></li>
+      <li><a href="#feedback">5. 피드백 보내기</a></li>
+      <li><a href="#children">6. 아동의 개인정보</a></li>
+      <li><a href="#changes">7. 이 방침의 변경</a></li>
+    </ol>
+  </nav>
+
+  <section id="none">
+    <h2>1. 수집하지 않는 정보</h2>
+    <p>
+      교대시간은 회원가입이나 로그인이 필요 없는 앱입니다. 이름, 전화번호,
+      이메일 주소 등 개인을 식별할 수 있는 정보를 요구하거나 서버에 저장하지
+      않습니다. 광고 SDK나 사용자 행동을 분석하는 트래킹 도구도 포함돼
+      있지 않습니다.
+    </p>
+  </section>
+
+  <section id="device">
+    <h2>2. 기기에 저장되는 정보</h2>
+    <p>다음 정보는 오직 사용자의 기기(앱 저장공간)에만 저장되며, 개발자의 서버로 전송되지 않습니다.</p>
+    <ul>
+      <li>근무 주기·근무 순서 등 설정한 근무 패턴</li>
+      <li>등록한 할 일, 반복 할일, 미배치 항목</li>
+      <li>팀 이름, 근무 색상 등 개인화 설정</li>
+    </ul>
+    <p>
+      앱을 삭제하면 이 정보도 함께 삭제됩니다. 설정 탭의 "데이터 백업"
+      기능으로 이 정보를 JSON 파일로 직접 내보내기·가져오기 할 수 있는데,
+      이 파일 역시 사용자의 기기(또는 사용자가 저장을 선택한 위치)에만
+      저장되고 개발자에게 전송되지 않습니다.
+    </p>
+  </section>
+
+  <section id="location">
+    <h2>3. 위치 정보 (날씨 표시)</h2>
+    <p>
+      오늘 탭에 현재 지역의 날씨를 보여주기 위해 위치 권한을 요청할 수
+      있습니다. 이 권한은 다음 목적에만 쓰입니다.
+    </p>
+    <ul>
+      <li>위치 좌표를 <strong>Open-Meteo</strong>(날씨 정보 제공)에 전달해 현재 날씨를 조회</li>
+      <li>위치 좌표를 <strong>BigDataCloud</strong>(좌표 → 지역 이름 변환 서비스)에 전달해 화면에 보여줄 지역 이름을 조회</li>
+    </ul>
+    <p>
+      위치 정보는 그 순간 날씨를 조회하는 데에만 쓰이고 개발자가 별도로
+      저장하지 않습니다. 다만 위 두 외부 서비스로 전송되므로, 각 서비스의
+      개인정보처리방침이 함께 적용될 수 있습니다. 위치 권한은 기기 설정에서
+      언제든 끌 수 있고, 대신 지역을 직접 선택해 날씨를 볼 수도 있습니다.
+      날씨 표시를 아예 쓰지 않아도 앱의 다른 기능은 모두 정상 동작합니다.
+    </p>
+  </section>
+
+  <section id="notification">
+    <h2>4. 알림 (근무별 알람)</h2>
+    <p>
+      근무 유형별로 알람을 설정하는 기능은 기기 안에서만 동작하며, 알림
+      관련 정보를 외부로 전송하지 않습니다. 알림 권한은 기기 설정에서
+      언제든 끌 수 있습니다.
+    </p>
+  </section>
+
+  <section id="feedback">
+    <h2>5. 피드백 보내기</h2>
+    <p>
+      설정 탭의 "피드백 보내기"를 누르면 Google Forms로 연결됩니다. 이
+      화면에서 사용자가 직접 작성해 제출한 내용(및 선택적으로 첨부한
+      스크린샷 등)만 개발자가 확인할 수 있으며, 제출 과정에는 Google의
+      개인정보처리방침이 적용됩니다. 이 화면으로 이동하지 않으면 어떤
+      정보도 전송되지 않습니다.
+    </p>
+  </section>
+
+  <section id="children">
+    <h2>6. 아동의 개인정보</h2>
+    <p>
+      이 앱은 교대근무를 하는 성인 근로자를 대상으로 하며, 만 14세 미만
+      아동으로부터 개인정보를 의도적으로 수집하지 않습니다.
+    </p>
+  </section>
+
+  <section id="changes">
+    <h2>7. 이 방침의 변경</h2>
+    <p>
+      앱 기능이 추가되거나 바뀌어 개인정보 처리 방식이 달라지면 이 페이지
+      내용을 갱신하고 상단의 최종 수정일을 업데이트합니다.
+    </p>
+  </section>
+
+  <div class="contact">
+    문의 <a href="mailto:gmdwn916@gmail.com">gmdwn916@gmail.com</a>
+  </div>
+</div>
+</body>
+</html>
