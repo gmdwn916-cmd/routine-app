@@ -200,7 +200,9 @@ public class MonthCalendarWidgetProvider extends AppWidgetProvider {
         PendingIntent nextPending = navPendingIntent(context, ACTION_NEXT, 2);
         views.setOnClickPendingIntent(idFor(context, "header_" + mondayCol), prevPending);
         views.setOnClickPendingIntent(idFor(context, "header_" + sunColForNav), nextPending);
-        for (int row = 0; row < 6; row++) {
+        // 2026-07-22 재조정: 6줄(42칸)이 아니라 5줄(35칸)만 보여줌(레이아웃도
+        // 같이 수정, 자세한 이유는 widget_month_calendar.xml 상단 주석 참고).
+        for (int row = 0; row < 5; row++) {
             views.setOnClickPendingIntent(idFor(context, "cell_container_" + (row * 7 + mondayCol)), prevPending);
             views.setOnClickPendingIntent(idFor(context, "cell_container_" + (row * 7 + sunColForNav)), nextPending);
         }
@@ -213,7 +215,7 @@ public class MonthCalendarWidgetProvider extends AppWidgetProvider {
             views.setTextViewText(idFor(context, "header_" + i), "");
             views.setTextColor(idFor(context, "header_" + i), secondaryText);
         }
-        for (int i = 0; i < 42; i++) {
+        for (int i = 0; i < 35; i++) {
             views.setTextViewText(idFor(context, "cell_date_" + i), "");
             views.setTextViewText(idFor(context, "cell_shift_" + i), "");
             views.setTextColor(idFor(context, "cell_date_" + i), primaryText);
@@ -279,7 +281,10 @@ public class MonthCalendarWidgetProvider extends AppWidgetProvider {
                             // 안 속하는 빈 칸(null)을 만나면 거기서만 진짜로 끊긴 것이므로
                             // 그때만 초기화.
                             String prevBatchId = null;
-                            for (int i = 0; i < days.length() && i < 42; i++) {
+                            // 5줄(35칸)까지만 그림 — JS는 여전히 42칸(6주)을
+                            // 계산해 넘기지만, 이 위젯 화면 자체는 5줄만 있으므로
+                            // 나머지는 무시(위 "6줄→5줄" 재조정 참고).
+                            for (int i = 0; i < days.length() && i < 35; i++) {
                                 Object dayObj = days.opt(i);
                                 if (!(dayObj instanceof JSONObject)) { prevBatchId = null; continue; } // 그 달에 속하지 않는 빈 칸
                                 JSONObject day = (JSONObject) dayObj;
