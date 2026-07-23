@@ -440,6 +440,9 @@
     }
     .td-weather:empty { display: none; }
     .td-weather-temp { color: var(--text-1); font-weight: 700; }
+    /* 비/눈 예보 시각·확률(2026-07-23 추가) — 아이콘보다 살짝 눈에 덜 띄게
+       기본 글자색보다 옅은 톤, 크기도 살짝 작게. */
+    .td-weather-prob { color: var(--text-2); font-weight: 600; font-size: 12px; }
 
     .section-label {
       font-size: 11px;
@@ -5234,17 +5237,32 @@
 
   // 현재 코드가 이미 비/눈이면 그대로, 아니면 지금부터 오늘 남은 시간
   // 중 강수확률 30% 이상인 시간이 있는지로 판단(그 시간대 코드로 비/눈 구분).
+  // **비/눈일 때 시각·확률도 같이 반환(2026-07-23 추가)** — "비 이모지 옆에
+  // 몇 시에 몇 %인지 보여달라"는 요청. hourly.time[i]가 "2026-07-23T14:00"
+  // 형태라 T 뒤 두 자리를 뽑아 24시간제 시(hour)로 씀. 이 최고 확률 시각은
+  // 지금 당장 비가 오고 있는 경우에도 똑같이 구해서 보여줌(예: 지금 비가
+  // 오고 있어도 "언제 가장 심한지"를 같이 알려주는 게 더 유용하다고 판단 —
+  // sun/cloudy는 이 정보 자체가 의미 없어서 hour/prob 필드를 안 줌).
   function classifyTodayWeather(currentCode, hourly, nowIdx) {
-    if (WEATHER_SNOW_CODES.indexOf(currentCode) !== -1) return { key: 'snow', label: '눈', icon: '❄️' };
-    if (WEATHER_RAIN_CODES.indexOf(currentCode) !== -1) return { key: 'rain', label: '비', icon: '🌧️' };
-    let maxProb = 0, maxProbCode = null;
+    let maxProb = 0, maxProbCode = null, maxProbIdx = nowIdx;
     for (let i = nowIdx; i < hourly.time.length; i++) {
       const p = hourly.precipitation_probability[i];
-      if (typeof p === 'number' && p > maxProb) { maxProb = p; maxProbCode = hourly.weather_code[i]; }
+      if (typeof p === 'number' && p > maxProb) { maxProb = p; maxProbCode = hourly.weather_code[i]; maxProbIdx = i; }
+    }
+    const m = /T(\d{2}):/.exec(hourly.time[maxProbIdx] || '');
+    const maxProbHour = m ? parseInt(m[1], 10) : null;
+
+    if (WEATHER_SNOW_CODES.indexOf(currentCode) !== -1) {
+      return { key: 'snow', label: '눈', icon: '❄️', hour: maxProbHour, prob: maxProb };
+    }
+    if (WEATHER_RAIN_CODES.indexOf(currentCode) !== -1) {
+      return { key: 'rain', label: '비', icon: '🌧️', hour: maxProbHour, prob: maxProb };
     }
     if (maxProb >= 30) {
-      if (WEATHER_SNOW_CODES.indexOf(maxProbCode) !== -1) return { key: 'snow', label: '눈', icon: '❄️' };
-      return { key: 'rain', label: '비', icon: '🌧️' };
+      if (WEATHER_SNOW_CODES.indexOf(maxProbCode) !== -1) {
+        return { key: 'snow', label: '눈', icon: '❄️', hour: maxProbHour, prob: maxProb };
+      }
+      return { key: 'rain', label: '비', icon: '🌧️', hour: maxProbHour, prob: maxProb };
     }
     if (currentCode === 0) return { key: 'sun', label: '해', icon: '☀️' };
     return { key: 'cloudy', label: '흐림', icon: '☁️' };
@@ -5264,6 +5282,7 @@
       return {
         temp: Math.round(data.current.temperature_2m),
         key: cls.key, label: cls.label, icon: cls.icon,
+        hour: cls.hour, prob: cls.prob,
       };
     });
   }
@@ -5343,6 +5362,17 @@
       el.appendChild(nameSpan);
       el.appendChild(tempSpan);
       el.appendChild(iconSpan);
+      // 비/눈일 때 "몇 시에 몇 %인지"를 아이콘 옆에 같이 보여줌(2026-07-23
+      // 추가) — classifyTodayWeather가 구해둔 hour(24시간제)/prob을 그대로
+      // 씀. 시각 표기는 "18:00"처럼 콜론 형식(같은 날 재요청 — 처음엔
+      // "18시"였는데 이 형식으로 바꿈), 시는 항상 두 자리로 맞춤(0시대는
+      // "00:00").
+      if ((c.key === 'rain' || c.key === 'snow') && c.hour !== null && c.hour !== undefined) {
+        const probSpan = document.createElement('span');
+        probSpan.className = 'td-weather-prob';
+        probSpan.textContent = String(c.hour).padStart(2, '0') + ':00/' + c.prob + '%';
+        el.appendChild(probSpan);
+      }
     }
 
     if (weatherCache && (Date.now() - weatherCache.fetchedAt) < GPS_CACHE_MS) {
@@ -7086,7 +7116,17 @@
     // 이 필드만 보고 자기 줄에 그림) — 기온+이모지만("해/흐림/비/눈" 글자는
     // 안 씀, 오늘 탭 날씨 표시와 다른 부분). weatherCache가 없으면
     // 빈 문자열 — 네이티브가 비어 있으면 그 줄 자체를 GONE으로 숨김.
-    const weatherLabel = weatherCache ? (weatherCache.temp + '° ' + weatherCache.icon) : '';
+    // 비/눈일 때는 "몇 시에 몇 %인지"도 뒤에 붙임(2026-07-23 추가, 오늘 탭과
+    // 같은 정보 — weatherCache.hour/prob은 classifyTodayWeather가 구해둔 값).
+    const weatherHasRainInfo = weatherCache && (weatherCache.key === 'rain' || weatherCache.key === 'snow')
+      && weatherCache.hour !== null && weatherCache.hour !== undefined;
+    // 시각 표기는 오늘 탭과 같은 "18:00" 콜론 형식(2026-07-23 재요청).
+    const weatherRainSuffix = weatherHasRainInfo
+      ? ' ' + String(weatherCache.hour).padStart(2, '0') + ':00/' + weatherCache.prob + '%'
+      : '';
+    const weatherLabel = weatherCache
+      ? (weatherCache.temp + '° ' + weatherCache.icon + weatherRainSuffix)
+      : '';
 
     // 위젯에서 체크한 항목은 목록에서 바로 사라지게 함(완료 표시만 하고 계속
     // 보여주던 이전 방식에서 바뀜) — 그래서 원래는 완료된 항목을 항상 payload에서
